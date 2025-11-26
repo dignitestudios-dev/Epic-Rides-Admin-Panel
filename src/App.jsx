@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppProvider } from "./contexts/AppContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -64,7 +64,7 @@ function App() {
                     // <ProtectedRoute>
                       <Layout>
                         <Routes>
-                          <Route path="/" element={<Dashboard />} />
+                          <Route path="/" element={<Navigate to={'/auth/login'} />} />
 
                           <Route path="/dashboard" element={<Dashboard />} />
 
