@@ -13,12 +13,23 @@ import { useApp } from "../contexts/AppContext";
 import UserGrowthChart from "../components/ui/UserGrowthChart";
 import RevenueTrendChart from "../components/ui/RevenueTrendChart";
 import { useNavigate } from "react-router-dom";
+import Calendar from "../components/common/Calender";
 
 const Dashboard = () => {
   const { dashboardAnalytics } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("users");
+  const [rideshowCalendar, setRideShowCalendar] = useState(false);
+  const [revenueShowCalendar, setRevenueShowCalendar] = useState(false);
 
+  const [ridecustomRange, setRideCustomRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
+  const [revenuecustomRange, setRevenueCustomRange] = useState({
+    startDate: "",
+    endDate: "",
+  });
   // ------------------ USER STATS ------------------
   const userStats = useMemo(
     () => [
@@ -149,22 +160,20 @@ const Dashboard = () => {
       <div className="flex space-x-4  pb-2">
         <button
           onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 font-semibold ${
-            activeTab === "users"
-              ? "border-b-2 border-green-600 text-green-600"
-              : "text-gray-600"
-          }`}
+          className={`px-4 py-2 font-semibold ${activeTab === "users"
+            ? "border-b-2 border-green-600 text-green-600"
+            : "text-gray-600"
+            }`}
         >
           Users
         </button>
 
         <button
           onClick={() => setActiveTab("drivers")}
-          className={`px-4 py-2 font-semibold ${
-            activeTab === "drivers"
-              ? "border-b-2 border-green-600 text-green-600"
-              : "text-gray-600"
-          }`}
+          className={`px-4 py-2 font-semibold ${activeTab === "drivers"
+            ? "border-b-2 border-green-600 text-green-600"
+            : "text-gray-600"
+            }`}
         >
           Drivers
         </button>
@@ -191,28 +200,48 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="bg-white p-5 rounded-xl shadow-sm">
-          <div className="flex gap-6 items-center">
+          <div className="flex gap-6 justify-between items-center">
             <h2 className="text-lg font-bold mb-5">Ride Statistics</h2>
 
-            <div className="flex flex-wrap gap-4 mb-8">
-              <select className="border rounded-lg px-3 py-2">
+            <div className="flex flex-wrap gap-4 mb-8 relative">
+              <select
+                className="border rounded-lg px-3 py-2"
+
+              >
+                <option disabled selected>Ride Type</option>
+                <option>Economic</option>
+                <option>Luxury</option>
+                <option>Carpool</option>
+              </select>
+              <select
+                className="border rounded-lg px-3 py-2"
+                onChange={(e) => {
+                  if (e.target.value === "Custom") {
+                    setRideShowCalendar(true);
+                  } else {
+                    setRideShowCalendar(false);
+                  }
+                }}
+              >
                 <option>Today</option>
                 <option>Last 7 Days</option>
                 <option>Last 30 Days</option>
                 <option>Custom</option>
               </select>
+              <div className="absolute -right-40 top-10">
 
-              <select className="border rounded-lg px-3 py-2">
-                <option>All Cities</option>
-                <option>City A</option>
-                <option>City B</option>
-              </select>
-
-              <select className="border rounded-lg px-3 py-2">
-                <option>All States</option>
-                <option>State A</option>
-                <option>State B</option>
-              </select>
+                {rideshowCalendar && (
+                  <Calendar
+                    customRange={ridecustomRange}
+                    setCustomRange={setRideCustomRange}
+                    onClose={() => setRideShowCalendar(false)}
+                    onApply={() => {
+                      console.log(ridecustomRange);
+                      setRideShowCalendar(false);
+                    }}
+                  />
+                )}
+              </div>
             </div>
           </div>
 
@@ -231,18 +260,39 @@ const Dashboard = () => {
         </div>
 
         <div className="bg-white p-5 rounded-xl shadow-sm">
-          <div className="flex gap-2 flex-nowrap items-center">
+          <div className="flex gap-2 justify-between flex-nowrap items-center">
             <h2 className="text-lg font-bold mb-5">Revenue Summary</h2>
 
-            <div className="flex  gap-4 mb-8">
-              <select className="border rounded-lg px-3 py-2">
+            <div className="flex  gap-4 mb-8 relative">
+              <select
+                className="border rounded-lg px-3 py-2"
+                onChange={(e) => {
+                  if (e.target.value === "Custom") {
+                    setRevenueShowCalendar(true);
+                  } else {
+                    setRevenueShowCalendar(false);
+                  }
+                }}
+              >
                 <option>Today</option>
                 <option>Last 7 Days</option>
                 <option>Last 30 Days</option>
                 <option>Custom</option>
               </select>
-
-              <select className="border rounded-lg px-3 py-2">
+              <div className="absolute -right-40 top-10">
+                {revenueShowCalendar && (
+                  <Calendar
+                    customRange={revenuecustomRange}
+                    setCustomRange={setRevenueCustomRange}
+                    onClose={() => setRevenueShowCalendar(false)}
+                    onApply={() => {
+                      console.log(revenuecustomRange);
+                      setRevenueShowCalendar(false);
+                    }}
+                  />
+                )}
+              </div>
+              {/* <select className="border rounded-lg px-3 py-2">
                 <option>All Cities</option>
                 <option>City A</option>
                 <option>City B</option>
@@ -252,7 +302,7 @@ const Dashboard = () => {
                 <option>All States</option>
                 <option>State A</option>
                 <option>State B</option>
-              </select>
+              </select> */}
             </div>
           </div>
           <div className="grid grid-cols-2 gap-5">
@@ -272,11 +322,11 @@ const Dashboard = () => {
 
       {/* ----------- EXTRA SECTIONS SAME RAHENGE ----------- */}
 
-    
-        <Card.Content >
-          <UserGrowthChart />
-        </Card.Content>
-      
+
+      <Card.Content >
+        <UserGrowthChart />
+      </Card.Content>
+
     </div>
   );
 };

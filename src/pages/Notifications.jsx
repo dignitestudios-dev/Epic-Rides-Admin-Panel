@@ -493,8 +493,8 @@ const confirmDelete = () => {
             options={[
               { value: "all_users", label: "All Users" },
               { value: "role_based", label: "By Role (Drivers/Riders)" },
-              { value: "geo_based", label: "By Geography (Country/City/Area)" },
-              { value: "specific_users", label: "Specific Users" },
+              // { value: "geo_based", label: "By Geography (Country/City/Area)" },
+              // { value: "specific_users", label: "Specific Users" },
             ]}
             {...register("audienceType", {
               required: "Target audience is required",
@@ -518,8 +518,8 @@ const confirmDelete = () => {
             />
           )}
 
-          {/* Geography target */}
-          {watchAudienceType === "geo_based" && (
+        
+          {/* {watchAudienceType === "geo_based" && (
             <>
               <Select
                 value={watchCountry}
@@ -548,16 +548,16 @@ const confirmDelete = () => {
             </>
           )}
 
-          {/* Specific users text */}
+        
           {watchAudienceType === "specific_users" && (
             <Input
               label="Specific Target Description"
               {...register("specificTarget")}
               placeholder="e.g., Beta Testers, VIP Users"
             />
-          )}
+          )} */}
 
-          {/* Title + counter */}
+        
           <div>
             <Input
               label="Notification Title"
