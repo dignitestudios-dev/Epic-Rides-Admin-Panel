@@ -31,7 +31,7 @@ export const COLOR_CONFIG = {
 export const THEME_OPTIONS = {
   enableThemeToggle: true, // Set to false to disable theme switching
   defaultTheme: "light", // 'light' or 'dark'
-  forceTheme: null, // Set to 'light' or 'dark' to force a single theme (disables toggle)
+  forceTheme: "light", // Set to 'light' or 'dark' to force a single theme (disables toggle)
   enableSecondaryColor: COLOR_CONFIG.secondary.enabled,
   // Theme persistence
   persistTheme: true, // Save theme preference to localStorage

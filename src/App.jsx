@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppProvider } from "./contexts/AppContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -35,6 +40,7 @@ import ContentManagement from "./pages/ContentManagement";
 import ReportDetail from "./pages/ReportDetail";
 import Emergencies from "./pages/Emergencie";
 import UserDetailPage from "./pages/UserDetailPage";
+import DriverDetails from "./pages/DriverDetails";
 
 function App() {
   return (
@@ -62,51 +68,76 @@ function App() {
                   path="/*"
                   element={
                     // <ProtectedRoute>
-                      <Layout>
-                        <Routes>
-                          <Route path="/" element={<Navigate to={'/auth/login'} />} />
+                    <Layout>
+                      <Routes>
+                        <Route
+                          path="/"
+                          element={<Navigate to={"/auth/login"} />}
+                        />
 
-                          <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<Dashboard />} />
 
-                          {/* <Route path="/products">
+                        {/* <Route path="/products">
                             <Route path="" element={<Products />} />
                             <Route path="categories" element={<Categories />} />
                           </Route> */}
 
-                          <Route path="/orders" element={<Orders />} />
-                          <Route path="/user-management" element={<UserManagement />} />
-                          <Route path="/content-management" element={<ContentManagement />} />
-                          <Route path="/reports" element={<Reports />} />
-                          <Route path="/reports-management" element={<SupportTickets />} />
-                          <Route path="/reports-detail/:id" element={<ReportDetail />} />
-                          <Route path="/notifications" element={<Notifications />} />
-                          <Route path="/emergency-management" element={<Emergencies />} />
-                          <Route path="/user-detail/:id" element={<UserDetailPage />} />
+                        <Route path="/orders" element={<Orders />} />
+                        <Route
+                          path="/user-management"
+                          element={<UserManagement />}
+                        />
+                        <Route
+                          path="/driver/:id"
+                          element={<DriverDetails />}
+                        />
+                        <Route
+                          path="/content-management"
+                          element={<ContentManagement />}
+                        />
+                        <Route path="/reports" element={<Reports />} />
+                        <Route
+                          path="/reports-management"
+                          element={<SupportTickets />}
+                        />
+                        <Route
+                          path="/reports-detail/:id"
+                          element={<ReportDetail />}
+                        />
+                        <Route
+                          path="/notifications"
+                          element={<Notifications />}
+                        />
+                        <Route
+                          path="/emergency-management"
+                          element={<Emergencies />}
+                        />
+                        <Route
+                          path="/user-detail/:id"
+                          element={<UserDetailPage />}
+                        />
 
-                          <Route path="/settings">
-                            <Route
-                              path=""
-                              element={
-                                <div className="p-6">
-                                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                    Settings
-                                  </h1>
-                                </div>
-                              }
-                            />
-                            <Route
-                              path="change-password"
-                              element={<ChangePassword />}
-                            />
-                            <Route
-                              path="configs"
-                              element={<Configurations />}
-                            />
-                          </Route>
+                        <Route path="/settings">
+                          <Route
+                            path=""
+                            element={
+                              <div className="p-6">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                  Settings
+                                </h1>
+                              </div>
+                            }
+                          />
+                          <Route
+                            path="change-password"
+                            element={<ChangePassword />}
+                          />
+                          <Route path="configs" element={<Configurations />} />
+                        </Route>
 
-                          <Route path="/docs" element={<Documentation />} />
-                        </Routes>
-                      </Layout>
+                        <Route path="/docs" element={<Documentation />} />
+                      </Routes>
+                    </Layout>
                     // </ProtectedRoute>
                   }
                 />

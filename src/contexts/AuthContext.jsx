@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     if (isLockedOut()) {
       const remainingTime = Math.ceil(
-        (new Date(lockedUntil) - new Date()) / 1000 / 60
+        (new Date(lockedUntil) - new Date()) / 1000 / 60,
       );
       return {
         success: false,
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Generate device information
       const deviceuniqueid = `device-${Date.now()}-${Math.floor(
-        Math.random() * 10000
+        Math.random() * 10000,
       )}`;
       const devicemodel = navigator.userAgent || "Unknown Device";
 
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }) => {
         devicemodel,
       });
 
-      const userData = response?.data?.user;
+      const userData = response?.data?.admin;
       const token = response?.data?.token;
 
       // Store auth data
@@ -107,7 +107,7 @@ export const AuthProvider = ({ children }) => {
 
       if (newAttempts >= SECURITY_CONFIG.maxLoginAttempts) {
         const lockoutEnd = new Date(
-          Date.now() + SECURITY_CONFIG.lockoutDuration
+          Date.now() + SECURITY_CONFIG.lockoutDuration,
         );
         setLockedUntil(lockoutEnd.toISOString());
         localStorage.setItem("lockedUntil", lockoutEnd.toISOString());
@@ -177,7 +177,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // Generate device information
       const deviceuniqueid = `device-${Date.now()}-${Math.floor(
-        Math.random() * 10000
+        Math.random() * 10000,
       )}`;
       const devicemodel = navigator.userAgent || "Unknown Device";
 
@@ -287,7 +287,7 @@ export const AuthProvider = ({ children }) => {
         if (lockedUntilCache) {
           const remainingTime = Math.max(
             new Date(lockedUntilCache) - new Date(),
-            0
+            0,
           );
           setRemainingLockTime(remainingTime);
           if (remainingTime === 0) {

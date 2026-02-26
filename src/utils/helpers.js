@@ -11,20 +11,20 @@ export const formatDate = (date, format = DATE_CONFIG.format) => {
     day: "2-digit",
   });
 };
-  export const getStatusVariant = (status) => {
-    switch (status.toLowerCase()) {
-      case "open":
-        return "danger"; // Red
-      case "in progress":
-        return "warning"; // Yellow
-      case "resolved":
-        return "success"; // Green
-      case "archived":
-        return "secondary"; // Gray
-      default:
-        return "info";
-    }
-  };
+export const getStatusVariant = (status) => {
+  switch (status.toLowerCase()) {
+    case "open":
+      return "danger"; // Red
+    case "in progress":
+      return "warning"; // Yellow
+    case "resolved":
+      return "success"; // Green
+    case "archived":
+      return "secondary"; // Gray
+    default:
+      return "info";
+  }
+};
 export const formatDateTime = (date) => {
   if (!date) return "";
   const d = new Date(date);
@@ -153,10 +153,12 @@ export const deepClone = (obj) => {
 export const handleError = (error) => {
   console.log(error);
   toast.error(
-    error?.message || error?.response?.data?.message || "Something went wrong"
+    error?.message || error?.response?.data?.message || "Something went wrong",
   );
 };
 
 export const handleSuccess = (message, customMessage) => {
   toast.success(message || customMessage || "Operation successful");
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────

@@ -18,7 +18,7 @@ API.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response Interceptor
@@ -32,7 +32,7 @@ API.interceptors.response.use(
     console.log(error);
     console.log("API Error:", error.response?.data || error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // Centralized API Handling functions start
@@ -54,7 +54,7 @@ const handleApiResponse = (response) => {
   // Check if success is false and throw an error
   if (!responseData.success) {
     throw new Error(
-      responseData.message || "Something went wrong, Please try again!"
+      responseData.message || "Something went wrong, Please try again!",
     );
   }
 
@@ -76,12 +76,16 @@ const apiHandler = async (apiCall) => {
 
 const login = (credentials) =>
   apiHandler(() =>
-    API.post("/auth/login", credentials, {
-      headers: {
-        deviceuniqueid: credentials.deviceuniqueid,
-        devicemodel: credentials.devicemodel,
+    API.post(
+      "login",
+      { email: credentials.email, password: credentials.password },
+      {
+        headers: {
+          deviceuniqueid: credentials.deviceuniqueid,
+          devicemodel: credentials.devicemodel,
+        },
       },
-    })
+    ),
   );
 
 const forgotPassword = (payload) =>
@@ -94,7 +98,7 @@ const verifyOTP = (payload) =>
         deviceuniqueid: payload.deviceuniqueid,
         devicemodel: payload.devicemodel,
       },
-    })
+    }),
   );
 
 const updatePassword = (payload) =>
@@ -120,19 +124,19 @@ const createProduct = (productData) =>
   apiHandler(() =>
     API.post(`/product`, productData, {
       headers: { "Content-Type": "multipart/form-data" },
-    })
+    }),
   );
 
 const getAllProducts = (
   search,
   status,
   page = 1,
-  limit = PAGINATION_CONFIG.defaultPageSize
+  limit = PAGINATION_CONFIG.defaultPageSize,
 ) =>
   apiHandler(() =>
     API.get(
-      `/product?page=${page}&limit=${limit}&search=${search}&status=${status}`
-    )
+      `/product?page=${page}&limit=${limit}&search=${search}&status=${status}`,
+    ),
   );
 
 const updateProduct = (id, productData) =>
@@ -149,10 +153,10 @@ const createCategory = (categoryData) =>
 const getAllCategories = (
   status, // active or inactive
   page = 1,
-  limit = PAGINATION_CONFIG.defaultPageSize
+  limit = PAGINATION_CONFIG.defaultPageSize,
 ) =>
   apiHandler(() =>
-    API.get(`/category?status=${status}&page=${page}&limit=${limit}`)
+    API.get(`/category?status=${status}&page=${page}&limit=${limit}`),
   );
 
 const updateCategory = (id, categoryData) =>
@@ -171,12 +175,12 @@ const getOrders = (
   endDate,
   search,
   page = 1,
-  limit = API_CONFIG.pagination.defaultPageSize
+  limit = API_CONFIG.pagination.defaultPageSize,
 ) =>
   apiHandler(() =>
     API.get(
-      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${startDate}&endDate=${endDate}&search=${search}&page=${page}&limit=${limit}`
-    )
+      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${startDate}&endDate=${endDate}&search=${search}&page=${page}&limit=${limit}`,
+    ),
   );
 
 const getOrdersByContact = (contactEmail) =>
@@ -187,7 +191,30 @@ const getOrderById = (id) => apiHandler(() => API.get(`/order/${id}`));
 const updateOrder = (id, orderData) =>
   apiHandler(() => API.put(`/order/${id}`, orderData));
 
+const getAllDocs = (
+  search,
+  status,
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+) =>
+  apiHandler(() =>
+    API.get(
+      `/docs?status=${status}&page=${page}&limit=${limit}&search=${search}`,
+    ),
+  );
+const updateDocs = (documents) =>
+  apiHandler(() =>
+    API.put(`/docs/respond`, {
+      documents: documents.map((d) => ({
+        id: d.id,
+        status: d.status,
+        rejectReason: d.rejectReason || null,
+      })),
+    }),
+  );
+
 export const api = {
+  updateDocs,
   login,
   forgotPassword,
   verifyOTP,
@@ -211,4 +238,5 @@ export const api = {
   getOrdersByContact,
   getOrderById,
   updateOrder,
+  getAllDocs,
 };

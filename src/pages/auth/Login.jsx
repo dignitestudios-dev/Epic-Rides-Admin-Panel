@@ -6,7 +6,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { APP_CONFIG, AUTH_ROUTES } from "../../config/constants";
 
 const Login = () => {
-  const navigate =useNavigate()
+  const navigate = useNavigate();
   const { user, login, loading, isLockedOut, remainingLockTime } = useAuth();
   const location = useLocation();
   const [formData, setFormData] = useState({
@@ -30,19 +30,21 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    navigate("/dashboard")
-    // e.preventDefault();
-    // setError("");
+    e.preventDefault();
+    setError("");
 
-    // if (!formData.email || !formData.password) {
-    //   setError("Please fill in all fields");
-    //   return;
-    // }
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
 
-    // const result = await login(formData.email, formData.password);
-    // if (!result.success) {
-    //   setError(result.error);
-    // }
+    const result = await login(formData.email, formData.password);
+    if (result?.success) {
+      navigate("/dashboard");
+    }
+    if (!result.success) {
+      setError(result.error);
+    }
   };
 
   return (
