@@ -7,7 +7,6 @@ const DEV_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
 // const STAGING_BASE_URL = "https://onboarding-epicrides.vercel.app/api/admin/";
 const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/";
 
-
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
   timeout: API_CONFIG.timeout, // Set a timeout (optional)
