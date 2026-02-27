@@ -7,7 +7,7 @@ import { APP_CONFIG, AUTH_ROUTES } from "../../config/constants";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, login, loading, isLockedOut, remainingLockTime } = useAuth();
+  const { user, login, loading, isLockedOut, remainingLockTime } = usedAuth();
   const location = useLocation();
   const [formData, setFormData] = useState({
     email: "",
