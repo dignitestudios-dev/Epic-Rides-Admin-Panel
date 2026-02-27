@@ -2,8 +2,12 @@ import axios from "axios";
 import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
+
+const DEV_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
+const STAGING_BASE_URL = "https://onboarding-epicrides.vercel.app/api/admin/";
+
 const API = axios.create({
-  baseURL: API_CONFIG.baseURL,
+  baseURL: STAGING_BASE_URL,
   timeout: API_CONFIG.timeout, // Set a timeout (optional)
   headers: API_CONFIG.headers,
 });
@@ -202,7 +206,7 @@ const getAllDocs = (
       `/docs?status=${status}&page=${page}&limit=${limit}&search=${search}`,
     ),
   );
-const updateDocs = (documents) =>
+const updateDocs = (documents = [], vehicles = []) =>
   apiHandler(() =>
     API.put(`/docs/respond`, {
       documents: documents.map((d) => ({
@@ -210,9 +214,13 @@ const updateDocs = (documents) =>
         status: d.status,
         rejectReason: d.rejectReason || null,
       })),
+      vehicle: vehicles.map((v) => ({
+        id: v.id,
+        status: v.status,
+        rejectReason: v.rejectReason || null,
+      })),
     }),
   );
-
 export const api = {
   updateDocs,
   login,

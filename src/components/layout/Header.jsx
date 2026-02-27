@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, setUser } = useAuth();
   const { theme, toggleTheme, canToggleTheme } = useTheme();
   const { markNotificationAsRead, sidebarOpen, toggleMobileSidebar } = useApp();
 
@@ -30,6 +30,11 @@ const Header = () => {
   const handleLogout = async () => {
     // await logout();
     // setShowUserMenu(false);
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("lockedUntil");
+    localStorage.removeItem("loginAttempts");
+    setUser(null);
     navigate("/auth/login");
   };
 

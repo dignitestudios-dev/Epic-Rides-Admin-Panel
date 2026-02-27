@@ -34,8 +34,14 @@ const useGetDocuments = (search, status, page, limit) => {
       setLoading(false);
     }
   };
-  const bulkRespond = async (documents, status, reason = null) => {
+  const bulkRespond = async (
+    documents = [],
+    vehicles = [],
+    status,
+    reason = null,
+  ) => {
     setBulkLoading(true);
+
     try {
       const formattedDocs = documents.map((doc) => ({
         id: doc._id,
@@ -43,11 +49,16 @@ const useGetDocuments = (search, status, page, limit) => {
         rejectReason: status === "rejected" ? reason : null,
       }));
 
-      await api.updateDocs(formattedDocs);
+      const formattedVehicles = vehicles.map((vehicle) => ({
+        id: vehicle._id,
+        status,
+        rejectReason: status === "rejected" ? reason : null,
+      }));
+
+      await api.updateDocs(formattedDocs, formattedVehicles);
 
       setBulkDone(status);
-
-      getAllDocuments(); // refresh data
+      getAllDocuments();
       navigate("/user-management");
     } catch (err) {
       handleError(err);

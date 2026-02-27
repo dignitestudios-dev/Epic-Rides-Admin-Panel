@@ -46,9 +46,9 @@ function App() {
   return (
     <>
       <ThemeProvider>
-        <AppProvider>
-          <Router>
-            <AuthProvider>
+        <AuthProvider>
+          <AppProvider>
+            <Router>
               <Routes>
                 {/* Auth Routes */}
                 <Route path="/auth/login" element={<Login />} />
@@ -87,10 +87,7 @@ function App() {
                           path="/user-management"
                           element={<UserManagement />}
                         />
-                        <Route
-                          path="/driver/:id"
-                          element={<DriverDetails />}
-                        />
+                        <Route path="/driver/:id" element={<DriverDetails />} />
                         <Route
                           path="/content-management"
                           element={<ContentManagement />}
@@ -142,9 +139,9 @@ function App() {
                   }
                 />
               </Routes>
-            </AuthProvider>
-          </Router>
-        </AppProvider>
+            </Router>
+          </AppProvider>
+        </AuthProvider>
       </ThemeProvider>
 
       <Toaster position="bottom-right" reverseOrder={false} />

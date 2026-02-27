@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem("authToken");
         const userData = localStorage.getItem("userData");
-
+        console.log(token, userData, "token and userData in initAuth");
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
 
@@ -321,6 +321,7 @@ export const AuthProvider = ({ children }) => {
     updatePassword,
     updatePasswordAuth,
     register,
+    setUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
