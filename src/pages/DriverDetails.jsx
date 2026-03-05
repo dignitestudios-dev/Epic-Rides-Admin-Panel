@@ -4,16 +4,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
 import { formatDateTime, handleError } from "../utils/helpers";
 import useGetDocuments from "../hooks/Docs/useGetDocuments";
+import toast from "react-hot-toast";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
 const statusBadge = (status) => {
   const map = {
-    approved: "bg-emerald-100 capitalize text-emerald-700 border border-emerald-200",
+    approved:
+      "bg-emerald-100 capitalize text-emerald-700 border border-emerald-200",
     rejected: "bg-red-100 capitalize text-red-700 border border-red-200",
     pending: "bg-amber-100 capitalize text-amber-700 border border-amber-200",
   };
-  return map[status] ?? "bg-gray-100 capitalize text-gray-600 border border-gray-200";
+  return (
+    map[status] ?? "bg-gray-100 capitalize text-gray-600 border border-gray-200"
+  );
 };
 
 const statusDot = (status) => {
@@ -70,7 +74,7 @@ const Detail = ({ label, value }) => (
 
 // ── DocCard ───────────────────────────────────────────────────────────────────
 
-const DocCard = ({ doc }) => {
+const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(doc.status);
   const [showReject, setShowReject] = useState(false);
@@ -88,6 +92,7 @@ const DocCard = ({ doc }) => {
           status,
           rejectReason: status === "rejected" ? reason : null,
         },
+        [],
       ]);
       setLocalStatus(status);
       setShowReject(false);
@@ -100,7 +105,7 @@ const DocCard = ({ doc }) => {
   };
 
   const isAlreadyProcessed = localStatus !== "pending";
-
+  const showBulkRejectBox = bulkRejectMode && localStatus === "pending";
   return (
     <div
       className={`border rounded-2xl p-4 bg-white shadow-sm flex flex-col gap-3 transition-all duration-200 ${isAlreadyProcessed ? "opacity-75" : "hover:shadow-md"}`}
@@ -171,59 +176,80 @@ const DocCard = ({ doc }) => {
         </p>
       )}
 
+      {showBulkRejectBox && (
+        <div className="space-y-2 pt-2">
+          <textarea
+            placeholder="Enter reject reason..."
+            className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none"
+            rows={3}
+            value={bulkReasons[doc._id] || ""}
+            onChange={(e) =>
+              setBulkReasons((prev) => ({
+                ...prev,
+                [doc._id]: e.target.value,
+              }))
+            }
+          />
+        </div>
+      )}
+
       {/* Actions */}
       {!isAlreadyProcessed ? (
         <>
-          <div className="flex gap-2">
-            <button
-              disabled={loading}
-              onClick={() => respond("approved")}
-              className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-            >
-              {loading ? (
-                <LoadingSpinner size="sm" color="emerald" />
-              ) : (
-                "✓ Approve"
-              )}
-            </button>
-            <button
-              disabled={loading}
-              onClick={() => setShowReject((v) => !v)}
-              className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              ✕ Reject
-            </button>
-          </div>
-
-          {showReject && (
-            <div className="space-y-2 pt-1">
-              <textarea
-                placeholder="Enter reject reason (required)…"
-                className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
-                rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
+          {!bulkRejectMode && (
+            <>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowReject(false)}
-                  className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={loading || !reason.trim()}
-                  onClick={() => respond("rejected")}
-                  className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                  disabled={loading}
+                  onClick={() => respond("approved")}
+                  className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
                 >
                   {loading ? (
-                    <LoadingSpinner size="sm" color="white" />
+                    <LoadingSpinner size="sm" color="emerald" />
                   ) : (
-                    "Confirm Reject"
+                    "✓ Approve"
                   )}
                 </button>
+                <button
+                  disabled={loading}
+                  onClick={() => setShowReject((v) => !v)}
+                  className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ✕ Reject
+                </button>
               </div>
-            </div>
+
+              {showReject && (
+                <div className="space-y-2 pt-1">
+                  <textarea
+                    placeholder="Enter reject reason (required)…"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
+                    rows={3}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowReject(false)}
+                      className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={loading || !reason.trim()}
+                      onClick={() => respond("rejected")}
+                      className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                    >
+                      {loading ? (
+                        <LoadingSpinner size="sm" color="white" />
+                      ) : (
+                        "Confirm Reject"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </>
       ) : (
@@ -278,10 +304,7 @@ const VehicleCard = ({ vehicle }) => {
         <div className="flex items-center gap-2">
           <span className="text-xl">🚗</span>
           <div>
-            <h3 className="font-bold text-gray-800 text-sm">
-              {vehicle.make} 
-            </h3>
-          
+            <h3 className="font-bold text-gray-800 text-sm">{vehicle.make}</h3>
           </div>
         </div>
         <span
@@ -305,9 +328,15 @@ const VehicleCard = ({ vehicle }) => {
             <Detail label="Color" value={vehicle.color} />
             <Detail label="VIN" value={vehicle.vehicleIdentificationNumber} />
             <Detail label="Registration #" value={vehicle.registrationNumber} />
-            <Detail label="License Plate #" value={vehicle.licensePlateNumber} />
+            <Detail
+              label="License Plate #"
+              value={vehicle.licensePlateNumber}
+            />
             <Detail label="Region" value={vehicle.regionOfRegistration} />
-            <Detail label="Year of Manufacture" value={vehicle.yearOfManufacture} />
+            <Detail
+              label="Year of Manufacture"
+              value={vehicle.yearOfManufacture}
+            />
             <Detail label="Vehicle Type" value={vehicle.vehicleType} />
             <Detail
               label="Expiry Date"
@@ -429,7 +458,7 @@ const StatBadge = ({ count, label, color }) => {
       className={`flex  items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${colorMap[color]}`}
     >
       <span className="font-bold">{count}</span>
-      <span className="capitalize" >{label}</span>
+      <span className="capitalize">{label}</span>
     </div>
   );
 };
@@ -439,6 +468,8 @@ const StatBadge = ({ count, label, color }) => {
 const DriverDetails = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
+  const [bulkRejectMode, setBulkRejectMode] = useState(false);
+  const [bulkReasons, setBulkReasons] = useState({});
   const { driver, documents, vehicles } = state;
   const { bulkDone, bulkLoading, bulkRespond } = useGetDocuments(
     "",
@@ -451,10 +482,19 @@ const DriverDetails = () => {
   const approvedDocs = documents.filter((d) => d.status === "approved");
   const rejectedDocs = documents.filter((d) => d.status === "rejected");
 
-  const handleBulkReject = () => {
-    const reason = prompt("Enter reject reason for all pending documents:");
-    if (!reason?.trim()) return;
-    bulkRespond(pendingDocs, "rejected", reason);
+  const handleBulkSubmit = async () => {
+    const docsToReject = pendingDocs.map((doc) => ({
+      _id: doc._id,
+      status: "rejected",
+      rejectReason: bulkReasons[doc._id] || "",
+    }));
+
+    if (docsToReject.some((d) => !d.rejectReason.trim())) {
+      toast.error("All reject reasons are required.");
+      return;
+    }
+
+    bulkRespond(docsToReject, [], "rejected");
   };
 
   return (
@@ -473,7 +513,6 @@ const DriverDetails = () => {
           </span>
         </div>
       </div>
-
       <div className="max-w-7xl mx-auto p-4 space-y-5">
         {/* Driver Info Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -516,7 +555,6 @@ const DriverDetails = () => {
               </div>
             </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 rounded-xl p-4 mt-5">
             <InfoRow label="Email" value={driver.email} icon="✉️" />
             <InfoRow label="Phone" value={driver.phone} icon="📞" />
@@ -527,7 +565,6 @@ const DriverDetails = () => {
             />
           </div>
         </div>
-
         {/* Documents Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
@@ -540,33 +577,44 @@ const DriverDetails = () => {
                   ` · ${pendingDocs.length} awaiting review`}
               </p>
             </div>
-
             {pendingDocs.length > 0 && (
               <div className="flex gap-2 shrink-0">
-                <button
-                  disabled={bulkLoading}
-                  onClick={() => bulkRespond(pendingDocs, "approved")}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                >
-                  {bulkLoading ? (
-                    <LoadingSpinner size="sm" color="emerald" />
-                  ) : (
-                    "✓"
-                  )}{" "}
-                  Approve All
-                </button>
-                <button
-                  disabled={bulkLoading}
-                  onClick={handleBulkReject}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
-                >
-                  {bulkLoading ? (
-                    <LoadingSpinner size="sm" color="white" />
-                  ) : (
-                    "✕"
-                  )}{" "}
-                  Reject All
-                </button>
+                {!bulkRejectMode ? (
+                  <>
+                    <button
+                      disabled={bulkLoading}
+                      onClick={() => bulkRespond(pendingDocs, "approved")}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700"
+                    >
+                      ✓ Approve All
+                    </button>
+
+                    <button
+                      disabled={bulkLoading}
+                      onClick={() => setBulkRejectMode(true)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-600"
+                    >
+                      ✕ Reject All
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setBulkRejectMode(false)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600"
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      disabled={bulkLoading}
+                      onClick={handleBulkSubmit}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white"
+                    >
+                      Submit
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -588,7 +636,13 @@ const DriverDetails = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {documents.map((doc) => (
-                <DocCard key={doc._id} doc={doc} />
+                <DocCard
+                  key={doc._id}
+                  doc={doc}
+                  bulkRejectMode={bulkRejectMode}
+                  bulkReasons={bulkReasons}
+                  setBulkReasons={setBulkReasons}
+                />
               ))}
             </div>
           )}

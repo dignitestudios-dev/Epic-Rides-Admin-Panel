@@ -43,18 +43,23 @@ const useGetDocuments = (search, status, page, limit) => {
     setBulkLoading(true);
 
     try {
-      const formattedDocs = documents.map((doc) => ({
+      // ✅ ensure arrays
+      const safeDocs = Array.isArray(documents) ? documents : [];
+      const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
+        console.log(safeDocs,"safe-docs")
+      const formattedDocs = safeDocs.map((doc) => ({
         id: doc._id,
         status,
-        rejectReason: status === "rejected" ? reason : null,
+        rejectReason: status === "rejected" ? doc.rejectReason || reason : null,
       }));
 
-      const formattedVehicles = vehicles.map((vehicle) => ({
+      const formattedVehicles = safeVehicles.map((vehicle) => ({
         id: vehicle._id,
         status,
-        rejectReason: status === "rejected" ? reason : null,
+        rejectReason:
+          status === "rejected" ? vehicle.rejectReason || reason : null,
       }));
-
+       console.log(formattedDocs,"formatedDocs")
       await api.updateDocs(formattedDocs, formattedVehicles);
 
       setBulkDone(status);

@@ -6,7 +6,7 @@ import useGetDocuments from "../hooks/Docs/useGetDocuments";
 
 const statuses = ["all", "approved", "pending", "rejected"];
 
-const UserManagment = () => {
+const DriverRequests = () => {
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -17,7 +17,6 @@ const UserManagment = () => {
     10,
   );
 
-  // ✅ Group by driver
   // ✅ Group by driver and calculate aggregated status
   const groupedDrivers = Object.values(
     docs.reduce((acc, doc) => {
@@ -174,4 +173,4 @@ const UserManagment = () => {
   );
 };
 
-export default UserManagment;
+export default DriverRequests;

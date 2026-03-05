@@ -7,7 +7,6 @@ import {
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppProvider } from "./contexts/AppContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Layout from "./components/layout/Layout";
 
 // Auth pages
@@ -29,7 +28,7 @@ import Reports from "./pages/Reports";
 import SendEmail from "./pages/SendEmail";
 import SupportTickets from "./pages/SupportTickets";
 import Transactions from "./pages/Transactions";
-import UserManagement from "./pages/UserManagement";
+import UserManagement from "./pages/DriverRequests";
 import ChatSupport from "./pages/ChatSupport";
 
 import "./App.css";
@@ -41,6 +40,7 @@ import ReportDetail from "./pages/ReportDetail";
 import Emergencies from "./pages/Emergencie";
 import UserDetailPage from "./pages/UserDetailPage";
 import DriverDetails from "./pages/DriverDetails";
+import DriverRequests from "./pages/DriverRequests";
 
 function App() {
   return (
@@ -51,16 +51,21 @@ function App() {
             <Router>
               <Routes>
                 {/* Auth Routes */}
+
                 <Route path="/auth/login" element={<Login />} />
+
                 <Route
                   path="/auth/forgot-password"
                   element={<ForgotPassword />}
                 />
+
                 <Route path="/auth/verify-otp" element={<VerifyOTP />} />
+
                 <Route
                   path="/auth/reset-password"
                   element={<ResetPassword />}
                 />
+
                 <Route path="/d/docs" element={<Documentation />} />
 
                 {/* Protected Routes */}
@@ -72,7 +77,7 @@ function App() {
                       <Routes>
                         <Route
                           path="/"
-                          element={<Navigate to={"/auth/login"} />}
+                          element={<Navigate to={"/dashboard"} />}
                         />
 
                         <Route path="/dashboard" element={<Dashboard />} />
@@ -82,10 +87,11 @@ function App() {
                             <Route path="categories" element={<Categories />} />
                           </Route> */}
 
+                        <Route path="/user-management" element={<Users />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route
-                          path="/user-management"
-                          element={<UserManagement />}
+                          path="/driver-requests"
+                          element={<DriverRequests />}
                         />
                         <Route path="/driver/:id" element={<DriverDetails />} />
                         <Route
@@ -113,7 +119,6 @@ function App() {
                           path="/user-detail/:id"
                           element={<UserDetailPage />}
                         />
-
                         <Route path="/settings">
                           <Route
                             path=""

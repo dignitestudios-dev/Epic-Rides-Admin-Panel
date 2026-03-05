@@ -34,15 +34,12 @@ export const AuthProvider = ({ children }) => {
       try {
         const token = localStorage.getItem("authToken");
         const userData = localStorage.getItem("userData");
-        console.log(token, userData, "token and userData in initAuth");
+
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
-
           setUser(parsedUser);
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
-        // Clear corrupted auth data
         localStorage.removeItem("authToken");
         localStorage.removeItem("userData");
       } finally {
@@ -52,7 +49,6 @@ export const AuthProvider = ({ children }) => {
 
     initAuth();
   }, []);
-
   // Login function
   const login = async (email, password) => {
     if (isLockedOut()) {
