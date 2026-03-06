@@ -41,6 +41,8 @@ import Emergencies from "./pages/Emergencie";
 import UserDetailPage from "./pages/UserDetailPage";
 import DriverDetails from "./pages/DriverDetails";
 import DriverRequests from "./pages/DriverRequests";
+import TermCondition from "./pages/TermCondtion";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 function App() {
   return (
@@ -50,8 +52,10 @@ function App() {
           <AppProvider>
             <Router>
               <Routes>
-                {/* Auth Routes */}
+                <Route path="/terms-conditions" element={<TermCondition />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
+                {/* Auth Routes */}
                 <Route path="/auth/login" element={<Login />} />
 
                 <Route

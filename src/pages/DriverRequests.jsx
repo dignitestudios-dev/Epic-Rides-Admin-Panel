@@ -1,63 +1,88 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Table from "../components/ui/Table";
 import Button from "../components/ui/Button";
 import useGetDocuments from "../hooks/Docs/useGetDocuments";
+import { formatDate } from "../utils/helpers";
 
 const statuses = ["all", "approved", "pending", "rejected"];
 
 const DriverRequests = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState("all");
 
-  const { docs, vehicles, loading, stats } = useGetDocuments(
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const { docs, vehicles, loading } = useGetDocuments(
     "",
     statusFilter === "all" ? "" : statusFilter,
     1,
     10,
   );
 
-  // ✅ Group by driver and calculate aggregated status
-  const groupedDrivers = Object.values(
-    docs.reduce((acc, doc) => {
-      const driverId = doc.driver._id;
+  // 🔥 Process Data (Group + Status + Search + Sort)
+  const driversData = useMemo(() => {
+    if (!docs) return [];
 
-      if (!acc[driverId]) {
-        acc[driverId] = {
-          driver: doc.driver,
-          documents: [],
-          vehicles: vehicles.filter(
-            (vehicle) => vehicle.driver._id === driverId,
-          ),
-        };
-      }
+    const grouped = Object.values(
+      docs.reduce((acc, doc) => {
+        const driverId = doc.driver._id;
 
-      acc[driverId].documents.push(doc);
-      return acc;
-    }, {}),
-  );
+        if (!acc[driverId]) {
+          acc[driverId] = {
+            driver: doc.driver,
+            documents: [],
+            vehicles: vehicles.filter(
+              (vehicle) => vehicle.driver._id === driverId,
+            ),
+          };
+        }
 
-  // 🔥 Compute aggregated status per driver
-  groupedDrivers.forEach((driver) => {
-    const allDocs = driver.documents;
-    const allVehicles = driver.vehicles;
+        acc[driverId].documents.push(doc);
 
-    // Check for any rejected
-    const hasRejected =
-      allDocs.some((doc) => doc.status === "rejected") ||
-      allVehicles.some((vehicle) => vehicle.status === "rejected");
+        return acc;
+      }, {}),
+    );
 
-    // Check if all approved
-    const allApproved =
-      allDocs.every((doc) => doc.status === "approved") &&
-      allVehicles.every((vehicle) => vehicle.status === "approved");
+    // Aggregate Status
+    grouped.forEach((driver) => {
+      const hasRejected =
+        driver.documents.some((d) => d.status === "rejected") ||
+        driver.vehicles.some((v) => v.status === "rejected");
 
-    driver.status = hasRejected
-      ? "rejected"
-      : allApproved
-        ? "approved"
-        : "pending";
-  });
+      const allApproved =
+        driver.documents.every((d) => d.status === "approved") &&
+        driver.vehicles.every((v) => v.status === "approved");
+
+      driver.status = hasRejected
+        ? "rejected"
+        : allApproved
+          ? "approved"
+          : "pending";
+    });
+
+    // 🔎 Search
+    let filtered = grouped.filter((driver) => {
+      const keyword = search.toLowerCase();
+
+      return (
+        driver.driver.name.toLowerCase().includes(keyword) ||
+        driver.driver.email.toLowerCase().includes(keyword) ||
+        driver.driver.phone?.toLowerCase().includes(keyword)
+      );
+    });
+
+    // 🔃 Sort
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.documents[0]?.createdAt);
+      const dateB = new Date(b.documents[0]?.createdAt);
+
+      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
+    });
+
+    return filtered;
+  }, [docs, vehicles, search, sortOrder]);
 
   const columns = [
     {
@@ -103,6 +128,11 @@ const DriverRequests = () => {
       ),
     },
     {
+      key: "createdAt",
+      label: "Created",
+      render: (_, row) => formatDate(row?.documents[0]?.createdAt),
+    },
+    {
       key: "action",
       label: "Action",
       render: (_, row) => (
@@ -124,51 +154,46 @@ const DriverRequests = () => {
       <h2 className="text-xl font-semibold mb-6">
         Driver Document Verification
       </h2>
-
-      {/* 🔥 Status Filter Tabs */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        {statuses.map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition-all duration-200
+      {/* Status Tabs */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-wrap gap-3 mb-6">
+          {statuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-2 rounded-full text-sm font-medium capitalize
               ${
                 statusFilter === status
-                  ? "bg-primary-600 text-white shadow-md"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-              }
-            `}
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 text-gray-600"
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        {/* 🔍 Search + Sort */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <input
+            type="text"
+            placeholder="Search name / email / phone"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border px-3 py-2 focus:outline-none rounded-md w-64"
+          />
+
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className="border px-3 py-2 w-40 focus:outline-none rounded-md"
           >
-            {status}
-          </button>
-        ))}
+            <option value="desc">Latest First</option>
+            <option value="asc">Oldest First</option>
+          </select>
+        </div>
       </div>
 
-      {/* 📊 Optional Stats Section */}
-      {/* {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow border">
-            <p className="text-sm text-gray-500">Total Docs</p>
-            <p className="text-xl font-semibold">{stats.totalDocs}</p>
-          </div>
-
-          <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg shadow border">
-            <p className="text-sm text-gray-500">Active Docs</p>
-            <p className="text-xl font-semibold text-green-600">
-              {stats.totalActiveDocs}
-            </p>
-          </div>
-
-          <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg shadow border">
-            <p className="text-sm text-gray-500">Inactive Docs</p>
-            <p className="text-xl font-semibold text-red-600">
-              {stats.totalInactiveDocs}
-            </p>
-          </div>
-        </div>
-      )} */}
-
-      <Table data={groupedDrivers} columns={columns} loading={loading} />
+      <Table data={driversData} columns={columns} loading={loading} />
     </div>
   );
 };
