@@ -3,11 +3,11 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const DEV_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/";
+// const DEV_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/";
 
 const API = axios.create({
-  baseURL: DEV_BASE_URL,
+  baseURL: STAGING_BASE_URL,
   timeout: API_CONFIG.timeout, // Set a timeout (optional)
   headers: API_CONFIG.headers,
 });
