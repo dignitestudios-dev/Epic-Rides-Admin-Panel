@@ -65,6 +65,25 @@ const Sidebar = () => {
                     {item.label}
                   </span>
                 )}
+                {item?.id === "driver-management" && (
+                  <div className="ml-auto flex items-center gap-1">
+                    {/* Pending badge */}
+                    <span
+                      title="Pending / Under Review"
+                      className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
+                    >
+                      8
+                    </span>
+
+                    {/* Resubmitted badge */}
+                    <span
+                      title="Resubmitted"
+                      className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
+                    >
+                      4
+                    </span>
+                  </div>
+                )}
               </div>
               {/* Chevron only if not collapsed */}
               {!sidebarCollapsed && (
@@ -127,6 +146,25 @@ const Sidebar = () => {
               <span className="transition-opacity duration-200 truncate">
                 {item.label}
               </span>
+            )}
+            {item?.id === "driver-management" && (
+              <div className="ml-auto flex items-center gap-1">
+                {/* Pending badge */}
+                <span
+                  title="Pending / Under Review"
+                  className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
+                >
+                  8
+                </span>
+
+                {/* Resubmitted badge */}
+                <span
+                  title="Resubmitted"
+                  className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
+                >
+                  4
+                </span>
+              </div>
             )}
           </Link>
         )}

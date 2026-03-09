@@ -101,7 +101,7 @@ export const MENU_ITEMS = [
     ],
   },
   {
-    id: "user-management",
+    id: "driver-management",
     label: "Driver Requests ",
     icon: "User",
     path: "/driver-requests",

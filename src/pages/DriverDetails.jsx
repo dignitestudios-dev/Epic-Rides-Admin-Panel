@@ -817,16 +817,17 @@ const VehicleCard = ({ vehicle }) => {
     if (loading) return;
     setLoading(true);
     try {
-      await api.updateDocs(
-        [],
-        [
-          {
-            id: vehicle._id,
-            status,
-            rejectReason: status === "rejected" ? reason : null,
+      await api.updateDocs([
+        {
+          id: vehicle._id,
+          status,
+          rejectReason: status === "rejected" ? reason : null,
+          metadata: {
+            vehicleIdentificationNumber: vehicle?.vehicleIdentificationNumber,
+            registrationNumber: vehicle?.registrationNumber,
           },
-        ],
-      );
+        },
+      ]);
       setLocalStatus(status);
       setShowReject(false);
     } catch (err) {

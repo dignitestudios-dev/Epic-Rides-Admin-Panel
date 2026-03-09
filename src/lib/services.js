@@ -213,11 +213,7 @@ const updateDocs = (documents = [], vehicles = []) =>
         id: d.id,
         status: d.status,
         rejectReason: d.rejectReason || null,
-      })),
-      vehicle: vehicles.map((v) => ({
-        id: v.id,
-        status: v.status,
-        rejectReason: v.rejectReason || null,
+       ...(d.metadata && { metadata: d.metadata })
       })),
     }),
   );

@@ -43,6 +43,7 @@ import DriverDetails from "./pages/DriverDetails";
 import DriverRequests from "./pages/DriverRequests";
 import TermCondition from "./pages/TermCondtion";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import VehicleCategoryManagement from "./pages/VehicleCategory";
 
 function App() {
   return (
@@ -92,6 +93,7 @@ function App() {
                           </Route> */}
 
                         <Route path="/user-management" element={<Users />} />
+                        <Route path="/vehicle-category" element={<VehicleCategoryManagement />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route
                           path="/driver-requests"
