@@ -68,20 +68,20 @@ const Sidebar = () => {
                 {item?.id === "driver-management" && (
                   <div className="ml-auto flex items-center gap-1">
                     {/* Pending badge */}
-                    <span
+                    {/* <span
                       title="Pending / Under Review"
                       className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
                     >
                       8
-                    </span>
+                    </span> */}
 
                     {/* Resubmitted badge */}
-                    <span
+                    {/* <span
                       title="Resubmitted"
                       className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
                     >
                       4
-                    </span>
+                    </span> */}
                   </div>
                 )}
               </div>
@@ -150,20 +150,20 @@ const Sidebar = () => {
             {item?.id === "driver-management" && (
               <div className="ml-auto flex items-center gap-1">
                 {/* Pending badge */}
-                <span
+                {/* <span
                   title="Pending / Under Review"
                   className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
                 >
                   8
-                </span>
+                </span> */}
 
                 {/* Resubmitted badge */}
-                <span
+                {/* <span
                   title="Resubmitted"
                   className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
                 >
                   4
-                </span>
+                </span> */}
               </div>
             )}
           </Link>
