@@ -1148,7 +1148,7 @@ const useGetAllUsers = (filters, search, limit) => {
     },
     {
       id: 77,
-      name: "Sarah Khan",
+      name: "Daniel",
       email: "kcosta@buchanan.biz",
       role: "admin",
       status: "active",

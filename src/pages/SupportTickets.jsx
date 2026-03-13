@@ -17,7 +17,7 @@ const SupportTickets = () => {
       reportedAgainst: {
         id: 501,
         type: "driver",
-        name: "Driver Ali Khan",
+        name: "Driver Zack",
       },
       datetime: "2024-01-20T10:30:00Z",
       rideReference: "RIDE-88421",
@@ -44,7 +44,7 @@ const SupportTickets = () => {
       reportedAgainst: {
         id: 301,
         type: "rider",
-        name: "Umair Khan",
+        name: "Ausitin",
       },
       datetime: "2024-01-21T14:10:00Z",
       rideReference: null,
