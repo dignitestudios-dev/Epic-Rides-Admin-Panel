@@ -118,7 +118,7 @@ function App() {
                           element={<Notifications />}
                         />
                         <Route
-                          path="/emergency-management"
+                          path="/history"
                           element={<Emergencies />}
                         />
                         <Route

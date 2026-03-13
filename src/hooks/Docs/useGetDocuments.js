@@ -46,7 +46,6 @@ const useGetDocuments = (search, status, page, limit) => {
       // ✅ ensure arrays
       const safeDocs = Array.isArray(documents) ? documents : [];
       const safeVehicles = Array.isArray(vehicles) ? vehicles : [];
-        console.log(safeDocs,"safe-docs")
       const formattedDocs = safeDocs.map((doc) => ({
         id: doc._id,
         status,
@@ -59,8 +58,7 @@ const useGetDocuments = (search, status, page, limit) => {
         rejectReason:
           status === "rejected" ? vehicle.rejectReason || reason : null,
       }));
-       console.log(formattedDocs,"formatedDocs")
-      await api.updateDocs(formattedDocs, formattedVehicles);
+      await api.updateDocs(formattedDocs);
 
       setBulkDone(status);
       getAllDocuments();

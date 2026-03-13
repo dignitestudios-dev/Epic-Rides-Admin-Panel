@@ -108,6 +108,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "vehicle-category",
+    label: "Vehicle Category",
+    icon: "Car",
+    path: "/vehicle-category",
+    children: [],
+  },
+  {
     id: "content-management",
     label: "Content Management",
     icon: "FileText",
@@ -136,10 +143,10 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
-    id: "emergencay",
-    label: "Emergency Management",
+    id: "history",
+    label: "History",
     icon: "ShieldAlert",
-    path: "/emergency-management",
+    path: "/history",
     children: [],
   },
   // {
@@ -336,8 +343,6 @@ export const FEATURE_FLAGS = {
   enableBulkActions: true,
   enableAdvancedFilters: true,
 };
-
-
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 export const RIDERS = [

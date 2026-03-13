@@ -141,13 +141,8 @@ export default function VehicleCategoryManagement() {
 
       {/* Header */}
       <div className="mb-8">
-        <p className="font-mono-c text-xs tracking-widest uppercase mb-1 text-green-500">
-          Admin Panel · Vehicle
-        </p>
-        <h1 className="font-display text-3xl font-bold text-green-900">
-          Category Management
-        </h1>
-        <p className="text-sm mt-1 text-green-600">
+        <h1 className=" text-3xl font-bold ">Category Management</h1>
+        <p className="text-sm mt-1 ">
           Define vehicle types and map them to ride tiers
         </p>
       </div>
@@ -157,10 +152,10 @@ export default function VehicleCategoryManagement() {
         <div className="bg-white border border-green-200 rounded-2xl overflow-hidden shadow-sm">
           <div className="flex items-center justify-between px-5 py-4 border-b border-green-100 bg-green-50">
             <div>
-              <h2 className="font-display text-base font-bold text-green-900">
+              <h2 className="font-display text-base font-bold ">
                 Vehicle Categories
               </h2>
-              <p className="text-xs mt-0.5 font-mono-c text-green-500">
+              <p className="text-xs mt-0.5 font-mono-c ">
                 {categories.length} types configured
               </p>
             </div>
@@ -222,7 +217,7 @@ export default function VehicleCategoryManagement() {
             <h2 className="font-display text-base font-bold text-green-900">
               Ride Type Mapping
             </h2>
-            <p className="text-xs mt-0.5 text-green-500">
+            <p className="text-xs mt-0.5 ">
               Assign categories to ride tiers — affects live rider options
             </p>
           </div>
@@ -282,20 +277,20 @@ export default function VehicleCategoryManagement() {
       {/* Modal */}
       {modal && (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-green-950/30 backdrop-blur-sm"
+          className="fixed inset-0 z-40 flex items-center justify-center p-4 backdrop-blur-sm"
           onClick={(e) => e.target === e.currentTarget && setModal(null)}
         >
-          <div className="slide-up bg-white border border-green-200 rounded-2xl w-full max-w-md shadow-2xl">
+          <div className="slide-up bg-white  rounded-2xl w-full max-w-md shadow-2xl">
             {/* Add / Edit */}
             {(modal.type === "add" || modal.type === "edit") && (
               <div className="p-6">
-                <h3 className="font-display text-lg font-bold mb-5 text-green-900">
+                <h3 className="text-lg font-bold mb-5">
                   {modal.type === "add"
                     ? "Add Vehicle Category"
                     : "Edit Category"}
                 </h3>
                 <div className="mb-4">
-                  <label className="font-mono-c text-xs uppercase tracking-widest mb-2 block text-green-500">
+                  <label className="text-xs uppercase tracking-widest mb-2 block ">
                     Icon
                   </label>
                   <div className="flex gap-2 flex-wrap">
@@ -305,8 +300,8 @@ export default function VehicleCategoryManagement() {
                         onClick={() => setFormIcon(ic)}
                         className={`text-xl p-2 rounded-lg border-2 transition-colors ${
                           formIcon === ic
-                            ? "border-green-500 bg-green-50"
-                            : "border-green-100 hover:border-green-300"
+                            ? "border-green-300 bg-green-50"
+                            : "border-green-100 hover:border-green-200"
                         }`}
                       >
                         {ic}
@@ -315,11 +310,11 @@ export default function VehicleCategoryManagement() {
                   </div>
                 </div>
                 <div className="mb-6">
-                  <label className="font-mono-c text-xs uppercase tracking-widest mb-2 block text-green-500">
+                  <label className="text-xs uppercase tracking-widest mb-2 block">
                     Name
                   </label>
                   <input
-                    className="w-full bg-green-50 border-2 border-green-200 focus:border-green-500 rounded-xl px-4 py-2.5 text-sm text-green-900 outline-none transition-colors font-mono-c placeholder-green-300"
+                    className="w-full bg-green-50 border-2 focus:border-green-300 rounded-xl px-4 py-2.5 text-sm  outline-none transition-colors font-mono-c"
                     placeholder="e.g. Sedan, SUV..."
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}

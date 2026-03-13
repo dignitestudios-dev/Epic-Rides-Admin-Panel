@@ -557,8 +557,7 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
           id: doc._id,
           status,
           rejectReason: status === "rejected" ? reason : null,
-        },
-        [],
+        }
       ]);
       setLocalStatus(status);
       setShowReject(false);
