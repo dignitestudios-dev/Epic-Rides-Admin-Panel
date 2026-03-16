@@ -58,19 +58,23 @@ const useGetDocuments = (search, status, page, limit) => {
         rejectReason:
           status === "rejected" ? vehicle.rejectReason || reason : null,
       }));
+
       await api.updateDocs(formattedDocs);
 
       setBulkDone(status);
       getAllDocuments();
-      navigate("/user-management");
+      navigate("/driver-requests");
     } catch (err) {
       handleError(err);
     } finally {
       setBulkLoading(false);
     }
   };
+
   useEffect(() => {
+
     getAllDocuments();
+
   }, [page, limit, search, status]);
 
   return {

@@ -1125,7 +1125,7 @@ const DriverDetails = () => {
                   <>
                     <button
                       disabled={bulkLoading}
-                      onClick={() => bulkRespond(pendingDocs, "approved")}
+                      onClick={() => bulkRespond(pendingDocs,[],"approved")}
                       className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700"
                     >
                       ✓ Approve All
