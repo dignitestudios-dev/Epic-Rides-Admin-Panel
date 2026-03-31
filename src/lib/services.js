@@ -213,11 +213,74 @@ const updateDocs = (documents = [], vehicles = []) =>
         id: d.id,
         status: d.status,
         rejectReason: d.rejectReason || null,
-       ...(d.metadata && { metadata: d.metadata })
+        ...(d.metadata && { metadata: d.metadata }),
       })),
     }),
   );
+
+// Vehicle Types API
+const getAllVehicleTypes = (
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  search = "",
+  rideType = "",
+) =>
+  apiHandler(() => {
+    let url = `/vehicle-types?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    if (rideType) url += `&rideType=${rideType}`;
+    return API.get(url);
+  });
+
+const createVehicleType = (payload) =>
+  apiHandler(() => API.post("/vehicle-types", payload));
+
+const updateVehicleType = (id, payload) =>
+  apiHandler(() => API.put(`/vehicle-types/${id}`, payload));
+
+const deleteVehicleType = (id) =>
+  apiHandler(() => API.delete(`/vehicle-types/${id}`));
+
+// User Management API
+const getUsers = (type, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "", startDate = "", endDate = "") =>
+  apiHandler(() => {
+    let url = `/users?type=${type}&page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return API.get(url);
+  });
+
+const getUserDetail = (id, type) => apiHandler(() => API.get(`/users/${id}?type=${type}`));
+
+const updateUserStatus = (id, type, status) =>
+  apiHandler(() => API.patch(`/users/${id}/status`, { type, status }));
+
+const getSubscriptionRevenue = (page = 1, limit = 10, search = "", startDate = "", endDate = "", status = "") =>
+  apiHandler(() => {
+    let url = `/subscription-revenue?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    if (status) url += `&subscriptionStatus=${status}`;
+    return API.get(url);
+  });
+
+const getWithdrawalRevenue = (page = 1, limit = 10, search = "", startDate = "", endDate = "") =>
+  apiHandler(() => {
+    let url = `/withdrawals?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return API.get(url);
+  });
+
 export const api = {
+  getUsers,
+  getUserDetail,
+  updateUserStatus,
+  getSubscriptionRevenue,
+  getWithdrawalRevenue,
   updateDocs,
   login,
   forgotPassword,
@@ -243,4 +306,8 @@ export const api = {
   getOrderById,
   updateOrder,
   getAllDocs,
+  getAllVehicleTypes,
+  createVehicleType,
+  updateVehicleType,
+  deleteVehicleType,
 };

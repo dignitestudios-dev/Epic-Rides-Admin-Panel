@@ -44,6 +44,10 @@ import DriverRequests from "./pages/DriverRequests";
 import TermCondition from "./pages/TermCondtion";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import VehicleCategoryManagement from "./pages/VehicleCategory";
+import RiderDetail from "./pages/RiderDetail";
+import DriverDetail from "./pages/DriverDetail";
+
+import Revenue from "./pages/Revenue";
 
 function App() {
   return (
@@ -93,6 +97,8 @@ function App() {
                           </Route> */}
 
                         <Route path="/user-management" element={<Users />} />
+                        <Route path="/user-management/rider/:id" element={<RiderDetail />} />
+                        <Route path="/user-management/driver/:id" element={<DriverDetail />} />
                         <Route path="/vehicle-category" element={<VehicleCategoryManagement />} />
                         <Route path="/orders" element={<Orders />} />
                         <Route
@@ -109,6 +115,7 @@ function App() {
                           path="/reports-management"
                           element={<SupportTickets />}
                         />
+                        <Route path="/revenue" element={<Revenue />} />
                         <Route
                           path="/reports-detail/:id"
                           element={<ReportDetail />}

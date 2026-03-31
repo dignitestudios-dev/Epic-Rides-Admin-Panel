@@ -162,3 +162,34 @@ export const handleSuccess = (message, customMessage) => {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+// Export to CSV utility
+export const downloadCSV = (data, filename) => {
+  if (!data || data.length === 0) return;
+
+  const headers = Object.keys(data[0]).join(",");
+  const csvContent = [
+    headers,
+    ...data.map((row) =>
+      Object.values(row)
+        .map((value) => {
+          if (value === null || value === undefined) return '""';
+          const strValue = String(value);
+          return `"${strValue.replace(/"/g, '""')}"`;
+        })
+        .join(","),
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute(
+    "download",
+    `${filename}_${new Date().toISOString().split("T")[0]}.csv`,
+  );
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};

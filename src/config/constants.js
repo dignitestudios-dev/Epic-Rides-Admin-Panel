@@ -143,6 +143,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "revenue",
+    label: "Revenue",
+    icon: "BadgeDollarSign",
+    path: "/revenue",
+    children: [],
+  },
+  {
     id: "history",
     label: "History",
     icon: "ShieldAlert",

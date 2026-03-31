@@ -2,7 +2,7 @@ import React from "react";
 import Button from "./Button";
 import Input from "./Input";
 import Select from "./Select";
-import { Filter as FilterIcon, X as XIcon } from "lucide-react";
+import { Filter as FilterIcon, X as XIcon, Search } from "lucide-react";
 
 /**
  * FilterBar - A highly reusable, professional filter bar for any page.
@@ -21,15 +21,34 @@ import { Filter as FilterIcon, X as XIcon } from "lucide-react";
  * - onClear: function to clear all filters
  * - showClear?: boolean (default: true)
  * - className?: string
+ * - searchable?: boolean
+ * - searchValue?: string
+ * - onSearchChange?: (value) => void
+ * - searchPlaceholder?: string
  */
 const FilterBar = ({
   filters = [],
   onClear,
   showClear = true,
   className = "",
+  searchable = false,
+  searchValue = "",
+  onSearchChange,
+  searchPlaceholder = "Search...",
 }) => {
   return (
     <div className={`flex items-center flex-wrap gap-4 ${className}`}>
+      {searchable && (
+        <div className="flex-1 min-w-[200px] max-w-md">
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
+            leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+            className="bg-white dark:bg-gray-800"
+          />
+        </div>
+      )}
       <div className="flex items-center space-x-2">
         <FilterIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">

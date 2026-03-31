@@ -34,7 +34,7 @@ const DriverRequests = () => {
             driver: doc.driver,
             documents: [],
             vehicles: vehicles.filter(
-              (vehicle) => vehicle.driver._id === driverId,
+              (vehicle) => vehicle.driver?._id === driverId,
             ),
           };
         }
