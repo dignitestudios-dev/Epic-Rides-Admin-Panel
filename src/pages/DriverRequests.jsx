@@ -1,199 +1,231 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Table from "../components/ui/Table";
+import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
-import useGetDocuments from "../hooks/Docs/useGetDocuments";
-import { formatDate } from "../utils/helpers";
+import useGetDrivers from "../hooks/drivers/useGetDrivers";
+import Badge from "../components/ui/Badge";
+import Card from "../components/ui/Card";
+import FilterBar from "../components/ui/FilterBar";
+import { 
+  CheckCircle, 
+  Clock, 
+  FileText, 
+  Download, 
+  Eye, 
+  AlertCircle
+} from "lucide-react";
+import { downloadCSV, formatDate } from "../utils/helpers";
 
-const statuses = ["all", "approved", "pending", "rejected"];
+const statuses = [
+  { value: "pending", label: "Pending" },
+  { value: "changes_requested", label: "Changes Requested" },
+  { value: "resubmitted", label: "Resubmitted" },
+];
 
 const DriverRequests = () => {
   const navigate = useNavigate();
 
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState("desc");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
-  const { docs, vehicles, loading } = useGetDocuments(
-    "",
-    statusFilter === "all" ? "" : statusFilter,
-    1,
-    10,
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const { drivers, loading, totalPages, totalData } = useGetDrivers(
+    page,
+    limit,
+    debouncedSearch,
+    statusFilter?.target?.value
   );
 
-  // 🔥 Process Data (Group + Status + Search + Sort)
-  const driversData = useMemo(() => {
-    if (!docs) return [];
+  const handleExport = () => {
+    if (!drivers || drivers.length === 0) return;
+    
+    const dataToExport = drivers.map(driver => ({
+      ID: driver._id,
+      Name: driver.name,
+      Email: driver.email,
+      Phone: driver.phone || "—",
+      "Registration Date": formatDate(driver.createdAt),
+      Status: driver.status || "Pending",
+      Vehicles: driver.vehicleCount || 0,
+      "Account Status": driver.isDeactivatedByAdmin ? "Deactivated" : "Active"
+    }));
 
-    const grouped = Object.values(
-      docs.reduce((acc, doc) => {
-        const driverId = doc.driver._id;
+    downloadCSV(dataToExport, "driver_requests_export");
+  };
 
-        if (!acc[driverId]) {
-          acc[driverId] = {
-            driver: doc.driver,
-            documents: [],
-            vehicles: vehicles.filter(
-              (vehicle) => vehicle.driver?._id === driverId,
-            ),
-          };
-        }
-
-        acc[driverId].documents.push(doc);
-
-        return acc;
-      }, {}),
-    );
-
-    // Aggregate Status
-    grouped.forEach((driver) => {
-      const hasRejected =
-        driver.documents.some((d) => d.status === "rejected") ||
-        driver.vehicles.some((v) => v.status === "rejected");
-
-      const allApproved =
-        driver.documents.every((d) => d.status === "approved") &&
-        driver.vehicles.every((v) => v.status === "approved");
-
-      driver.status = hasRejected
-        ? "rejected"
-        : allApproved
-          ? "approved"
-          : "pending";
-    });
-
-    // 🔎 Search
-    let filtered = grouped.filter((driver) => {
-      const keyword = search.toLowerCase();
-
-      return (
-        driver.driver.name.toLowerCase().includes(keyword) ||
-        driver.driver.email.toLowerCase().includes(keyword) ||
-        driver.driver.phone?.toLowerCase().includes(keyword)
-      );
-    });
-
-    // 🔃 Sort
-    filtered.sort((a, b) => {
-      const dateA = new Date(a.documents[0]?.createdAt);
-      const dateB = new Date(b.documents[0]?.createdAt);
-
-      return sortOrder === "asc" ? dateA - dateB : dateB - dateA;
-    });
-
-    return filtered;
-  }, [docs, vehicles, search, sortOrder]);
+  const getStatusBadge = (status) => {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return (
+          <Badge variant="warning" className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            Pending
+          </Badge>
+        );
+      case "changes requested":
+      case "changes_requested":
+        return (
+          <Badge variant="danger" className="flex items-center gap-1">
+            <AlertCircle className="w-3 h-3" />
+            Changes Requested
+          </Badge>
+        );
+      case "resubmitted":
+        return (
+          <Badge variant="info" className="flex items-center gap-1">
+            <FileText className="w-3 h-3" />
+            Resubmitted
+          </Badge>
+        );
+      case "approved":
+        return (
+          <Badge variant="success" className="flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" />
+            Approved
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="warning" className="flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {status || "Pending"}
+          </Badge>
+        );
+    }
+  };
 
   const columns = [
     {
       key: "name",
       label: "Driver Name",
-      render: (_, row) => row.driver.name,
+      render: (_, row) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
+            {row.name?.charAt(0).toUpperCase()}
+          </div>
+          <span className="font-bold text-gray-900 dark:text-white capitalize truncate max-w-[200px]">
+            {row.name}
+          </span>
+        </div>
+      ),
     },
     {
       key: "email",
       label: "Email",
-      render: (_, row) => row.driver.email,
+      render: (val) => <span className="text-gray-600 truncate max-w-[220px] block">{val}</span>,
     },
     {
       key: "phone",
-      label: "Phone",
-      render: (_, row) => row.driver.phone,
-    },
-    {
-      key: "docs",
-      label: "Documents",
-      render: (_, row) => row.documents.length,
-    },
-    {
-      key: "vehicles",
-      label: "Vehicles",
-      render: (_, row) => row.vehicles.length,
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (_, row) => (
-        <span
-          className={`px-2 py-1 rounded-full text-sm font-medium capitalize ${
-            row.status === "approved"
-              ? "bg-green-100 text-green-800"
-              : row.status === "rejected"
-                ? "bg-red-100 text-red-800"
-                : "bg-yellow-100 text-yellow-800"
-          }`}
-        >
-          {row.status}
-        </span>
-      ),
+      label: "Phone Number",
+      render: (val) => <span className="text-gray-600">{val || "—"}</span>,
     },
     {
       key: "createdAt",
-      label: "Created",
-      render: (_, row) => formatDate(row?.documents[0]?.createdAt),
+      label: "Registration Date",
+      render: (val) => <span className="text-gray-600">{formatDate(val)}</span>,
+    },
+    {
+      key: "status",
+      label: "Current Status",
+      render: (val) => (
+        <div className="flex items-center gap-3">
+          {getStatusBadge(val || "Pending")}
+        </div>
+      ),
     },
     {
       key: "action",
-      label: "Action",
+      label: "Actions",
       render: (_, row) => (
-        <Button
-          onClick={() =>
-            navigate(`/driver/${row.driver._id}`, {
-              state: row,
-            })
-          }
-        >
-          View Details
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon={<Eye className="w-4 h-4" />}
+            onClick={() => navigate(`/driver/${row._id}`)}
+          >
+            Details
+          </Button>
+        </div>
       ),
     },
   ];
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-6">
-        Driver Document Verification
-      </h2>
-      {/* Status Tabs */}
+    <div className="space-y-6 max-w-[1600px] mx-auto overflow-hidden">
       <div className="flex items-center justify-between">
-        <div className="flex flex-wrap gap-3 mb-6">
-          {statuses.map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-full text-sm font-medium capitalize
-              ${
-                statusFilter === status
-                  ? "bg-primary-600 text-white"
-                  : "bg-gray-100 text-gray-600"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Driver Requests</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Review and manage driver registration requests and document verification.
+          </p>
         </div>
-        {/* 🔍 Search + Sort */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <input
-            type="text"
-            placeholder="Search name / email / phone"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border px-3 py-2 focus:outline-none rounded-md w-64"
-          />
-
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="border px-3 py-2 w-40 focus:outline-none rounded-md"
-          >
-            <option value="desc">Latest First</option>
-            <option value="asc">Oldest First</option>
-          </select>
-        </div>
+        <Button
+          variant="primary"
+          icon={<Download className="w-4 h-4" />}
+          onClick={handleExport}
+        >
+          Export CSV
+        </Button>
       </div>
 
-      <Table data={driversData} columns={columns} loading={loading} />
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <FilterBar
+          searchable
+          searchValue={search}
+          onSearchChange={(val) => {
+            setSearch(val);
+            setPage(1);
+          }}
+          searchPlaceholder="Search by name, email or phone..."
+          filters={[
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              options: statuses,
+              value: statusFilter?.target?.value,
+              onChange: (val) => {
+                setStatusFilter(val);
+                setPage(1);
+              },
+            },
+          ]}
+          onClear={() => {
+            setSearch("");
+            setStatusFilter("");
+            setPage(1);
+          }}
+        />
+      </div>
+
+      <Card className="overflow-hidden">
+        <DataTable 
+          title="Verification Requests"
+          data={drivers} 
+          columns={columns} 
+          loading={loading}
+          totalPages={totalPages}
+          totalData={totalData}
+          currentPage={page}
+          onPageChange={setPage}
+          onPageSizeChange={(s) => {
+            setLimit(s);
+            setPage(1);
+          }}
+          pageSize={limit}
+          addButton={false}
+        />
+      </Card>
     </div>
   );
 };

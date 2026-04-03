@@ -1,78 +1,96 @@
 // pages/DriverDetails.jsx
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
-import { formatDateTime, handleError } from "../utils/helpers";
-import useGetDocuments from "../hooks/Docs/useGetDocuments";
+import { formatDate, handleError } from "../utils/helpers";
 import toast from "react-hot-toast";
+import Badge from "../components/ui/Badge";
+import Card from "../components/ui/Card";
+import Modal from "../components/ui/Modal";
+import Button from "../components/ui/Button";
+import {
+  ArrowLeft,
+  Car,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Clock,
+  ShieldCheck,
+  ShieldAlert,
+  ShieldQuestion,
+  ChevronUp,
+  Loader2,
+  RotateCcw,
+  RotateCw,
+  ZoomIn,
+  ZoomOut,
+  Maximize,
+  X,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  ChevronDown,
+} from "lucide-react";
+import useGetUserDetails from "../hooks/users/useGetUserDetails";
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-const statusBadge = (status) => {
-  const map = {
-    approved:
-      "bg-emerald-100 capitalize text-emerald-700 border border-emerald-200",
-    rejected: "bg-red-100 capitalize text-red-700 border border-red-200",
-    pending: "bg-amber-100 capitalize text-amber-700 border border-amber-200",
-  };
+const statusStyles = {
+  approved: {
+    badge: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    dot: "bg-emerald-500",
+  },
+  rejected: {
+    badge: "bg-red-100 text-red-700 border border-red-200",
+    dot: "bg-red-500",
+  },
+  pending: {
+    badge: "bg-amber-100 text-amber-700 border border-amber-200",
+    dot: "bg-amber-400",
+  },
+  old: {
+    badge: "bg-gray-100 text-gray-500 border border-gray-200",
+    dot: "bg-gray-400",
+  },
+};
+
+const StatusPill = ({ status }) => {
+  const s = statusStyles[status] || statusStyles.old;
   return (
-    map[status] ?? "bg-gray-100 capitalize text-gray-600 border border-gray-200"
+    <span
+      className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 capitalize ${s.badge}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+      {status}
+    </span>
   );
 };
 
-const statusDot = (status) => {
-  const map = {
-    approved: "bg-emerald-500 capitalize",
-    rejected: "bg-red-500 capitalize",
-    pending: "bg-amber-400 capitalize",
-  };
-  return map[status] ?? "bg-gray-400 capitalize";
-};
-
-// ── skeleton loaders ──────────────────────────────────────────────────────────
-
-const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
-);
-
-const DocCardSkeleton = () => (
-  <div className="border border-gray-100 rounded-2xl p-4 bg-white shadow-sm space-y-3">
-    <div className="flex justify-between items-center">
-      <Skeleton className="h-4 w-24" />
-      <Skeleton className="h-5 w-16 rounded-full" />
-    </div>
-    <Skeleton className="h-28 w-full rounded-xl" />
-    <div className="flex gap-2">
-      <Skeleton className="h-8 flex-1 rounded-lg" />
-      <Skeleton className="h-8 flex-1 rounded-lg" />
-    </div>
-  </div>
-);
-
-// ── sub-components ────────────────────────────────────────────────────────────
-
-const InfoRow = ({ label, value, icon }) => (
-  <div className="flex items-center gap-3">
-    {icon && <span className="text-gray-400 text-base">{icon}</span>}
-    <div className="flex flex-col min-w-0">
-      <span className="text-xs text-gray-400 font-medium">{label}</span>
-      <span className="text-sm text-gray-800 font-semibold truncate">
-        {value ?? "—"}
-      </span>
-    </div>
-  </div>
-);
-
 const Detail = ({ label, value }) => (
   <div className="flex justify-between items-center text-xs py-2 border-b border-gray-50 last:border-0">
-    <span className="text-gray-500">{label}</span>
-    <span className="font-medium text-gray-800 text-right max-w-[55%] truncate">
+    <span className="text-gray-400 font-medium">{label}</span>
+    <span className="font-semibold text-gray-800 text-right max-w-[55%] truncate">
       {value || "—"}
     </span>
   </div>
 );
 
-// ── ImageViewer ───────────────────────────────────────────────────────────────
+const LoadingSpinner = ({ color = "gray" }) => {
+  const c = {
+    gray: "border-gray-300 border-t-gray-600",
+    emerald: "border-emerald-300 border-t-emerald-700",
+    white: "border-white/30 border-t-white",
+    red: "border-red-300 border-t-red-600",
+  };
+  return (
+    <span
+      className={`inline-block w-3 h-3 rounded-full animate-spin border-[1.5px] ${c[color]}`}
+    />
+  );
+};
+
+// ── Image Viewer ─────────────────────────────────────────────────────────────
 
 const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
   const [idx, setIdx] = useState(initialIndex);
@@ -87,7 +105,6 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
     setRotation(0);
     setOffset({ x: 0, y: 0 });
   };
-
   const goTo = (i) => {
     setIdx(i);
     reset();
@@ -108,7 +125,6 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
     e.preventDefault();
     setZoom((z) => Math.min(5, Math.max(0.3, z * (e.deltaY < 0 ? 1.1 : 0.9))));
   };
-
   const onMouseDown = (e) => {
     if (zoom <= 1) return;
     setDragging(true);
@@ -129,28 +145,7 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
     <button
       onClick={onClick}
       title={title}
-      style={{
-        width: 32,
-        height: 32,
-        borderRadius: 7,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "transparent",
-        color: "rgba(255,255,255,0.55)",
-        border: "none",
-        cursor: "pointer",
-        transition: "all 0.15s",
-        flexShrink: 0,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "rgba(255,255,255,0.12)";
-        e.currentTarget.style.color = "#fff";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "rgba(255,255,255,0.55)";
-      }}
+      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
     >
       {children}
     </button>
@@ -158,233 +153,69 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        flexDirection: "column",
-        background: "rgba(4,6,14,0.97)",
-      }}
+      className="fixed inset-0 z-[9999] flex flex-col"
+      style={{ background: "rgba(4,6,14,0.97)" }}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
     >
       {/* Toolbar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "10px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          flexShrink: 0,
-          gap: 8,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span
-            style={{
-              fontSize: 11,
-              color: "rgba(255,255,255,0.35)",
-              fontFamily: "monospace",
-              letterSpacing: "0.07em",
-              textTransform: "uppercase",
-            }}
-          >
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[11px] text-white/30 font-mono tracking-widest uppercase">
             {img.label}
           </span>
           {images.length > 1 && (
-            <span
-              style={{
-                fontSize: 11,
-                color: "rgba(255,255,255,0.2)",
-                fontFamily: "monospace",
-              }}
-            >
-              {idx + 1} / {images.length}
+            <span className="text-[11px] text-white/20 font-mono">
+              {idx + 1}/{images.length}
             </span>
           )}
         </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-          {/* Zoom Out */}
+        <div className="flex items-center gap-1">
           <ToolBtn
             title="Zoom Out"
             onClick={() =>
               setZoom((z) => Math.max(0.3, +(z - 0.25).toFixed(2)))
             }
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              <line x1="8" y1="11" x2="14" y2="11" />
-            </svg>
+            <ZoomOut className="w-3.5 h-3.5" />
           </ToolBtn>
-
-          {/* Zoom % */}
           <button
             onClick={reset}
-            title="Reset to 100%"
-            style={{
-              fontSize: 11,
-              fontFamily: "monospace",
-              color: "rgba(255,255,255,0.45)",
-              background: "rgba(255,255,255,0.06)",
-              border: "none",
-              borderRadius: 6,
-              padding: "3px 8px",
-              cursor: "pointer",
-              minWidth: 44,
-              textAlign: "center",
-            }}
+            className="text-[11px] font-mono text-white/40 bg-white/6 border-0 rounded-md px-2 py-0.5 min-w-[42px] text-center hover:text-white/70 transition-colors"
           >
             {Math.round(zoom * 100)}%
           </button>
-
-          {/* Zoom In */}
           <ToolBtn
             title="Zoom In"
             onClick={() => setZoom((z) => Math.min(5, +(z + 0.25).toFixed(2)))}
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              <line x1="11" y1="8" x2="11" y2="14" />
-              <line x1="8" y1="11" x2="14" y2="11" />
-            </svg>
+            <ZoomIn className="w-3.5 h-3.5" />
           </ToolBtn>
-
-          <div
-            style={{
-              width: 1,
-              height: 18,
-              background: "rgba(255,255,255,0.1)",
-              margin: "0 4px",
-            }}
-          />
-
-          {/* Rotate Left */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
           <ToolBtn
             title="Rotate Left 90°"
             onClick={() => setRotation((r) => r - 90)}
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-              <path d="M3 3v5h5" />
-            </svg>
+            <RotateCcw className="w-3.5 h-3.5" />
           </ToolBtn>
-
-          {/* Rotate Right */}
           <ToolBtn
             title="Rotate Right 90°"
             onClick={() => setRotation((r) => r + 90)}
           >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-            </svg>
+            <RotateCw className="w-3.5 h-3.5" />
           </ToolBtn>
-
-          <div
-            style={{
-              width: 1,
-              height: 18,
-              background: "rgba(255,255,255,0.1)",
-              margin: "0 4px",
-            }}
-          />
-
-          {/* Reset */}
-          <ToolBtn title="Reset View" onClick={reset}>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M3 21v-5h5" />
-            </svg>
-          </ToolBtn>
-
-          <div
-            style={{
-              width: 1,
-              height: 18,
-              background: "rgba(255,255,255,0.1)",
-              margin: "0 4px",
-            }}
-          />
-
-          {/* Close */}
+          <div className="w-px h-4 bg-white/10 mx-1" />
           <ToolBtn title="Close (Esc)" onClick={onClose}>
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
+            <X className="w-3.5 h-3.5" />
           </ToolBtn>
         </div>
       </div>
 
-      {/* Image area */}
+      {/* Image Area */}
       <div
+        className="flex-1 flex items-center justify-center overflow-hidden relative"
         style={{
-          flex: 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          overflow: "hidden",
-          position: "relative",
           cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "default",
           userSelect: "none",
         }}
@@ -394,35 +225,11 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
         {images.length > 1 && (
           <button
             onClick={() => goTo((idx - 1 + images.length) % images.length)}
-            style={{
-              position: "absolute",
-              left: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              zIndex: 10,
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-              border: "none",
-              color: "rgba(255,255,255,0.7)",
-              fontSize: 22,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.18)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.08)")
-            }
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/8 text-white/70 text-2xl flex items-center justify-center hover:bg-white/15 transition-colors"
           >
             ‹
           </button>
         )}
-
         <img
           src={img.src}
           alt={img.label}
@@ -441,135 +248,54 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
             pointerEvents: "none",
           }}
         />
-
         {images.length > 1 && (
           <button
             onClick={() => goTo((idx + 1) % images.length)}
-            style={{
-              position: "absolute",
-              right: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              zIndex: 10,
-              width: 38,
-              height: 38,
-              borderRadius: "50%",
-              background: "rgba(255,255,255,0.08)",
-              border: "none",
-              color: "rgba(255,255,255,0.7)",
-              fontSize: 22,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.18)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.background = "rgba(255,255,255,0.08)")
-            }
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/8 text-white/70 text-2xl flex items-center justify-center hover:bg-white/15 transition-colors"
           >
             ›
           </button>
         )}
       </div>
 
-      {/* Thumbnail strip */}
+      {/* Thumbnails */}
       {images.length > 1 && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: 8,
-            padding: "8px 0",
-            flexShrink: 0,
-          }}
-        >
+        <div className="flex justify-center gap-2 py-2 shrink-0">
           {images.map((im, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              style={{
-                padding: 0,
-                border: "none",
-                borderRadius: 7,
-                overflow: "hidden",
-                cursor: "pointer",
-                outline:
-                  i === idx
-                    ? "2px solid rgba(255,255,255,0.5)"
-                    : "2px solid transparent",
-                outlineOffset: 2,
-                opacity: i === idx ? 1 : 0.35,
-                transition: "all 0.15s",
-              }}
+              className={`w-14 h-9 rounded-lg overflow-hidden transition-all ${i === idx ? "ring-2 ring-white/50 opacity-100" : "opacity-35 hover:opacity-60"}`}
             >
               <img
                 src={im.src}
                 alt={im.label}
-                style={{
-                  width: 60,
-                  height: 38,
-                  objectFit: "cover",
-                  display: "block",
-                }}
+                className="w-full h-full object-cover"
               />
             </button>
           ))}
         </div>
       )}
-
-      <div
-        style={{
-          textAlign: "center",
-          paddingBottom: 8,
-          fontSize: 10,
-          color: "rgba(255,255,255,0.15)",
-          letterSpacing: "0.04em",
-        }}
-      >
-        Scroll to zoom · Drag to pan
-        {images.length > 1 ? " · ← → to navigate" : ""} · Esc to close
-      </div>
+      <p className="text-center pb-2 text-[10px] text-white/15 tracking-wide">
+        Scroll to zoom · Drag to pan{images.length > 1 ? " · ← → navigate" : ""}{" "}
+        · Esc to close
+      </p>
     </div>
   );
 };
 
-// ── DocCard ───────────────────────────────────────────────────────────────────
+// ── Doc Card ──────────────────────────────────────────────────────────────────
 
-const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
+const DocCard = ({ doc, onRespond, isOld }) => {
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(doc.status);
-  const [showReject, setShowReject] = useState(false);
+  const [showRejectBox, setShowRejectBox] = useState(false);
   const [reason, setReason] = useState("");
   const [imgError, setImgError] = useState({});
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerIndex, setViewerIndex] = useState(0);
-  const navigate = useNavigate();
+  const [viewerIdx, setViewerIdx] = useState(0);
+  const [collapsed, setCollapsed] = useState(isOld);
 
-  const respond = async (status) => {
-    if (loading) return;
-    setLoading(true);
-    try {
-      await api.updateDocs([
-        {
-          id: doc._id,
-          status,
-          rejectReason: status === "rejected" ? reason : null,
-        }
-      ]);
-      setLocalStatus(status);
-      setShowReject(false);
-      navigate(-1);
-    } catch (err) {
-      handleError(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Build images array for viewer (only available images)
   const docImages = [
     doc.frontImage && !imgError.front
       ? { src: doc.frontImage, label: `${doc.type} — Front` }
@@ -579,188 +305,209 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
       : null,
   ].filter(Boolean);
 
-  const openViewer = (index) => {
-    if (docImages.length === 0) return;
-    setViewerIndex(index);
-    setViewerOpen(true);
+  const respond = async (status) => {
+    if (loading) return;
+    const isRejected = status === "rejected";
+    if (isRejected && !reason.trim()) {
+      toast.error("Rejection reason is required.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = { id: doc._id, status };
+      if (isRejected) payload.rejectReason = reason;
+
+      await api.updateDocs([payload], []);
+      console.log(payload);
+      setLocalStatus(status);
+      setShowRejectBox(false);
+      toast.success(`Document ${status} successfully.`);
+      if (onRespond) onRespond();
+    } catch (err) {
+      toast.error(err.message || "Failed to update document.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isAlreadyProcessed = localStatus !== "pending";
-  const showBulkRejectBox = bulkRejectMode && localStatus === "pending";
+  const docTypeLabel =
+    doc.type
+      ?.replace(/([A-Z])/g, " $1")
+      .replace(/^./, (s) => s.toUpperCase()) || "Document";
+  const isLicense = doc.type === "driverLicense";
 
   return (
     <>
       {viewerOpen && docImages.length > 0 && (
         <ImageViewer
           images={docImages}
-          initialIndex={viewerIndex}
+          initialIndex={viewerIdx}
           onClose={() => setViewerOpen(false)}
         />
       )}
-
       <div
-        className={`border rounded-2xl p-4 bg-white shadow-sm flex flex-col gap-3 transition-all duration-200 ${isAlreadyProcessed ? "opacity-75" : "hover:shadow-md"}`}
+        className={`border rounded-2xl bg-white shadow-sm flex flex-col gap-3 transition-all duration-200 overflow-hidden ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📄</span>
-            <span className="font-semibold capitalize text-sm text-gray-800">
-              {doc.type}
-            </span>
+        {/* Card Header */}
+        <div
+          className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
+          onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
+        >
+          <div className="flex items-center gap-3">
+            <FileText className="w-5 h-5 text-slate-400" />
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[15px] text-gray-700 capitalize">
+                {docTypeLabel}
+              </span>
+              {isOld && (
+                <span className="text-[11px] px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded-full font-medium">
+                  Old
+                </span>
+              )}
+              {localStatus === "pending" && !isOld && (
+                <span className="text-[11px] px-2.5 py-0.5 bg-amber-100 text-amber-600 rounded-full font-medium animate-pulse">
+                  Needs Review
+                </span>
+              )}
+            </div>
           </div>
-          <span
-            className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${statusBadge(localStatus)}`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${statusDot(localStatus)}`}
-            />
-            {localStatus}
-          </span>
+          <div className="flex items-center gap-3">
+            <StatusPill status={localStatus} />
+            {isOld &&
+              (collapsed ? (
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              ) : (
+                <ChevronUp className="w-4 h-4 text-slate-400" />
+              ))}
+          </div>
         </div>
 
-        {/* Images */}
-        <div className="space-y-2">
-          {doc.frontImage && (
-            <div
-              className="relative group cursor-pointer"
-              onClick={() => openViewer(0)}
-            >
-              {!imgError.front ? (
-                <img
-                  src={doc.frontImage}
-                  alt="Document front"
-                  className="w-full h-28 object-cover rounded-xl bg-gray-100"
-                  onError={() => setImgError((p) => ({ ...p, front: true }))}
-                />
-              ) : (
-                <div className="w-full h-28 rounded-xl bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                  Image unavailable
-                </div>
-              )}
-              {/* Hover overlay */}
-              {!imgError.front && (
-                <div className="absolute inset-0 rounded-xl bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white text-xs font-semibold flex items-center gap-1.5">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    View
+        {/* Collapsible Body */}
+        {!collapsed && (
+          <div className="px-4 pb-4 space-y-3">
+            {/* License Verification info removed */}
+
+            {/* Images */}
+            <div className="space-y-2">
+              {doc.frontImage && (
+                <div
+                  className="relative group cursor-pointer rounded-xl overflow-hidden"
+                  onClick={() => {
+                    setViewerIdx(0);
+                    setViewerOpen(true);
+                  }}
+                >
+                  {!imgError.front ? (
+                    <img
+                      src={doc.frontImage}
+                      alt="Front"
+                      className="w-full h-32 object-cover bg-gray-100"
+                      onError={() =>
+                        setImgError((p) => ({ ...p, front: true }))
+                      }
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                      Image unavailable
+                    </div>
+                  )}
+                  {!imgError.front && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                      <Maximize className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded">
+                    Front
                   </span>
                 </div>
               )}
-              <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded-md">
-                Front
-              </span>
-            </div>
-          )}
-          {doc.backImage && (
-            <div
-              className="relative group cursor-pointer"
-              onClick={() =>
-                openViewer(doc.frontImage && !imgError.front ? 1 : 0)
-              }
-            >
-              {!imgError.back ? (
-                <img
-                  src={doc.backImage}
-                  alt="Document back"
-                  className="w-full h-28 object-cover rounded-xl bg-gray-100"
-                  onError={() => setImgError((p) => ({ ...p, back: true }))}
-                />
-              ) : (
-                <div className="w-full h-28 rounded-xl bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                  Image unavailable
-                </div>
-              )}
-              {!imgError.back && (
-                <div className="absolute inset-0 rounded-xl bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
-                  <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-white text-xs font-semibold flex items-center gap-1.5">
-                    <svg
-                      width="15"
-                      height="15"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    View
+              {doc.backImage && (
+                <div
+                  className="relative group cursor-pointer rounded-xl overflow-hidden"
+                  onClick={() => {
+                    setViewerIdx(doc.frontImage && !imgError.front ? 1 : 0);
+                    setViewerOpen(true);
+                  }}
+                >
+                  {!imgError.back ? (
+                    <img
+                      src={doc.backImage}
+                      alt="Back"
+                      className="w-full h-32 object-cover bg-gray-100"
+                      onError={() => setImgError((p) => ({ ...p, back: true }))}
+                    />
+                  ) : (
+                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
+                      Image unavailable
+                    </div>
+                  )}
+                  {!imgError.back && (
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
+                      <Maximize className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  )}
+                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded">
+                    Back
                   </span>
                 </div>
               )}
-              <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded-md">
-                Back
-              </span>
             </div>
-          )}
-        </div>
 
-        {doc.metadata?.expiryDate && (
-          <p className="text-xs text-gray-400 flex items-center gap-1">
-            <span>📅</span> Expires: {formatDateTime(doc.metadata.expiryDate)}
-          </p>
-        )}
+            {/* Metadata */}
+            {doc.metadata && (
+              <div className="bg-gray-50 rounded-xl p-3 space-y-1">
+                {doc.metadata.licenseNumber && (
+                  <Detail
+                    label="License #"
+                    value={doc.metadata.licenseNumber}
+                  />
+                )}
+                {doc.metadata.expiryDate && (
+                  <Detail
+                    label="Expiry Date"
+                    value={formatDate(doc.metadata.expiryDate)}
+                  />
+                )}
+              </div>
+            )}
+            {doc.rejectReason && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100">
+                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-red-600">{doc.rejectReason}</p>
+              </div>
+            )}
+            <p className="text-[11px] text-gray-400">
+              Submitted: {formatDate(doc.createdAt)}
+            </p>
 
-        {showBulkRejectBox && (
-          <div className="space-y-2 pt-2">
-            <textarea
-              placeholder="Enter reject reason..."
-              className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none"
-              rows={3}
-              value={bulkReasons[doc._id] || ""}
-              onChange={(e) =>
-                setBulkReasons((prev) => ({
-                  ...prev,
-                  [doc._id]: e.target.value,
-                }))
-              }
-            />
-          </div>
-        )}
-
-        {/* Actions */}
-        {!isAlreadyProcessed ? (
-          <>
-            {!bulkRejectMode && (
-              <>
-                <div className="flex gap-2">
-                  <button
-                    disabled={loading}
-                    onClick={() => respond("approved")}
-                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-                  >
-                    {loading ? (
-                      <LoadingSpinner size="sm" color="emerald" />
-                    ) : (
-                      "✓ Approve"
-                    )}
-                  </button>
-                  <button
-                    disabled={loading}
-                    onClick={() => setShowReject((v) => !v)}
-                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    ✕ Reject
-                  </button>
-                </div>
-
-                {showReject && (
-                  <div className="space-y-2 pt-1">
+            {/* Actions */}
+            {!isLicense && localStatus === "pending" && !isOld && (
+              <div className="space-y-2 pt-1 border-t border-gray-50">
+                {!showRejectBox ? (
+                  <div className="flex gap-2">
+                    <button
+                      disabled={loading}
+                      onClick={() => respond("approved")}
+                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      {loading ? (
+                        <LoadingSpinner color="emerald" />
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3.5 h-3.5" /> Approve
+                        </>
+                      )}
+                    </button>
+                    <button
+                      disabled={loading}
+                      onClick={() => setShowRejectBox(true)}
+                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Reject
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
                     <textarea
                       placeholder="Enter reject reason (required)…"
                       className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
@@ -770,7 +517,7 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
                     />
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setShowReject(false)}
+                        onClick={() => setShowRejectBox(false)}
                         className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition"
                       >
                         Cancel
@@ -778,10 +525,10 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
                       <button
                         disabled={loading || !reason.trim()}
                         onClick={() => respond("rejected")}
-                        className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+                        className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-1"
                       >
                         {loading ? (
-                          <LoadingSpinner size="sm" color="white" />
+                          <LoadingSpinner color="white" />
                         ) : (
                           "Confirm Reject"
                         )}
@@ -789,14 +536,16 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
-          </>
-        ) : (
-          <div
-            className={`text-center text-xs py-1.5 rounded-lg font-medium ${localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}
-          >
-            {localStatus === "approved" ? "✓ Approved" : "✕ Rejected"}
+
+            {localStatus !== "pending" && localStatus !== "old" && !isOld && (
+              <div
+                className={`text-center text-xs py-1.5 rounded-lg font-medium ${localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}
+              >
+                {localStatus === "approved" ? "✓ Approved" : "✕ Rejected"}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -804,407 +553,545 @@ const DocCard = ({ doc, bulkRejectMode, bulkReasons, setBulkReasons }) => {
   );
 };
 
-// ── VehicleCard ───────────────────────────────────────────────────────────────
+// ── Vehicle Card ──────────────────────────────────────────────────────────────
 
-const VehicleCard = ({ vehicle }) => {
+const VehicleCard = ({ vehicle, onRespond }) => {
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(vehicle.status);
   const [showReject, setShowReject] = useState(false);
   const [reason, setReason] = useState("");
 
+  const isOld = vehicle.status === "old";
+  const [collapsed, setCollapsed] = useState(isOld);
+
   const respond = async (status) => {
     if (loading) return;
+    const isRejected = status === "rejected";
+    if (isRejected && !reason.trim()) {
+      toast.error("Rejection reason is required.");
+      return;
+    }
     setLoading(true);
     try {
-      await api.updateDocs([
-        {
-          id: vehicle._id,
-          status,
-          rejectReason: status === "rejected" ? reason : null,
-          metadata: {
-            vehicleIdentificationNumber: vehicle?.vehicleIdentificationNumber,
-            registrationNumber: vehicle?.registrationNumber,
-          },
-        },
-      ]);
+      const payload = { id: vehicle._id, status };
+      if (isRejected) payload.rejectReason = reason;
+
+      await api.updateDocs([], [payload]);
       setLocalStatus(status);
       setShowReject(false);
+      toast.success(`Vehicle ${status} successfully.`);
+      if (onRespond) onRespond();
     } catch (err) {
-      handleError(err);
+      toast.error(err.message || "Failed to update vehicle.");
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (date) =>
-    date ? new Date(date).toLocaleDateString() : "—";
-
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-5">
-      {/* Vehicle Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🚗</span>
-          <div>
-            <h3 className="font-bold text-gray-800 text-sm">{vehicle.make}</h3>
+    <div
+      className={`border rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-200 ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
+    >
+      <div
+        className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
+        onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+            <Car className="w-5 h-5 text-blue-500" />
           </div>
-        </div>
-        <span
-          className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 ${statusBadge(localStatus)}`}
-        >
-          <span
-            className={`w-1.5 h-1.5 capitalize rounded-full ${statusDot(localStatus)}`}
-          />
-          {localStatus}
-        </span>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0">
-        {/* Vehicle Details */}
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-            Vehicle Info
-          </p>
-          <div className="bg-gray-50 rounded-xl p-3">
-            <Detail label="Model" value={vehicle.model} />
-            <Detail label="Color" value={vehicle.color} />
-            <Detail label="VIN" value={vehicle.vehicleIdentificationNumber} />
-            <Detail label="Registration #" value={vehicle.registrationNumber} />
-            <Detail
-              label="License Plate #"
-              value={vehicle.licensePlateNumber}
-            />
-            <Detail label="Region" value={vehicle.regionOfRegistration} />
-            <Detail
-              label="Year of Manufacture"
-              value={vehicle.yearOfManufacture}
-            />
-            <Detail label="Vehicle Type" value={vehicle.vehicleType} />
-            <Detail
-              label="Expiry Date"
-              value={formatDate(vehicle.expiryDate)}
-            />
-            <Detail label="Created At" value={formatDate(vehicle.createdAt)} />
-          </div>
-        </div>
-
-        {/* Driver Details */}
-        {vehicle.driver && (
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-              Driver Info
-            </p>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <Detail label="Name" value={vehicle.driver.name} />
-              <Detail label="Email" value={vehicle.driver.email} />
-              <Detail label="Phone" value={vehicle.driver.phone} />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      {localStatus === "pending" ? (
-        <div className="space-y-2 pt-1 border-t border-gray-50">
-          <div className="flex gap-2">
-            <button
-              disabled={loading}
-              onClick={() => respond("approved")}
-              className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1"
-            >
-              {loading ? (
-                <LoadingSpinner size="sm" color="emerald" />
-              ) : (
-                "✓ Approve Vehicle"
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[15px] text-gray-700">
+                {vehicle.make} {vehicle.model}
+              </span>
+              {isOld && (
+                <span className="text-[11px] px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded-full font-medium">
+                  Old
+                </span>
               )}
-            </button>
-            <button
-              disabled={loading}
-              onClick={() => setShowReject((v) => !v)}
-              className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50"
-            >
-              ✕ Reject Vehicle
-            </button>
+            </div>
+            <span className="text-[11px] text-gray-400">
+              {vehicle.vehicleType} · {vehicle.color}
+            </span>
           </div>
-          {showReject && (
-            <div className="space-y-2">
-              <textarea
-                placeholder="Enter reject reason…"
-                className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
-                rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowReject(false)}
-                  className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  disabled={loading || !reason.trim()}
-                  onClick={() => respond("rejected")}
-                  className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                >
-                  {loading ? (
-                    <LoadingSpinner size="sm" color="white" />
-                  ) : (
-                    "Confirm Reject"
-                  )}
-                </button>
-              </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <StatusPill status={localStatus} />
+          {isOld &&
+            (collapsed ? (
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            ) : (
+              <ChevronUp className="w-4 h-4 text-slate-400" />
+            ))}
+        </div>
+      </div>
+
+      {!collapsed && (
+        <div className="px-5 pb-5 space-y-4 border-t border-gray-50">
+          <div className="grid grid-cols-2 gap-x-6 bg-gray-50 rounded-xl p-3 mt-3">
+            <Detail label="Year" value={vehicle.yearOfManufacture} />
+            <Detail label="Plate #" value={vehicle.licensePlateNumber} />
+            <Detail label="VIN" value={vehicle.vehicleIdentificationNumber} />
+            <Detail label="Reg #" value={vehicle.registrationNumber} />
+            <Detail label="Region" value={vehicle.regionOfRegistration} />
+            <Detail label="Expiry" value={formatDate(vehicle.expiryDate)} />
+          </div>
+
+          {vehicle.rejectReason && (
+            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100">
+              <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-600">{vehicle.rejectReason}</p>
             </div>
           )}
-        </div>
-      ) : (
-        <div
-          className={`text-center text-xs py-2 rounded-lg font-medium ${localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}
-        >
-          {localStatus === "approved"
-            ? "✓ Vehicle Approved"
-            : "✕ Vehicle Rejected"}
+
+          {localStatus === "pending" && (
+            <div className="space-y-2">
+              {!showReject ? (
+                <div className="flex gap-2">
+                  <button
+                    disabled={loading}
+                    onClick={() => respond("approved")}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                  >
+                    {loading ? (
+                      <LoadingSpinner color="emerald" />
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5" /> Approve Vehicle
+                      </>
+                    )}
+                  </button>
+                  <button
+                    disabled={loading}
+                    onClick={() => setShowReject(true)}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                  >
+                    <XCircle className="w-3.5 h-3.5" /> Reject Vehicle
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <textarea
+                    placeholder="Enter reject reason (required)…"
+                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200"
+                    rows={3}
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowReject(false)}
+                      className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      disabled={loading || !reason.trim()}
+                      onClick={() => respond("rejected")}
+                      className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      {loading ? (
+                        <LoadingSpinner color="white" />
+                      ) : (
+                        "Confirm Reject"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {localStatus !== "pending" && localStatus !== "old" && (
+            <div
+              className={`text-center text-xs py-1.5 rounded-lg font-medium ${localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"}`}
+            >
+              {localStatus === "approved"
+                ? "✓ Vehicle Approved"
+                : "✕ Vehicle Rejected"}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 };
 
-// ── LoadingSpinner ────────────────────────────────────────────────────────────
-
-const LoadingSpinner = ({ size = "md", color = "gray" }) => {
-  const sizeMap = { sm: "w-3 h-3 border-[1.5px]", md: "w-4 h-4 border-2" };
-  const colorMap = {
-    gray: "border-gray-300 border-t-gray-600",
-    emerald: "border-emerald-300 border-t-emerald-700",
-    white: "border-white/30 border-t-white",
-  };
-  return (
-    <span
-      className={`inline-block rounded-full animate-spin ${sizeMap[size]} ${colorMap[color]}`}
-    />
-  );
-};
-
-// ── StatBadge ─────────────────────────────────────────────────────────────────
-
-const StatBadge = ({ count, label, color }) => {
-  const colorMap = {
-    emerald: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    red: "bg-red-50 text-red-600 border-red-200",
-    amber: "bg-amber-50 text-amber-700 border-amber-200",
-    gray: "bg-gray-50 text-gray-600 border-gray-200",
-  };
-  return (
-    <div
-      className={`flex  items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium ${colorMap[color]}`}
-    >
-      <span className="font-bold">{count}</span>
-      <span className="capitalize">{label}</span>
-    </div>
-  );
-};
-
-// ── main page ─────────────────────────────────────────────────────────────────
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 const DriverDetails = () => {
-  const { state } = useLocation();
+  const { id } = useParams();
   const navigate = useNavigate();
+
+  const [driverInfo, setDriverInfo] = useState(null);
+  const [docs, setDocs] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
   const [bulkRejectMode, setBulkRejectMode] = useState(false);
   const [bulkReasons, setBulkReasons] = useState({});
-  const { driver, documents, vehicles } = state;
-  const { bulkDone, bulkLoading, bulkRespond } = useGetDocuments(
-    "",
-    "pending",
-    1,
-    100,
+  const [bulkLoading, setBulkLoading] = useState(false);
+
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectAllReason, setRejectAllReason] = useState("");
+
+  const { details: userDetails, loading: userLoading } = useGetUserDetails(
+    id,
+    "driver",
+  );
+  const pInfo = userDetails?.personalInfo;
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [docsRes, vehiclesRes] = await Promise.all([
+        api.getDriverDocs(id),
+        api.getDriverVehicles(id),
+      ]);
+      const allDocs = docsRes.data || [];
+      const allVehicles = vehiclesRes.data || [];
+      setDocs(allDocs);
+      setVehicles(allVehicles);
+
+      // Get driver info from the first doc's driver field if available, or from drivers API
+      if (allDocs.length > 0 && allDocs[0].driver) {
+        // driver field is just an ID string, fetch via drivers list or use params
+      }
+    } catch (err) {
+      toast.error("Failed to load driver application data.");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Partition docs: show only the latest per type (non-old), everything else is "old"
+  const latestDocsByType = {};
+  [...docs]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .forEach((doc) => {
+      if (!latestDocsByType[doc.type]) latestDocsByType[doc.type] = doc;
+    });
+  const latestDocs = Object.values(latestDocsByType);
+  const oldDocs = docs.filter(
+    (d) => !latestDocs.find((ld) => ld._id === d._id),
   );
 
-  const pendingDocs = documents.filter((d) => d.status === "pending");
-  const approvedDocs = documents.filter((d) => d.status === "approved");
-  const rejectedDocs = documents.filter((d) => d.status === "rejected");
+  const pendingDocs = latestDocs.filter((d) => d.status === "pending");
+  const pendingVehicles = vehicles.filter((v) => v.status === "pending");
+  const activeVehicles = vehicles.filter((v) => v.status !== "old");
 
-  const handleBulkSubmit = async () => {
-    const docsToReject = pendingDocs.map((doc) => ({
-      _id: doc._id,
-      status: "rejected",
-      rejectReason: bulkReasons[doc._id] || "",
-    }));
+  const handleApproveAll = async () => {
+    if (pendingDocs.length === 0 && pendingVehicles.length === 0) return;
+    setBulkLoading(true);
+    try {
+      await api.updateDocs(
+        pendingDocs.map((d) => ({
+          id: d._id,
+          status: "approved",
+          rejectReason: null,
+        })),
+        pendingVehicles.map((v) => ({
+          id: v._id,
+          status: "approved",
+          rejectReason: null,
+        })),
+      );
+      toast.success("All pending items approved.");
+      fetchData();
+    } catch (err) {
+      toast.error(err.message || "Failed to approve all.");
+    } finally {
+      setBulkLoading(false);
+    }
+  };
 
-    if (docsToReject.some((d) => !d.rejectReason.trim())) {
-      toast.error("All reject reasons are required.");
+  const handleRejectAll = async () => {
+    if (!rejectAllReason.trim()) {
+      toast.error("Please enter a rejection reason.");
       return;
     }
-
-    bulkRespond(docsToReject, [], "rejected");
+    setBulkLoading(true);
+    try {
+      await api.updateDocs(
+        pendingDocs.map((d) => ({
+          id: d._id,
+          status: "rejected",
+          rejectReason: rejectAllReason,
+        })),
+        pendingVehicles.map((v) => ({
+          id: v._id,
+          status: "rejected",
+          rejectReason: rejectAllReason,
+        })),
+      );
+      toast.success("All pending items rejected.");
+      setRejectModalOpen(false);
+      setRejectAllReason("");
+      fetchData();
+    } catch (err) {
+      toast.error(err.message || "Failed to reject all.");
+    } finally {
+      setBulkLoading(false);
+    }
   };
+
+  const totalPending = pendingDocs.length + pendingVehicles.length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#39A300]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
       {/* Top Bar */}
-      <div className=" bg-white border-b border-gray-100 px-4 py-3 shadow-sm">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors font-medium"
           >
-            <span className="text-base">←</span> Back to Drivers
+            <ArrowLeft className="w-4 h-4" /> Back to Driver Requests
           </button>
-          <span className="text-xs text-gray-400 hidden sm:block">
-            Driver ID: {driver._id}
-          </span>
-        </div>
-      </div>
-      <div className="max-w-7xl mx-auto p-4 space-y-5">
-        {/* Driver Info Card */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-primary-500/30 dark:bg-primary-900/10 text-primary-700 dark:text-primary-300 flex items-center justify-center text-2xl font-bold uppercase shadow-inner shrink-0">
-              {driver.name?.[0] ?? "?"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-gray-900">{driver.name}</h1>
-              <p className="text-xs text-gray-400 mt-0.5 truncate">
-                ID: {driver._id}
-              </p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <StatBadge
-                  count={documents.length}
-                  label="Total"
-                  color="gray"
-                />
-                {pendingDocs.length > 0 && (
-                  <StatBadge
-                    count={pendingDocs.length}
-                    label="Pending"
-                    color="amber"
-                  />
-                )}
-                {approvedDocs.length > 0 && (
-                  <StatBadge
-                    count={approvedDocs.length}
-                    label="Approved"
-                    color="emerald"
-                  />
-                )}
-                {rejectedDocs.length > 0 && (
-                  <StatBadge
-                    count={rejectedDocs.length}
-                    label="Rejected"
-                    color="red"
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 rounded-xl p-4 mt-5">
-            <InfoRow label="Email" value={driver.email} icon="✉️" />
-            <InfoRow label="Phone" value={driver.phone} icon="📞" />
-            <InfoRow
-              label="Vehicles"
-              value={`${vehicles?.length ?? 0} registered`}
-              icon="🚗"
-            />
-          </div>
-        </div>
-        {/* Documents Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <div>
-              <h2 className="font-bold text-gray-800">Documents</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {documents.length} document{documents.length !== 1 ? "s" : ""}{" "}
-                submitted
-                {pendingDocs.length > 0 &&
-                  ` · ${pendingDocs.length} awaiting review`}
-              </p>
-            </div>
-            {pendingDocs.length > 0 && (
-              <div className="flex gap-2 shrink-0">
-                {!bulkRejectMode ? (
-                  <>
-                    <button
-                      disabled={bulkLoading}
-                      onClick={() => bulkRespond(pendingDocs,[],"approved")}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700"
-                    >
-                      ✓ Approve All
-                    </button>
 
-                    <button
-                      disabled={bulkLoading}
-                      onClick={() => setBulkRejectMode(true)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-600"
-                    >
-                      ✕ Reject All
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setBulkRejectMode(false)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600"
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      disabled={bulkLoading}
-                      onClick={handleBulkSubmit}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white"
-                    >
-                      Submit
-                    </button>
-                  </>
-                )}
-              </div>
+          <div className="flex items-center gap-2">
+            {totalPending > 0 && (
+              <>
+                <button
+                  disabled={bulkLoading}
+                  onClick={handleApproveAll}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {bulkLoading ? (
+                    <LoadingSpinner color="emerald" />
+                  ) : (
+                    <CheckCircle className="w-3.5 h-3.5" />
+                  )}
+                  Approve All ({totalPending})
+                </button>
+                <button
+                  disabled={bulkLoading}
+                  onClick={() => setRejectModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200 transition disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <XCircle className="w-3.5 h-3.5" /> Reject All
+                </button>
+              </>
             )}
           </div>
+        </div>
+      </div>
 
-          {bulkDone && (
-            <div
-              className={`mb-4 px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-2 ${bulkDone === "approved" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-red-50 text-red-600 border border-red-200"}`}
-            >
-              <span>{bulkDone === "approved" ? "✓" : "✕"}</span>
-              All documents have been {bulkDone}.
-            </div>
-          )}
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+        {/* Premium Profile Banner Header */}
+        <div className="bg-white rounded-3xl overflow-hidden shadow-[0px_2px_12px_rgba(0,0,0,0.03)] border border-gray-100">
+          {/* Gradient Top */}
+          <div className="h-36 bg-gradient-to-r from-slate-800 via-indigo-900 to-slate-900 w-full relative overflow-hidden">
+            {/* Decorative blurs */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-3xl rounded-full" />
+            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/20 blur-[80px] rounded-full" />
+          </div>
 
-          {documents.length === 0 ? (
-            <div className="text-center py-12 text-gray-400">
-              <p className="text-3xl mb-2">📂</p>
-              <p className="text-sm">No documents submitted yet</p>
+          <div className="px-6 pb-6 pt-4 relative">
+            {/* Overlapping Avatar */}
+            <div className="absolute -top-16 left-6 w-24 h-24 rounded-2xl border-[4px] border-white shadow-xl bg-gray-50 flex items-center justify-center overflow-hidden z-10 shrink-0">
+              {pInfo?.profilePicture ? (
+                <img
+                  src={pInfo.profilePicture}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-10 h-10 text-gray-300" />
+              )}
             </div>
-          ) : (
+
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 ml-[116px]">
+              <div>
+                <h1 className="text-[26px] font-bold text-gray-900 leading-none mb-2">
+                  {pInfo?.name || "Driver Application"}
+                </h1>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
+                    ID: {id}
+                  </p>
+                  {pInfo?.status && (
+                    <Badge
+                      variant={
+                        pInfo.status.toLowerCase() === "active"
+                          ? "success"
+                          : "danger"
+                      }
+                    >
+                      {pInfo.status}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Data Summary Badges (Documents & Vehicles Pending) */}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <span className="text-[11px] px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 font-semibold border border-slate-200">
+                  {docs.length} Docs Total
+                </span>
+                {pendingDocs.length > 0 && (
+                  <span className="text-[11px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100 flex items-center gap-1.5 shadow-sm">
+                    <Clock className="w-3 h-3" /> {pendingDocs.length} Pending
+                    Docs
+                  </span>
+                )}
+                {pendingVehicles.length > 0 && (
+                  <span className="text-[11px] px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-100 flex items-center gap-1.5 shadow-sm">
+                    <Car className="w-3 h-3" /> {pendingVehicles.length} Pending
+                    Vehicles
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Contact & Info Pills */}
+            <div className="mt-8 flex flex-wrap gap-2.5">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                <Mail className="w-3.5 h-3.5 text-gray-400" />{" "}
+                {pInfo?.email || "—"}
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                <Phone className="w-3.5 h-3.5 text-gray-400" />{" "}
+                {pInfo?.phone || pInfo?.phoneNumber || "—"}
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />{" "}
+                {pInfo?.joinedAt
+                  ? `Joined ${formatDate(pInfo.joinedAt)}`
+                  : "Onboarding"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Documents Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Documents</h2>
+              <p className="text-sm text-gray-500">
+                {latestDocs.length} latest · {oldDocs.length} historical
+                (collapsed)
+              </p>
+            </div>
+          </div>
+
+          {/* Pending / Active Documents */}
+          {latestDocs.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map((doc) => (
+              {latestDocs.map((doc) => (
                 <DocCard
                   key={doc._id}
                   doc={doc}
-                  bulkRejectMode={bulkRejectMode}
-                  bulkReasons={bulkReasons}
-                  setBulkReasons={setBulkReasons}
+                  onRespond={fetchData}
+                  isOld={false}
                 />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2">
+                <FileText className="w-6 h-6 text-gray-300" />
+              </div>
+              <p className="text-sm">No current documents submitted.</p>
+            </div>
+          )}
+
+          {/* Old / Historical Documents */}
+          {oldDocs.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <Clock className="w-4 h-4" /> Historical Submissions (collapsed)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {oldDocs.map((doc) => (
+                  <DocCard
+                    key={doc._id}
+                    doc={doc}
+                    onRespond={fetchData}
+                    isOld={true}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Vehicles */}
-        {vehicles?.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <h2 className="font-bold text-gray-800">Vehicles</h2>
-              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
-                {vehicles.length}
-              </span>
+        {/* Vehicles Section */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Vehicles</h2>
+              <p className="text-sm text-gray-500">
+                {activeVehicles.length} vehicles registered
+              </p>
             </div>
-            {vehicles.map((vehicle) => (
-              <VehicleCard key={vehicle._id} vehicle={vehicle} />
-            ))}
           </div>
-        )}
+
+          {vehicles.length > 0 ? (
+            <div className="space-y-4">
+              {vehicles.map((v) => (
+                <VehicleCard key={v._id} vehicle={v} onRespond={fetchData} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2">
+                <Car className="w-6 h-6 text-gray-300" />
+              </div>
+              <p className="text-sm">No vehicles registered.</p>
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Reject All Modal */}
+      <Modal
+        isOpen={rejectModalOpen}
+        onClose={() => setRejectModalOpen(false)}
+        title="Reject All Pending Items"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">
+            This will reject all <strong>{totalPending}</strong> pending
+            document(s) and vehicle(s). Please provide a mandatory rejection
+            reason.
+          </p>
+          <textarea
+            value={rejectAllReason}
+            onChange={(e) => setRejectAllReason(e.target.value)}
+            className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 outline-none transition-all text-sm"
+            placeholder="e.g., Documents are expired or unreadable. Please resubmit."
+          />
+          <div className="flex justify-end gap-3">
+            <Button variant="ghost" onClick={() => setRejectModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleRejectAll}
+              loading={bulkLoading}
+              disabled={!rejectAllReason.trim()}
+            >
+              Confirm Reject All
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

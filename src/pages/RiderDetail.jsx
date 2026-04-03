@@ -1,6 +1,18 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Mail, Phone, Calendar, Star, MapPin, Hash, Wallet, TrendingUp, XCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+  Star,
+  MapPin,
+  Hash,
+  Wallet,
+  TrendingUp,
+  XCircle,
+} from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -26,72 +38,88 @@ const RiderDetail = () => {
     return (
       <div className="p-6 text-center">
         <h2 className="text-xl font-semibold text-gray-900">Rider not found</h2>
-        <Button variant="ghost" onClick={() => navigate("/user-management")} className="mt-4">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/user-management")}
+          className="mt-4"
+        >
           Back to Users
         </Button>
       </div>
     );
   }
 
-  const { 
-    personalInfo, 
-    rideStats, 
-    rideHistory, 
-    activityLogs, 
-    ratingAndFeedback, 
-    transactionHistory, 
-    walletBalance 
+  const {
+    personalInfo,
+    rideStats,
+    rideHistory,
+    activityLogs,
+    ratingAndFeedback,
+    transactionHistory,
+    walletBalance,
   } = details;
 
   const historyColumns = [
-    { 
-      key: "createdAt", 
-      label: "Date", 
-      render: (val) => formatDate(val) 
+    {
+      key: "createdAt",
+      label: "Date",
+      render: (val) => formatDate(val),
     },
-    { 
-      key: "driver", 
-      label: "Driver", 
-      render: (driver) => driver?.name || "N/A" 
+    {
+      key: "driver",
+      label: "Driver",
+      render: (driver) => driver?.name || "N/A",
     },
-    { 
-      key: "pickupPoint", 
-      label: "Pickup", 
+    {
+      key: "pickupPoint",
+      label: "Pickup",
       render: (point) => (
-        <span className="text-xs max-w-[150px] block truncate" title={point?.placeName}>
+        <span
+          className="text-xs max-w-[150px] block truncate"
+          title={point?.placeName}
+        >
           {point?.placeName || "N/A"}
         </span>
-      )
+      ),
     },
-    { 
-      key: "dropOffPointRequested", 
-      label: "Drop-off", 
+    {
+      key: "dropOffPointRequested",
+      label: "Drop-off",
       render: (point) => (
-        <span className="text-xs max-w-[150px] block truncate" title={point?.placeName}>
+        <span
+          className="text-xs max-w-[150px] block truncate"
+          title={point?.placeName}
+        >
           {point?.placeName || "N/A"}
         </span>
-      )
+      ),
     },
-    { 
-      key: "rideFare", 
-      label: "Fare", 
-      render: (val) => `$${val || 0}` 
+    {
+      key: "rideFare",
+      label: "Fare",
+      render: (val) => `$${val || 0}`,
     },
-    { 
-      key: "rideStatus", 
-      label: "Status", 
+    {
+      key: "rideStatus",
+      label: "Status",
       render: (val) => (
-        <Badge variant={val?.toLowerCase() === "completed" ? "success" : "danger"}>
+        <Badge
+          variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
+        >
           {val}
         </Badge>
-      ) 
+      ),
     },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate("/user-management")}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate("/user-management")}
+        >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
@@ -105,24 +133,34 @@ const RiderDetail = () => {
             <div className="flex flex-col items-center text-center">
               <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
                 {personalInfo?.profilePicture ? (
-                  <img 
-                    src={personalInfo.profilePicture} 
-                    alt={personalInfo.name} 
+                  <img
+                    src={personalInfo.profilePicture}
+                    alt={personalInfo.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => { e.target.src = ""; e.target.style.display = "none"; }} 
+                    onError={(e) => {
+                      e.target.src = "";
+                      e.target.style.display = "none";
+                    }}
                   />
                 ) : (
                   <User className="w-12 h-12 text-blue-600" />
                 )}
               </div>
-              <h2 className="text-xl font-bold text-gray-900">{personalInfo?.name}</h2>
-              <Badge variant={personalInfo.status === "Active" ? "success" : "danger"} className="mt-2">
+              <h2 className="text-xl font-bold text-gray-900">
+                {personalInfo?.name}
+              </h2>
+              <Badge
+                variant={
+                  personalInfo.status === "Active" ? "success" : "danger"
+                }
+                className="mt-2"
+              >
                 {personalInfo.status}
               </Badge>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-gray-100 text-sm font-medium text-gray-700">
-               <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                 <Mail className="w-4 h-4 text-gray-400" />
                 <span>{personalInfo.email}</span>
               </div>
@@ -132,21 +170,33 @@ const RiderDetail = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-400" />
-                <span>Account Created: {formatDate(personalInfo.createdAt)}</span>
+                <span>
+                  Account Created: {formatDate(personalInfo.createdAt)}
+                </span>
               </div>
             </div>
 
             {/* Activity Logs */}
             <div className="space-y-4 pt-6 border-t border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Activity Logs</h3>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                Activity Logs
+              </h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Last Login</span>
-                  <span className="text-gray-900 font-medium">{activityLogs?.lastLogin ? formatDate(activityLogs.lastLogin) : 'Never'}</span>
+                  <span className="text-gray-900 font-medium">
+                    {activityLogs?.lastLogin
+                      ? formatDate(activityLogs.lastLogin)
+                      : "Never"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-gray-600">
                   <span>Last Ride</span>
-                  <span className="text-gray-900 font-medium">{activityLogs?.lastRideTaken ? formatDate(activityLogs.lastRideTaken) : 'No rides yet'}</span>
+                  <span className="text-gray-900 font-medium">
+                    {activityLogs?.lastRideTaken
+                      ? formatDate(activityLogs.lastRideTaken)
+                      : "No rides yet"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -180,7 +230,9 @@ const RiderDetail = () => {
             />
             <StatsCard
               title="Average Rating"
-              value={parseFloat(details?.personalInfo?.averageRating || 0).toFixed(1)}
+              value={parseFloat(
+                details?.personalInfo?.averageRating || 0,
+              ).toFixed(1)}
               icon={<Star />}
               colored
               index={4}
@@ -190,13 +242,17 @@ const RiderDetail = () => {
           {/* Ride History */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Ride History</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Ride History
+              </h3>
               {rideHistory && rideHistory.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table data={rideHistory} columns={historyColumns} />
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No ride history available</p>
+                <p className="text-gray-500 text-center py-4">
+                  No ride history available
+                </p>
               )}
             </div>
           </Card>
@@ -204,28 +260,42 @@ const RiderDetail = () => {
           {/* Transaction History */}
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Transaction History</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Transaction History
+              </h3>
               {transactionHistory && transactionHistory.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <Table 
-                    data={transactionHistory} 
+                  <Table
+                    data={transactionHistory}
                     columns={[
-                      { key: "createdAt", label: "Date", render: (val, row) => formatDate(val || row.date) },
-                      { key: "description", label: "Description" },
-                      { 
-                        key: "amount", 
-                        label: "Amount", 
-                        render: (val, row) => (
-                          <span className={row.type === 'credit' ? 'text-green-600' : 'text-red-600'}>
-                            {row.type === 'credit' ? '+' : '-'}${Math.abs(val)}
-                          </span>
-                        ) 
+                      {
+                        key: "createdAt",
+                        label: "Date",
+                        render: (val, row) => formatDate(val || row.date),
                       },
-                    ]} 
+                      { key: "description", label: "Description" },
+                      {
+                        key: "amount",
+                        label: "Amount",
+                        render: (val, row) => (
+                          <span
+                            className={
+                              row.type === "credit"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }
+                          >
+                            {row.type === "credit" ? "+" : "-"}${Math.abs(val)}
+                          </span>
+                        ),
+                      },
+                    ]}
                   />
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-4">No transactions found</p>
+                <p className="text-gray-500 text-center py-4">
+                  No transactions found
+                </p>
               )}
             </div>
           </Card>

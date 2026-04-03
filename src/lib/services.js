@@ -119,9 +119,11 @@ const getAppConfigs = () => apiHandler(() => API.get("/global/config"));
 const updateAppConfigs = (payload) =>
   apiHandler(() => API.put("/global/config", payload));
 
-// Dashboard Analytics API
-const getDashboardAnalytics = () =>
-  apiHandler(() => API.get("/dashboard/analytics"));
+const getDashboardStats = () =>
+  apiHandler(() => API.get("/dashboard-stats"));
+
+const getRideAnalytics = () =>
+  apiHandler(() => API.get("/ride-analytics"));
 
 // Products API
 const createProduct = (productData) =>
@@ -206,14 +208,22 @@ const getAllDocs = (
       `/docs?status=${status}&page=${page}&limit=${limit}&search=${search}`,
     ),
   );
-const updateDocs = (documents = [], vehicles = []) =>
+const getDriverDocs = (driverId) => apiHandler(() => API.get(`/docs?driverId=${driverId}`));
+const getDriverVehicles = (driverId) => apiHandler(() => API.get(`/vehicles?driverId=${driverId}`));
+
+const updateDocs = (documents = [], vehiclesList = []) =>
   apiHandler(() =>
     API.put(`/docs/respond`, {
       documents: documents.map((d) => ({
-        id: d.id,
+        id: d.id || d._id,
         status: d.status,
-        rejectReason: d.rejectReason || null,
+        ...(d.rejectReason && { rejectReason: d.rejectReason }),
         ...(d.metadata && { metadata: d.metadata }),
+      })),
+      vehicle: vehiclesList.map((v) => ({
+        id: v.id || v._id,
+        status: v.status,
+        ...(v.rejectReason && { rejectReason: v.rejectReason }),
       })),
     }),
   );
@@ -251,6 +261,14 @@ const getUsers = (type, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, sea
     return API.get(url);
   });
 
+const getDrivers = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "", status = "") =>
+  apiHandler(() => {
+    let url = `/drivers?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    if (status) url += `&status=${status}`;
+    return API.get(url);
+  });
+
 const getUserDetail = (id, type) => apiHandler(() => API.get(`/users/${id}?type=${type}`));
 
 const updateUserStatus = (id, type, status) =>
@@ -275,9 +293,35 @@ const getWithdrawalRevenue = (page = 1, limit = 10, search = "", startDate = "",
     return API.get(url);
   });
 
+const getReports = (page = 1, limit = 10, status = "", sort = "desc") =>
+  apiHandler(() => {
+    let url = `/reports?page=${page}&limit=${limit}&sort=${sort}`;
+    if (status) url += `&status=${status}`;
+    return API.get(url);
+  });
+
+const getNotifications = (page = 1, limit = 10, search = "", sort = "desc") =>
+  apiHandler(() => {
+    let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
+    if (search) url += `&search=${search}`;
+    return API.get(url);
+  });
+
+const sendNotification = (payload) =>
+  apiHandler(() => API.post("/notifications", payload));
+
+const resolveReport = (id, adminNotes = "") =>
+  apiHandler(() => API.patch(`/reports/${id}/resolved`, { adminNotes }));
+
+const getReportById = (id) =>
+  apiHandler(() => API.get(`/reports/${id}`));
+
 export const api = {
   getUsers,
+  getDrivers,
   getUserDetail,
+  getDriverDocs,
+  getDriverVehicles,
   updateUserStatus,
   getSubscriptionRevenue,
   getWithdrawalRevenue,
@@ -290,7 +334,8 @@ export const api = {
   logout,
   getAppConfigs,
   updateAppConfigs,
-  getDashboardAnalytics,
+  getDashboardStats,
+  getRideAnalytics,
   getAllProducts,
   getAllCategories,
   createProduct,
@@ -310,4 +355,9 @@ export const api = {
   createVehicleType,
   updateVehicleType,
   deleteVehicleType,
+  getReports,
+  resolveReport,
+  getReportById,
+  getNotifications,
+  sendNotification,
 };

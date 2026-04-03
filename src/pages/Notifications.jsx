@@ -1,13 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Send,
+  Bell,
   Users,
   UserCheck,
-  Bell,
-  Calendar,
-  Eye,
-  Trash2,
+  Download,
   Plus,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  Loader2,
+  CheckCircle,
 } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -17,104 +21,54 @@ import Modal from "../components/ui/Modal";
 import Input from "../components/ui/Input";
 import TextArea from "../components/ui/TextArea";
 import Select from "../components/ui/Select";
+import FilterBar from "../components/ui/FilterBar";
 import { useForm } from "react-hook-form";
-import { formatDateTime } from "../utils/helpers";
+import { formatDateTime, downloadCSV } from "../utils/helpers";
+import { api } from "../lib/services";
+import toast from "react-hot-toast";
 
-const COUNTRIES = [
-  { value: "uae", label: "UAE" },
-  { value: "saudi_arabia", label: "Saudi Arabia" },
-  { value: "usa", label: "United States" },
-  { value: "uk", label: "United Kingdom" },
-];
+// ── Status Badge Helper ───────────────────────────────────────────────────────
 
-const CITIES = {
-  uae: [
-    { value: "dubai", label: "Dubai" },
-    { value: "sharjah", label: "Sharjah" },
-  ],
+const statusVariant = (status) => {
+  switch (status?.toLowerCase()) {
+    case "sent": return "success";
+    case "scheduled": return "info";
+    case "failed": return "danger";
+    default: return "warning";
+  }
 };
 
-const AREAS = {
-  karachi: [
-    { value: "dha", label: "DHA" },
-    { value: "gulshan", label: "Gulshan" },
-  ],
-  lahore: [
-    { value: "gulberg", label: "Gulberg" },
-    { value: "dharampura", label: "Dharampura" },
-  ],
-  dubai: [
-    { value: "marina", label: "Marina" },
-    { value: "deira", label: "Deira" },
-  ],
-  sharjah: [
-    { value: "alqasba", label: "Al Qasba" },
-    { value: "aljada", label: "Aljada" },
-  ],
+const recipientIcon = (type) => {
+  switch (type?.toLowerCase()) {
+    case "driver": return <UserCheck className="w-3 h-3" />;
+    case "rider":
+    case "user": return <Users className="w-3 h-3" />;
+    default: return <Bell className="w-3 h-3" />;
+  }
 };
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: "NOTIF001",
-      title: "Welcome to Premium!",
-      message:
-        "Thank you for upgrading to our premium plan. Enjoy all the new features!",
-      // old "type" becomes audienceType; we add notificationType
-      notificationType: "system_update",
-      audienceType: "all_users",
-      targetAudience: "All Users",
-      recipientCount: 12543,
-      sentCount: 12543,
-      deliveredCount: 12340,
-      openedCount: 8765,
-      status: "sent",
-      createdAt: "2024-01-20T10:30:00Z",
-      sentAt: "2024-01-20T10:35:00Z",
-      createdBy: "Admin User",
-    },
-    {
-      id: "NOTIF002",
-      title: "System Maintenance Notice",
-      message:
-        "We will be performing scheduled maintenance on Sunday from 2-4 AM EST.",
-      notificationType: "system_update",
-      audienceType: "role_based",
-      targetAudience: "Riders",
-      recipientCount: 3456,
-      sentCount: 3456,
+  // Data state
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalData, setTotalData] = useState(0);
 
-      status: "sent",
-      createdAt: "2024-01-19T14:15:00Z",
-      sentAt: "2024-01-19T14:20:00Z",
-      createdBy: "Admin User",
-    },
-    {
-      id: "NOTIF003",
-      title: "New Feature: Dark Mode",
-      message: "We've added dark mode! Toggle it in your settings.",
-      notificationType: "custom",
-      audienceType: "specific_users",
-      targetAudience: "Both",
-      recipientCount: 150,
-      sentCount: 0,
+  // Filters
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("desc"); // asc | desc
 
-      status: "draft",
-      createdAt: "2024-01-20T16:45:00Z",
-      sentAt: null,
-      createdBy: "Admin User",
-    },
-  ]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
+  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedNotification, setSelectedNotification] = useState(null);
-
-  // Preview / confirmation modal state
-  const [previewNotification, setPreviewNotification] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [sending, setSending] = useState(false);
 
   const {
     register,
@@ -124,738 +78,420 @@ const Notifications = () => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      notificationType: "custom", // system_update | safety_alert | custom
-      audienceType: "all_users", // all_users | role_based | geo_based | specific_users
-      roleTarget: "riders",
-      country: "",
-      city: "",
-      area: "",
-      deliveryType: "immediate", // immediate | scheduled
-      scheduledAt: "",
+      audienceType: "both",
       title: "",
       message: "",
-      specificTarget: "",
+      deliveryType: "immediate",
+      scheduledFor: "",
     },
   });
 
-  // watch fields
-  const watchAudienceType = watch("audienceType");
-  const notificationType = watch("notificationType");
-  const watchCountry = watch("country");
-  const watchCity = watch("city");
-  const watchDeliveryType = watch("deliveryType");
   const watchTitle = watch("title") || "";
   const watchMessage = watch("message") || "";
-  const watchArea = watch("area") || "";
-  const watchRoleTarget = watch("roleTarget");
+  const watchAudienceType = watch("audienceType");
+  const watchDeliveryType = watch("deliveryType");
+  const watchScheduledFor = watch("scheduledFor");
 
-  // columns keep same styling and structure
+  // ── Fetch ───────────────────────────────────────────────────────────────────
+
+  const fetchNotifications = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.getNotifications(page, limit, search, sort);
+      const data = res.data || {};
+      setNotifications(data.notifications || []);
+      const pagination = data.pagination || {};
+      setTotalPages(pagination.totalPages || 1);
+      setTotalData(pagination.total || 0);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch notifications.");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit, search, sort]);
+
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+
+  // ── Handlers ────────────────────────────────────────────────────────────────
+
+  const handleExport = () => {
+    if (!notifications.length) return;
+    const rows = notifications.map((n) => ({
+      ID: n.id,
+      Title: n.title,
+      "Message Preview": n.messagePreview,
+      "Recipient Type": n.recipientType,
+      "Date & Time": formatDateTime(n.dateAndTime),
+      Status: n.status,
+    }));
+    downloadCSV(rows, "notifications_export");
+  };
+
+  const handleView = (n) => {
+    setSelectedNotification(n);
+    setShowDetailModal(true);
+  };
+
+  const handlePreview = (formValues) => {
+    setPreviewData(formValues);
+    setShowPreviewModal(true);
+  };
+
+  const handleConfirmSend = async () => {
+    if (!previewData) return;
+    setSending(true);
+    try {
+      const payload = {
+        title: previewData.title,
+        message: previewData.message,
+        recipientType: previewData.audienceType, // already lowercase: both/riders/drivers
+      };
+      // Only include scheduledFor when scheduling is requested
+      if (previewData.deliveryType === "scheduled" && previewData.scheduledFor) {
+        payload.scheduledFor = new Date(previewData.scheduledFor).toISOString();
+      }
+      await api.sendNotification(payload);
+      toast.success("Notification sent successfully!");
+      setShowPreviewModal(false);
+      setShowCreateModal(false);
+      setPreviewData(null);
+      reset();
+      fetchNotifications();
+    } catch (err) {
+      toast.error(err.message || "Failed to send notification.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const toggleSort = () => {
+    setSort((s) => (s === "desc" ? "asc" : "desc"));
+    setPage(1);
+  };
+
+  // ── Table Columns ────────────────────────────────────────────────────────────
+
   const columns = [
-    {
-      key: "id",
-      label: "ID",
-      render: (value) => <span className="font-mono text-sm">{value}</span>,
-    },
     {
       key: "title",
       label: "Title",
-      render: (value, notification) => (
+      render: (val, row) => (
         <div>
-          <p className="font-medium text-gray-900 dark:text-white">{value}</p>
-          <p className="text-sm text-gray-500 truncate max-w-xs">
-            {notification.message}
-          </p>
+          <p className="font-semibold text-gray-900 dark:text-white">{val}</p>
+          <p className="text-xs text-gray-500 truncate max-w-[260px] mt-0.5">{row.messagePreview}</p>
         </div>
       ),
     },
     {
-      key: "targetAudience",
-      label: "Audience",
-      render: (value, notification) => (
-        <div>
-          <p className="font-medium text-gray-900 dark:text-white">{value}</p>
+      key: "recipientType",
+      label: "Recipient Type",
+      render: (val) => (
+        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+          {recipientIcon(val)}
+          {val || "—"}
+        </div>
+      ),
+    },
+    {
+      key: "dateAndTime",
+      label: (
+        <button
+          className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+          onClick={toggleSort}
+        >
+          Date &amp; Time
+          {sort === "desc" ? (
+            <ArrowDown className="w-3.5 h-3.5" />
+          ) : (
+            <ArrowUp className="w-3.5 h-3.5" />
+          )}
+        </button>
+      ),
+      render: (val) => (
+        <div className="text-sm text-gray-600">
+          {val ? formatDateTime(val) : "—"}
         </div>
       ),
     },
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <Badge
-          variant={
-            value === "sent"
-              ? "success"
-              : value === "draft"
-              ? "warning"
-              : value === "scheduled"
-              ? "info"
-              : "default"
-          }
-        >
-          {value}
+      render: (val) => (
+        <Badge variant={statusVariant(val)}>
+          {val || "Unknown"}
         </Badge>
-      ),
-    },
-
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (value, notification) => (
-        <div>
-          <p className="text-sm">{new Date(value).toLocaleDateString()}</p>
-          <p className="text-xs text-gray-500">
-            {notification.sentAt
-              ? `Sent: ${new Date(notification.sentAt).toLocaleDateString()}`
-              : "Not sent"}
-          </p>
-        </div>
       ),
     },
     {
       key: "actions",
       label: "Actions",
-      render: (_, notification) => (
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleView(notification)}
-            icon={<Eye className="w-4 h-4" />}
-            title="View Details"
-          />
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleDelete(notification)}
-            icon={<Trash2 className="w-4 h-4" />}
-            title="Delete"
-          />
-        </div>
+      render: (_, row) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<Eye className="w-4 h-4" />}
+          onClick={() => handleView(row)}
+        >
+          View
+        </Button>
       ),
     },
   ];
 
-  // helpers to estimate recipient counts for sample/hardcoded filters
-  const estimateRecipients = (formValues) => {
-    const { audienceType, roleTarget, country, city, area } = formValues || {};
-    // simple heuristics — keep same numbers you used previously
-    if (audienceType === "all_users") return 12543;
-    if (audienceType === "role_based") {
-      if (roleTarget === "drivers") return 6000;
-      if (roleTarget === "riders") return 7000;
-      return 12543;
-    }
-    if (audienceType === "geo_based") {
-      if (country && city && area) return 1200;
-      if (country && city) return 3000;
-      if (country) return 5000;
-      return 1000;
-    }
-    if (audienceType === "specific_users") return 150;
-    return 0;
-  };
-
-  // Create new notification (saved as draft)
-  const onSubmit = (data) => {
-    // validation of character limits (redundant to react-hook rules, but safe)
-    const title = (data.title || "").slice(0, 60);
-    const message = (data.message || "").slice(0, 200);
-
-    const audienceLabel =
-      data.audienceType === "all_users"
-        ? "All Users"
-        : data.audienceType === "role_based"
-        ? data.roleTarget === "drivers"
-          ? "Drivers"
-          : data.roleTarget === "riders"
-          ? "Riders"
-          : "Role-based"
-        : data.audienceType === "geo_based"
-        ? `${data.country || "-"} / ${data.city || "-"} / ${data.area || "-"}`
-        : data.specificTarget || "Selected Users";
-
-    const newNotification = {
-      id: `NOTIF${String(notifications.length + 1).padStart(3, "0")}`,
-      title,
-      message,
-      notificationType: data.notificationType || "custom",
-      audienceType: data.audienceType,
-      targetAudience: audienceLabel,
-      recipientCount: estimateRecipients(data),
-      sentCount: 0,
-
-      status:
-        data.deliveryType === "scheduled" && data.scheduledAt
-          ? "scheduled"
-          : "draft",
-      createdAt: new Date().toISOString(),
-      sentAt: null,
-      createdBy: "Admin User",
-      deliveryType: data.deliveryType,
-      scheduledAt: data.scheduledAt || null,
-    };
-
-    setNotifications([newNotification, ...notifications]);
-    setShowCreateModal(false);
-    reset(); // clear form
-  };
-
-  const handleCreate = () => {
-    reset();
-    setShowCreateModal(true);
-  };
-
-  const handleView = (notification) => {
-    setSelectedNotification(notification);
-    setShowDetailModal(true);
-  };
-
-  // trigger preview modal from an existing notification (table)
-  const handlePreviewFromTable = (notification) => {
-    setPreviewNotification(notification);
-    setShowPreviewModal(true);
-  };
-
-  // handle preview from form: show built object then confirm
-  const handlePreviewFromForm = (formValues) => {
-    // build temporary preview object
-    const previewObj = {
-      id: `NOTIF_PREVIEW`,
-      title: formValues.title,
-      message: formValues.message,
-      notificationType: formValues.notificationType,
-      audienceType: formValues.audienceType,
-      targetAudience:
-        formValues.audienceType === "all_users"
-          ? "All Users"
-          : formValues.audienceType === "role_based"
-          ? formValues.roleTarget
-          : formValues.audienceType === "geo_based"
-          ? `${formValues.country || "-"} / ${formValues.city || "-"} / ${
-              formValues.area || "-"
-            }`
-          : formValues.specificTarget || "Selected Users",
-      recipientCount: estimateRecipients(formValues),
-      deliveryType: formValues.deliveryType,
-      scheduledAt: formValues.scheduledAt || null,
-      status:
-        formValues.deliveryType === "scheduled" && formValues.scheduledAt
-          ? "scheduled"
-          : "preview",
-      createdAt: new Date().toISOString(),
-      createdBy: "You (preview)",
-    };
-    setPreviewNotification(previewObj);
-    setShowPreviewModal(true);
-  };
-
-  // confirmation: send the previewNotification (if it was existing, update; if preview form, create & send)
-  const handleConfirmSend = (notifyObj) => {
-    // if it's a preview of an existing saved notification (has real id starting NOTIF)
-    if (notifyObj.id && notifyObj.id.startsWith("NOTIF")) {
-      // update that notification to sent (simulate)
-      const updated = notifications.map((n) =>
-        n.id === notifyObj.id
-          ? {
-              ...n,
-              status: "sent",
-              sentAt: new Date().toISOString(),
-              sentCount: n.recipientCount,
-              deliveredCount: Math.floor(n.recipientCount * 0.98),
-              openedCount: Math.floor(n.recipientCount * 0.65),
-            }
-          : n
-      );
-      setNotifications(updated);
-    } else if (notifyObj.id && notifyObj.id === "NOTIF_PREVIEW") {
-      // this is a form preview — create & send immediately
-      const newNotification = {
-        ...notifyObj,
-        id: `NOTIF${String(notifications.length + 1).padStart(3, "0")}`,
-        status: "sent",
-        sentAt: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        sentCount: notifyObj.recipientCount,
-        deliveredCount: Math.floor(notifyObj.recipientCount * 0.98),
-        openedCount: Math.floor(notifyObj.recipientCount * 0.65),
-      };
-      setNotifications([newNotification, ...notifications]);
-    }
-    setShowPreviewModal(false);
-    setPreviewNotification(null);
-    setShowCreateModal(false);
-  };
-
-  const handleSend = (notification) => {
-    if (
-      confirm(
-        `Send notification "${notification.title}" to ${notification.recipientCount} recipients?`
-      )
-    ) {
-      const updatedNotifications = notifications.map((n) =>
-        n.id === notification.id
-          ? {
-              ...n,
-              status: "sent",
-              sentAt: new Date().toISOString(),
-              sentCount: n.recipientCount,
-              deliveredCount: Math.floor(n.recipientCount * 0.98),
-              openedCount: Math.floor(n.recipientCount * 0.65),
-            }
-          : n
-      );
-      setNotifications(updatedNotifications);
-    }
-  };
-
-  const handleDelete = (notification) => {
-    setDeleteTarget(notification);
-    setShowDeleteModal(true);
-  };
-const confirmDelete = () => {
-  if (deleteTarget) {
-    setNotifications(notifications.filter(n => n.id !== deleteTarget.id));
-  }
-  setShowDeleteModal(false);
-  setDeleteTarget(null);
-};
-
-  // stats
-  const totalSent = notifications.filter((n) => n.status === "sent").length;
-  const totalDrafts = notifications.filter((n) => n.status === "draft").length;
-  const totalRecipients = notifications.reduce(
-    (sum, n) => sum + (n.sentCount || 0),
-    0
-  );
-  const totalOpened = notifications.reduce(
-    (sum, n) => sum + (n.openedCount || 0),
-    0
-  );
-  const avgOpenRate =
-    totalRecipients > 0 ? Math.round((totalOpened / totalRecipients) * 100) : 0;
-
-  // dynamic lists derived from watch
-  const citiesForCountry = useMemo(
-    () => CITIES[watchCountry] || [],
-    [watchCountry]
-  );
-  const areasForCity = useMemo(() => AREAS[watchCity] || [], [watchCity]);
+  // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
+    <div className="space-y-6 max-w-[1600px] mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Send and manage push notifications to riders and drivers.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+          >
+            Export CSV
+          </Button>
+          <Button
+            variant="primary"
+            icon={<Plus className="w-4 h-4" />}
+            onClick={() => { reset(); setShowCreateModal(true); }}
+          >
+            Send Notification
+          </Button>
+        </div>
+      </div>
 
-      {/* Notifications Table */}
-      <DataTable
-        title="Push Notifications"
-        data={notifications}
-        columns={columns}
-        onAdd={handleCreate}
-        searchable={false}
-        filterable={false}
-        exportable={false}
-        addButton={true}
-      />
+      {/* Filter Bar */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <FilterBar
+          searchable
+          searchValue={search}
+          onSearchChange={(val) => { setSearch(val); setPage(1); }}
+          searchPlaceholder="Search by title..."
+          onClear={() => { setSearch(""); setPage(1); }}
+        />
+      </div>
 
-      {/* Create Notification Modal */}
+      {/* Table */}
+      <Card className="overflow-hidden">
+        <DataTable
+          title="Notification History"
+          data={notifications}
+          columns={columns}
+          loading={loading}
+          totalPages={totalPages}
+          totalData={totalData}
+          currentPage={page}
+          onPageChange={setPage}
+          onPageSizeChange={(s) => { setLimit(s); setPage(1); }}
+          pageSize={limit}
+          addButton={false}
+        />
+      </Card>
+
+      {/* ── Create / Send Modal ─────────────────────────────────────────────── */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Create Push Notification"
-        size="lg"
+        title="Send Push Notification"
+        size="md"
       >
         <form
-          onSubmit={handleSubmit((data) => {
-            handlePreviewFromForm(data);
-          })}
-          className="space-y-4"
+          onSubmit={handleSubmit(handlePreview)}
+          className="space-y-5"
         >
-          {/* Notification Type */}
+          {/* Recipient Type */}
           <Select
-            value={notificationType}
-            options={[
-              { value: "system_update", label: "System Update" },
-              { value: "safety_alert", label: "Safety / Emergency Alert" },
-              { value: "custom", label: "Custom Message" },
-            ]}
-            {...register("notificationType", {
-              required: "Notification type is required",
-            })}
-            error={errors.notificationType?.message}
-            placeholder="Select Notification Type"
-          />
-
-          {/* Audience */}
-          <Select
-            label="Audience (Target)"
+            label="Recipient Type"
             value={watchAudienceType}
             options={[
-              { value: "all_users", label: "All Users" },
-              { value: "role_based", label: "By Role (Drivers/Riders)" },
-              // { value: "geo_based", label: "By Geography (Country/City/Area)" },
-              // { value: "specific_users", label: "Specific Users" },
+              { value: "both", label: "Both (Riders & Drivers)" },
+              { value: "drivers", label: "Drivers only" },
+              { value: "riders", label: "Riders only" },
             ]}
-            {...register("audienceType", {
-              required: "Target audience is required",
-            })}
+            {...register("audienceType", { required: "Recipient type is required" })}
             error={errors.audienceType?.message}
-            placeholder="Select Target Audience"
+            placeholder="Select recipient type"
           />
 
-          {/* Role target */}
-          {watchAudienceType === "role_based" && (
-            <Select
-              value={watchRoleTarget}
-              label="Select Role"
-              options={[
-                { value: "drivers", label: "Drivers only" },
-                { value: "riders", label: "Riders only" },
-                { value: "both", label: "Both drivers & riders" },
-              ]}
-              {...register("roleTarget")}
-              placeholder="Select Role"
-            />
-          )}
-
-        
-          {/* {watchAudienceType === "geo_based" && (
-            <>
-              <Select
-                value={watchCountry}
-                label="Country"
-                options={[{ value: "", label: "Select Country" }, ...COUNTRIES]}
-                {...register("country")}
-                placeholder="Country"
-              />
-              <Select
-                value={watchCity}
-                label="City"
-                options={[
-                  { value: "", label: "Select City" },
-                  ...citiesForCountry,
-                ]}
-                {...register("city")}
-                placeholder="City"
-              />
-              <Select
-                value={watchArea}
-                label="Area"
-                options={[{ value: "", label: "Select Area" }, ...areasForCity]}
-                {...register("area")}
-                placeholder="Area / Service Area"
-              />
-            </>
-          )}
-
-        
-          {watchAudienceType === "specific_users" && (
-            <Input
-              label="Specific Target Description"
-              {...register("specificTarget")}
-              placeholder="e.g., Beta Testers, VIP Users"
-            />
-          )} */}
-
-        
+          {/* Title */}
           <div>
             <Input
               label="Notification Title"
               {...register("title", {
                 required: "Title is required",
-                maxLength: {
-                  value: 60,
-                  message: "Title must be 60 characters or less",
-                },
+                maxLength: { value: 60, message: "Max 60 characters" },
               })}
               error={errors.title?.message}
-              placeholder="Enter notification title (max 60 chars)"
+              placeholder="e.g., New ride available near you"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {(watchTitle || "").length}/60
-            </p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchTitle.length}/60</p>
           </div>
 
-          {/* Message + counter */}
+          {/* Message */}
           <div>
             <TextArea
               label="Message"
               {...register("message", {
                 required: "Message is required",
-                maxLength: {
-                  value: 200,
-                  message: "Message must be 200 characters or less",
-                },
+                maxLength: { value: 200, message: "Max 200 characters" },
               })}
               rows={4}
-              placeholder="Enter notification message (max 200 chars)"
+              placeholder="Enter the notification message..."
               error={errors.message?.message}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              {(watchMessage || "").length}/200
-            </p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/200</p>
           </div>
 
-          {/* Delivery options */}
+          {/* Delivery Type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Delivery
-            </label>
-            <div className="flex items-center space-x-3">
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="immediate"
-                  {...register("deliveryType")}
-                  defaultChecked
-                />
+            <label className="block text-sm font-medium text-gray-700 mb-2">Delivery</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="immediate" {...register("deliveryType")} />
                 <span className="text-sm">Send Immediately</span>
               </label>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  value="scheduled"
-                  {...register("deliveryType")}
-                />
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" value="scheduled" {...register("deliveryType")} />
                 <span className="text-sm">Schedule</span>
               </label>
             </div>
-
             {watchDeliveryType === "scheduled" && (
-              <div className="mt-2">
+              <div className="mt-3">
                 <Input
-                  label="Schedule date/time"
+                  label="Scheduled Date & Time"
                   type="datetime-local"
-                  {...register("scheduledAt", {
-                    required: "Schedule time is required",
+                  {...register("scheduledFor", {
+                    required: watchDeliveryType === "scheduled"
+                      ? "Schedule date/time is required"
+                      : false,
                   })}
+                  error={errors.scheduledFor?.message}
                 />
-                {errors.scheduledAt && (
-                  <p className="text-xs text-red-500">
-                    {errors.scheduledAt.message}
-                  </p>
-                )}
               </div>
             )}
           </div>
 
-          <p className="text-xs text-gray-500 mt-1">
-            Leave schedule empty to save as draft.
-          </p>
-
-          {/* Buttons */}
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowCreateModal(false)}
-            >
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>
               Cancel
             </Button>
-
-            {/* Preview button: shows preview modal where admin can confirm send */}
-            <Button
-              type="button"
-              onClick={handleSubmit((data) => {
-                // show preview (without creating in list yet)
-                handlePreviewFromForm(data);
-              })}
-            >
-              Preview
-            </Button>
-
-            {/* Create as draft */}
-            <Button
-              type="button"
-              onClick={handleSubmit((data) => {
-                // create as draft directly
-                onSubmit(data);
-              })}
-            >
-              Save Draft
+            <Button type="submit" variant="primary" icon={<Send className="w-4 h-4" />}>
+              Preview &amp; Send
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Preview / Confirmation Modal */}
+      {/* ── Preview / Confirm Modal ─────────────────────────────────────────── */}
       <Modal
         isOpen={showPreviewModal}
-        onClose={() => {
-          setShowPreviewModal(false);
-          setPreviewNotification(null);
-        }}
+        onClose={() => setShowPreviewModal(false)}
         title="Preview Notification"
         size="md"
       >
-        {previewNotification && (
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-50 rounded">
-              <p className="text-xs text-gray-500 uppercase mb-1">
-                {previewNotification.notificationType === "safety_alert"
-                  ? "SAFETY ALERT"
-                  : previewNotification.notificationType === "system_update"
-                  ? "SYSTEM UPDATE"
-                  : "CUSTOM"}
-              </p>
-              <h3 className="text-lg font-semibold">
-                {previewNotification.title}
-              </h3>
-              <p className="text-sm text-gray-700 mt-1">
-                {previewNotification.message}
-              </p>
-              <div className="text-xs text-gray-500 mt-2">
-                <div>Audience: {previewNotification.targetAudience}</div>
-                {/* <div>
-                  Recipients:{" "}
-                  {previewNotification.recipientCount?.toLocaleString() || 0}
-                </div> */}
-                <div>
-                  Delivery:{" "}
-                  {previewNotification.deliveryType ||
-                    previewNotification.status}
-                </div>
-                {previewNotification.scheduledAt && (
-                  <div>
-                    Scheduled at:{" "}
-                    {formatDateTime(previewNotification.scheduledAt)}
+        {previewData && (
+          <div className="space-y-5">
+            {/* Phone mockup preview */}
+            <div className="mx-auto w-full max-w-sm bg-gray-900 rounded-3xl p-4 shadow-2xl">
+              <div className="bg-white rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-white" />
                   </div>
-                )}
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Epic Rides</p>
+                </div>
+                <p className="text-sm font-bold text-gray-900">{previewData.title}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">{previewData.message}</p>
               </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowPreviewModal(false);
-                  setPreviewNotification(null);
-                }}
-              >
-                Cancel
-              </Button>
+            {/* Preview phone summary */}
+            <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-500">Recipients</span>
+                <span className="font-semibold text-gray-800 capitalize">{previewData.audienceType}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500">Delivery</span>
+                <span className="font-semibold text-gray-800">
+                  {previewData.deliveryType === "scheduled" ? "Scheduled" : "Immediate"}
+                </span>
+              </div>
+              {previewData.deliveryType === "scheduled" && previewData.scheduledFor && (
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Scheduled For</span>
+                  <span className="font-semibold text-gray-800">
+                    {formatDateTime(previewData.scheduledFor)}
+                  </span>
+                </div>
+              )}
+            </div>
 
-              <Button onClick={() => handleConfirmSend(previewNotification)}>
-                Confirm & Send
+            <div className="flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setShowPreviewModal(false)}>
+                Back
+              </Button>
+              <Button
+                variant="success"
+                icon={sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                onClick={handleConfirmSend}
+                loading={sending}
+                disabled={sending}
+              >
+                Confirm &amp; Send
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Notification Detail Modal (existing behavior) */}
+      {/* ── Detail Modal ────────────────────────────────────────────────────── */}
       <Modal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
         title="Notification Details"
-        size="lg"
+        size="md"
       >
         {selectedNotification && (
-          <div className="space-y-6">
-            {/* Notification Header */}
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {selectedNotification.title}
-                </h3>
-                <Badge
-                  variant={
-                    selectedNotification.status === "sent"
-                      ? "success"
-                      : selectedNotification.status === "draft"
-                      ? "warning"
-                      : "info"
-                  }
-                >
+          <div className="space-y-5">
+            <div className="bg-gray-50 rounded-xl p-5 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <h3 className="text-base font-bold text-gray-900">{selectedNotification.title}</h3>
+                <Badge variant={statusVariant(selectedNotification.status)}>
                   {selectedNotification.status}
                 </Badge>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-3">
-                {selectedNotification.message}
-              </p>
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span>Target: {selectedNotification.targetAudience}</span>
-                
-                <span>•</span>
-                <span>
-                  Created: {formatDateTime(selectedNotification.createdAt)}
-                </span>
-              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">{selectedNotification.messagePreview}</p>
             </div>
-{console.log(selectedNotification,"selectedNotification")}
-            {/* Stats Grid */}
-          
 
-            {/* Timeline */}
-            <div className="space-y-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white">
-                Timeline
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium">Notification Created</p>
-                    <p className="text-xs text-gray-500">
-                      {formatDateTime(selectedNotification.createdAt)}
-                    </p>
-                  </div>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <p className="text-xs text-gray-400 mb-1 font-medium">Recipient Type</p>
+                <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                  {recipientIcon(selectedNotification.recipientType)}
+                  {selectedNotification.recipientType || "—"}
                 </div>
-                {selectedNotification.sentAt && (
-                  <div className="flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <div>
-                      <p className="text-sm font-medium">Notification Sent</p>
-                      <p className="text-xs text-gray-500">
-                        {formatDateTime(selectedNotification.sentAt)}
-                      </p>
-                    </div>
-                  </div>
-                )}
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-3">
+                <p className="text-xs text-gray-400 mb-1 font-medium">Date &amp; Time</p>
+                <p className="font-semibold text-gray-800">
+                  {selectedNotification.dateAndTime ? formatDateTime(selectedNotification.dateAndTime) : "—"}
+                </p>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex justify-end space-x-3 pt-4 border-t">
-              {selectedNotification.status === "draft" && (
-                <Button
-                  onClick={() => {
-                    handleSend(selectedNotification);
-                    setShowDetailModal(false);
-                  }}
-                  icon={<Send className="w-4 h-4" />}
-                >
-                  Send Now
-                </Button>
-              )}
-            </div>
-          </div>
-        )}
-      </Modal>
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Delete Notification"
-        size="sm"
-      >
-        {deleteTarget && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-700">
-              Are you sure you want to delete the notification
-              <span className="font-semibold"> "{deleteTarget.title}" </span>?
-            </p>
-
-            <div className="flex justify-end space-x-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowDeleteModal(false)}
-              >
-                No
-              </Button>
-
-              <Button variant="danger" onClick={confirmDelete}>
-                Yes, Delete
+            <div className="flex justify-end">
+              <Button variant="ghost" onClick={() => setShowDetailModal(false)}>
+                Close
               </Button>
             </div>
           </div>

@@ -1,293 +1,222 @@
-import { useState } from "react";
-import Card from "../components/ui/Card";
-import Select from "../components/ui/Select";
-import Button from "../components/ui/Button";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { AlertTriangle, CheckCircle, Clock, Users, Eye } from "lucide-react";
+import StatsCard from "../components/common/StatsCard";
 import DataTable from "../components/common/DataTable";
+import Select from "../components/ui/Select";
+import Badge from "../components/ui/Badge";
+import Button from "../components/ui/Button";
+import { api } from "../lib/services";
+import toast from "react-hot-toast";
 
 const Reports = () => {
-  const [activeTab, setActiveTab] = useState("user");
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    total: 0,
+  });
 
-  // Global Filters
-  const [dateFilter, setDateFilter] = useState("30days");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [userTypeFilter, setUserTypeFilter] = useState("all");
-  const [rideTypeFilter, setRideTypeFilter] = useState("all");
+  // Filters
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [pageSize, setPageSize] = useState(10);
 
-  // ----------------------------
-  // Dummy Data (Replace with API)
-  // ----------------------------
-
-  const userReports = [
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john@gmail.com",
-      phone: "123456789",
-      signupDate: "2025-01-12",
-      lastLogin: "2025-02-05",
-      status: "Active",
-      userType: "Rider",
-      city: "New York",
-      state: "NY",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      email: "jane@gmail.com",
-      phone: "987654321",
-      signupDate: "2025-01-02",
-      lastLogin: "2024-12-01",
-      status: "Inactive",
-      userType: "Driver",
-      city: "Los Angeles",
-      state: "CA",
-    },
-  ];
-
-  const driverReports = [
-    { id: 1, name: "Driver A", status: "Licensed", vehicle: "Sedan" },
-    { id: 2, name: "Driver B", status: "Suspended", vehicle: "SUV" },
-    {
-      id: 3,
-      name: "Driver C",
-      status: "Pending Verification",
-      vehicle: "Hatchback",
-    },
-  ];
-
-  const rideReports = [
-    {
-      id: 1,
-      rider: "John Doe",
-      driver: "Driver A",
-      type: "Economic",
-      fare: 15,
-      completed: 1,
-      cancelled: 0,
-      cancelledBy: "",
-      rating: 4.5,
-      date: "2025-02-07",
-    },
-    {
-      id: 2,
-      rider: "Jane Smith",
-      driver: "Driver B",
-      type: "Luxury",
-      fare: 50,
-      completed: 0,
-      cancelled: 1,
-      cancelledBy: "User",
-      rating: null,
-      date: "2025-02-07",
-    },
-  ];
-
-  const revenueReports = [
-    {
-      id: 1,
-      date: "2025-02-06",
-      ridePayments: 500,
-      withdrawalFees: 20,
-      refunds: 30,
-      netEarnings: 490,
-    },
-    {
-      id: 2,
-      date: "2025-02-07",
-      ridePayments: 800,
-      withdrawalFees: 40,
-      refunds: 10,
-      netEarnings: 830,
-    },
-  ];
-
-  // ----------------------------
-  // TABLE COLUMNS
-  // ----------------------------
-
-  const userColumns = [
-    { key: "id", label: "ID" },
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Phone" },
-    { key: "status", label: "Status" },
-    { key: "signupDate", label: "Signup Date" },
-    { key: "lastLogin", label: "Last Login" },
-    { key: "userType", label: "User Type" },
-    { key: "city", label: "City" },
-    { key: "state", label: "State" },
-  ];
-
-  const driverColumns = [
-    { key: "id", label: "ID" },
-    { key: "name", label: "Driver Name" },
-    { key: "status", label: "Status" },
-    { key: "vehicle", label: "Vehicle Type" },
-  ];
-
-  const rideColumns = [
-    { key: "id", label: "Ride ID" },
-    { key: "rider", label: "Rider" },
-    { key: "driver", label: "Driver" },
-    { key: "type", label: "Ride Type" },
-    { key: "fare", label: "Fare ($)" },
-    { key: "completed", label: "Completed" },
-    { key: "cancelled", label: "Cancelled" },
-    { key: "cancelledBy", label: "Cancelled By" },
-    { key: "rating", label: "Rating" },
-    { key: "date", label: "Date" },
-  ];
-
-  const revenueColumns = [
-    { key: "date", label: "Date" },
-    { key: "ridePayments", label: "Ride Payments" },
-    { key: "withdrawalFees", label: "Withdrawal Fees" },
-    { key: "refunds", label: "Refunds/Chargebacks" },
-    { key: "netEarnings", label: "Net Earnings" },
-  ];
-
-  // ----------------------------
-  // FILTERS UI
-  // ----------------------------
-
-  const Filters = () => (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 my-4">
-      <Select
-        value={dateFilter}
-        onChange={(e) => setDateFilter(e.target.value)}
-        options={[
-          { value: "today", label: "Today" },
-          { value: "7days", label: "Last 7 Days" },
-          { value: "30days", label: "Last 30 Days" },
-          { value: "custom", label: "Custom" },
-        ]}
-        label="Date Range"
-      />
-      <Select
-        value={cityFilter}
-        onChange={(e) => setCityFilter(e.target.value)}
-        options={[
-          { value: "all", label: "All Cities" },
-          { value: "new york", label: "New York" },
-          { value: "los angeles", label: "Los Angeles" },
-        ]}
-        label="City"
-      />
-      <Select
-        value={stateFilter}
-        onChange={(e) => setStateFilter(e.target.value)}
-        options={[
-          { value: "all", label: "All States" },
-          { value: "ny", label: "NY" },
-          { value: "ca", label: "CA" },
-        ]}
-        label="State"
-      />
-      <Select
-        value={userTypeFilter}
-        onChange={(e) => setUserTypeFilter(e.target.value)}
-        options={[
-          { value: "all", label: "All Types" },
-          { value: "rider", label: "Rider" },
-          { value: "driver", label: "Driver" },
-        ]}
-        label="User Type"
-      />
-      <Select
-        value={rideTypeFilter}
-        onChange={(e) => setRideTypeFilter(e.target.value)}
-        options={[
-          { value: "all", label: "All Ride Types" },
-          { value: "economic", label: "Economic" },
-          { value: "luxury", label: "Luxury" },
-          { value: "carpool", label: "Carpool" },
-        ]}
-        label="Ride Type"
-      />
-    </div>
-  );
-
-  // ----------------------------
-  // EXPORT HANDLER (CSV)
-  // ----------------------------
-  const handleExport = () => {
-    alert("CSV Exported (connect backend later)");
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+      const response = await api.getReports(
+        pagination.currentPage,
+        pageSize,
+        statusFilter,
+        sortOrder
+      );
+      if (response.success) {
+        setReports(response.data.results);
+        setStats(response.data.stats);
+        setPagination({
+          currentPage: response.pagination.currentPage,
+          totalPages: response.pagination.totalPages,
+          total: response.pagination.total,
+        });
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to fetch reports");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="space-y-6 p-4">
-      <h2 className="text-2xl font-bold">Report Generation</h2>
+  useEffect(() => {
+    fetchReports();
+  }, [pagination.currentPage, pageSize, statusFilter, sortOrder]);
 
-      {/* Tabs */}
-      <div className="flex space-x-4 border-b pb-2">
-        {["user", "driver", "ride", "revenue"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 font-semibold ${
-              activeTab === tab
-                ? "border-b-4 border-green-600 text-green-600"
-                : "text-gray-600"
-            }`}
-          >
-            {tab === "user"
-              ? "User Reports"
-              : tab === "driver"
-              ? "Driver Reports"
-              : tab === "ride"
-              ? "Ride Reports"
-              : "Revenue Reports"}
-          </button>
-        ))}
+  const columns = [
+    {
+      key: "reporterName",
+      label: "Reporter Name",
+      render: (value, row) => (
+        <div className="flex flex-col text-sm">
+          <span className="font-medium text-gray-900 dark:text-white">
+            {value}
+          </span>
+          <span className="text-gray-500 dark:text-gray-400 text-xs">
+            {row?.reporterType}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "reportedPersonName",
+      label: "Reported Person",
+      render: (value, row) => (
+        <div className="flex flex-col text-sm">
+          <span className="font-medium text-gray-900 dark:text-white">
+            {value}
+          </span>
+          <span className="text-gray-500 dark:text-gray-400 text-xs">
+            {row?.reportedPersonType}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "reportReason",
+      label: "Reason / Type",
+      render: (value) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {value}
+        </span>
+      ),
+    },
+    {
+      key: "date",
+      label: "Date",
+      render: (value) => (
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          {new Date(value).toLocaleDateString()}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (value) => (
+        <Badge
+          variant={value === "pending" ? "warning" : "success"}
+          className="capitalize"
+        >
+          {value || "reported"}
+        </Badge>
+      ),
+    },
+    {
+      key: "_id",
+      label: "Actions",
+      render: (value) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(`/reports-detail/${value}`)}
+          icon={<Eye className="w-4 h-4" />}
+        >
+          View Details
+        </Button>
+      ),
+    },
+  ];
+
+  const mostReported = stats?.mostReportedEntities?.[0];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Reports Management
+        </h1>
       </div>
 
-      {/* Filters */}
-      <Filters />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total Reports Received"
+          value={stats?.totalReportsReceived || 0}
+          icon={<AlertTriangle />}
+          index={0}
+        />
+        <StatsCard
+          title="Pending Reports"
+          value={stats?.pendingReports || 0}
+          icon={<Clock />}
+          index={1}
+          colored
+        />
+        <StatsCard
+          title="Resolved Reports"
+          value={stats?.resolvedReports || 0}
+          icon={<CheckCircle />}
+          index={2}
+          colored
+        />
+        <StatsCard
+          title="Most Reported"
+          value={mostReported ? mostReported.name : "N/A"}
+          description={
+            mostReported
+              ? `${mostReported.reportCount} reports (${mostReported.type})`
+              : "No reported entities"
+          }
+          icon={<Users />}
+          index={3}
+        />
+      </div>
 
-      {/* USER REPORTS */}
-      {activeTab === "user" && (
-        <Card className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">User Reports</h3>
-            <Button onClick={handleExport}>Export CSV</Button>
-          </div>
-          <DataTable columns={userColumns} data={userReports} />
-        </Card>
-      )}
+      {/* Filters Bar */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col md:flex-row md:items-end gap-4 border border-gray-100 dark:border-gray-700">
+        <div className="flex-1 max-w-xs">
+          <Select
+            label="Filter by Status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            options={[
+              { value: "", label: "All " },
+              { value: "pending", label: "Pending" },
+              { value: "resolved", label: "Resolved" },
+            ]}
+          />
+        </div>
+        <div className="flex-1 max-w-xs">
+          <Select
+            label="Sort by Date"
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            options={[
+              { value: "desc", label: "Newest First" },
+              { value: "asc", label: "Oldest First" },
+            ]}
+          />
+        </div>
+      </div>
 
-      {/* DRIVER REPORTS */}
-      {activeTab === "driver" && (
-        <Card className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Driver Reports</h3>
-            <Button onClick={handleExport}>Export CSV</Button>
-          </div>
-          <DataTable columns={driverColumns} data={driverReports} />
-        </Card>
-      )}
-
-      {/* RIDE REPORTS */}
-      {activeTab === "ride" && (
-        <Card className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Ride Reports</h3>
-            <Button onClick={handleExport}>Export CSV</Button>
-          </div>
-          <DataTable columns={rideColumns} data={rideReports} />
-        </Card>
-      )}
-
-      {/* REVENUE REPORTS */}
-      {activeTab === "revenue" && (
-        <Card className="p-4 space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-semibold">Revenue Reports</h3>
-            <Button onClick={handleExport}>Export CSV</Button>
-          </div>
-          <DataTable columns={revenueColumns} data={revenueReports} />
-        </Card>
-      )}
+      {/* Reports Table */}
+      <div className="bg-white p-6 dark:bg-gray-800 rounded-lg shadow-sm">
+        <DataTable
+          title="All Reports"
+          columns={columns}
+          data={reports}
+          loading={loading}
+          totalPages={pagination.totalPages}
+          currentPage={pagination.currentPage}
+          totalData={pagination.total}
+          onPageChange={(page) => setPagination({ ...pagination, currentPage: page })}
+          onPageSizeChange={setPageSize}
+          pageSize={pageSize}
+          addButton={false}
+        />
+      </div>
     </div>
   );
 };
