@@ -55,7 +55,7 @@ const StatsCard = ({
             {title}
           </p>
           <p
-            className={`text-2xl font-bold ${
+            className={`text-2xl line-clamp-1 font-bold ${
               colored ? colorObj.text : "text-gray-900 dark:text-white"
             } mt-1`}
           >

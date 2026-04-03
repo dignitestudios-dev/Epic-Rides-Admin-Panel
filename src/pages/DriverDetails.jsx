@@ -316,6 +316,12 @@ const DocCard = ({ doc, onRespond, isOld }) => {
     try {
       const payload = { id: doc._id, status };
       if (isRejected) payload.rejectReason = reason;
+      if (doc.type === "vehicleVerification") {
+        payload.metadata = {
+          vehicleIdentificationNumber: doc.metadata?.vehicleIdentificationNumber || "",
+          registrationNumber: doc.metadata?.registrationNumber || "",
+        };
+      }
 
       await api.updateDocs([payload], []);
       console.log(payload);
@@ -573,7 +579,14 @@ const VehicleCard = ({ vehicle, onRespond }) => {
     }
     setLoading(true);
     try {
-      const payload = { id: vehicle._id, status };
+      const payload = { 
+        id: vehicle._id, 
+        status, 
+        metadata: {
+          vehicleIdentificationNumber: vehicle.vehicleIdentificationNumber || "",
+          registrationNumber: vehicle.registrationNumber || "",
+        }
+      };
       if (isRejected) payload.rejectReason = reason;
 
       await api.updateDocs([], [payload]);
@@ -790,15 +803,23 @@ const DriverDetails = () => {
     setBulkLoading(true);
     try {
       await api.updateDocs(
-        pendingDocs.map((d) => ({
-          id: d._id,
-          status: "approved",
-          rejectReason: null,
-        })),
+        pendingDocs.map((d) => {
+          const payload = { id: d._id, status: "approved" };
+          if (d.type === "vehicleVerification") {
+            payload.metadata = {
+              vehicleIdentificationNumber: d.metadata?.vehicleIdentificationNumber || "",
+              registrationNumber: d.metadata?.registrationNumber || "",
+            };
+          }
+          return payload;
+        }),
         pendingVehicles.map((v) => ({
           id: v._id,
           status: "approved",
-          rejectReason: null,
+          metadata: {
+            vehicleIdentificationNumber: v.vehicleIdentificationNumber || "",
+            registrationNumber: v.registrationNumber || "",
+          }
         })),
       );
       toast.success("All pending items approved.");

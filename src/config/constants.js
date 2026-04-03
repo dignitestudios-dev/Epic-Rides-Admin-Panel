@@ -114,13 +114,13 @@ export const MENU_ITEMS = [
     path: "/vehicle-category",
     children: [],
   },
-  {
-    id: "content-management",
-    label: "Content Management",
-    icon: "FileText",
-    path: "/content-management",
-    children: [],
-  },
+  // {
+  //   id: "content-management",
+  //   label: "Content Management",
+  //   icon: "FileText",
+  //   path: "/content-management",
+  //   children: [],
+  // },
   {
     id: "reports",
     label: "Reports",
@@ -128,13 +128,13 @@ export const MENU_ITEMS = [
     path: "/reports",
     children: [],
   },
-  {
-    id: "reports",
-    label: "Reports Management",
-    icon: "FileSpreadsheet",
-    path: "/reports-management",
-    children: [],
-  },
+  // {
+  //   id: "reports",
+  //   label: "Reports Management",
+  //   icon: "FileSpreadsheet",
+  //   path: "/reports-management",
+  //   children: [],
+  // },
   {
     id: "reports",
     label: "Notifications",
@@ -149,13 +149,13 @@ export const MENU_ITEMS = [
     path: "/revenue",
     children: [],
   },
-  {
-    id: "history",
-    label: "History",
-    icon: "ShieldAlert",
-    path: "/history",
-    children: [],
-  },
+  // {
+  //   id: "history",
+  //   label: "History",
+  //   icon: "ShieldAlert",
+  //   path: "/history",
+  //   children: [],
+  // },
   // {
   //   id: "products",
   //   label: "Products",
@@ -173,24 +173,24 @@ export const MENU_ITEMS = [
   //   path: "/orders",
   //   children: [],
   // },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: "Settings",
-    path: "/settings",
-    children: [
-      // {
-      //   id: "configs",
-      //   label: "Configurations",
-      //   path: "/settings/configs",
-      // },
-      {
-        id: "change-password",
-        label: "Change Password",
-        path: "/settings/change-password",
-      },
-    ],
-  },
+  // {
+  //   id: "settings",
+  //   label: "Settings",
+  //   icon: "Settings",
+  //   path: "/settings",
+  //   children: [
+  //     // {
+  //     //   id: "configs",
+  //     //   label: "Configurations",
+  //     //   path: "/settings/configs",
+  //     // },
+  //     {
+  //       id: "change-password",
+  //       label: "Change Password",
+  //       path: "/settings/change-password",
+  //     },
+  //   ],
+  // },
 ];
 
 // User Roles

@@ -267,7 +267,7 @@ const Revenue = () => {
           />
           <StatsCard
             title="Total Commission Revenue"
-            value={`$${withStats?.totalCommissionRevenue || 0}`}
+            value={`$${withStats?.totalCommissionRevenue.toFixed(2) || 0}`}
             icon={<Wallet />}
             description="3% on every withdrawal"
             colored

@@ -211,22 +211,27 @@ const getAllDocs = (
 const getDriverDocs = (driverId) => apiHandler(() => API.get(`/docs?driverId=${driverId}`));
 const getDriverVehicles = (driverId) => apiHandler(() => API.get(`/vehicles?driverId=${driverId}`));
 
-const updateDocs = (documents = [], vehiclesList = []) =>
-  apiHandler(() =>
-    API.put(`/docs/respond`, {
-      documents: documents.map((d) => ({
+const updateDocs = (documentsList = [], vehiclesList = []) =>
+  apiHandler(() => {
+    const mergedDocuments = [
+      ...documentsList.map((d) => ({
         id: d.id || d._id,
         status: d.status,
         ...(d.rejectReason && { rejectReason: d.rejectReason }),
         ...(d.metadata && { metadata: d.metadata }),
       })),
-      vehicle: vehiclesList.map((v) => ({
+      ...vehiclesList.map((v) => ({
         id: v.id || v._id,
         status: v.status,
         ...(v.rejectReason && { rejectReason: v.rejectReason }),
+        ...(v.metadata && { metadata: v.metadata }),
       })),
-    }),
-  );
+    ];
+
+    return API.put(`/docs/respond`, {
+      documents: mergedDocuments,
+    });
+  });
 
 // Vehicle Types API
 const getAllVehicleTypes = (

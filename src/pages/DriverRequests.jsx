@@ -128,11 +128,11 @@ const DriverRequests = () => {
       label: "Phone Number",
       render: (val) => <span className="text-gray-600">{val || "—"}</span>,
     },
-    {
-      key: "createdAt",
-      label: "Registration Date",
-      render: (val) => <span className="text-gray-600">{formatDate(val)}</span>,
-    },
+    // {
+    //   key: "createdAt",
+    //   label: "Registration Date",
+    //   render: (val) => <span className="text-gray-600">{formatDate(val)}</span>,
+    // },
     {
       key: "status",
       label: "Current Status",
