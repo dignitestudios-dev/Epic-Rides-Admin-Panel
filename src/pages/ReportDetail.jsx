@@ -132,8 +132,8 @@ const ReportDetail = () => {
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white">{info.name}</h4>
              </div>
           </div>
-          <Badge variant={info.status === "active" ? "success" : "danger"}>
-            {info.status || "active"}
+          <Badge variant={info.isDeactivatedByAdmin ? "danger" : "success"}>
+            {info.isDeactivatedByAdmin ? "Deactivated" : "Active"}
           </Badge>
         </div>
         
@@ -160,11 +160,11 @@ const ReportDetail = () => {
           </Button>
           <Button 
             size="sm" 
-            variant={info.status === "active" ? "danger" : "success"}
+            variant={info.isDeactivatedByAdmin ? "success" : "danger"}
             className="flex-1 text-xs"
-            onClick={() => handleUserStatusToggle(info.id, info.type, info.status || "active")}
+            onClick={() => handleUserStatusToggle(info.id, info.type, info.isDeactivatedByAdmin)}
           >
-            {info.status === "active" ? "Deactivate" : "Activate"}
+            {info.isDeactivatedByAdmin ? " Activate" : "Deactivate"}
           </Button>
         </div>
       </div>
