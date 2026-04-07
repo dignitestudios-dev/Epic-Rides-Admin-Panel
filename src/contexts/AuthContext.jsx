@@ -20,6 +20,39 @@ export const AuthProvider = ({ children }) => {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [lockedUntil, setLockedUntil] = useState(null);
   const [remainingLockTime, setRemainingLockTime] = useState(null);
+  const [showTimeoutModal, setShowTimeoutModal] = useState(false);
+
+  // Inactivity timer logic
+  useEffect(() => {
+    let timer;
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      if (user && !showTimeoutModal) {
+        timer = setTimeout(async () => {
+          // Automatic logout on timeout
+          await logout();
+          setShowTimeoutModal(true);
+        }, SECURITY_CONFIG.sessionTimeout);
+      }
+    };
+
+    if (user) {
+      const events = [
+        "mousemove",
+        "mousedown",
+        "keypress",
+        "scroll",
+        "touchstart",
+      ];
+      events.forEach((event) => window.addEventListener(event, resetTimer));
+      resetTimer();
+
+      return () => {
+        if (timer) clearTimeout(timer);
+        events.forEach((event) => window.removeEventListener(event, resetTimer));
+      };
+    }
+  }, [user, showTimeoutModal]);
 
   // Check if user is locked out
   const isLockedOut = () => {
@@ -132,7 +165,6 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
 
     try {
-      await api.logout();
       // Clear auth data
       localStorage.removeItem("authToken");
       localStorage.removeItem("userData");
@@ -318,6 +350,8 @@ export const AuthProvider = ({ children }) => {
     updatePasswordAuth,
     register,
     setUser,
+    showTimeoutModal,
+    setShowTimeoutModal,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

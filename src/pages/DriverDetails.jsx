@@ -795,19 +795,24 @@ const DriverDetails = () => {
   );
 
   const pendingDocs = latestDocs.filter((d) => d.status === "pending");
+  const approvablePendingDocs = pendingDocs.filter(
+    (d) => d.type !== "driverLicense",
+  );
   const pendingVehicles = vehicles.filter((v) => v.status === "pending");
   const activeVehicles = vehicles.filter((v) => v.status !== "old");
 
   const handleApproveAll = async () => {
-    if (pendingDocs.length === 0 && pendingVehicles.length === 0) return;
+    if (approvablePendingDocs.length === 0 && pendingVehicles.length === 0)
+      return;
     setBulkLoading(true);
     try {
       await api.updateDocs(
-        pendingDocs.map((d) => {
+        approvablePendingDocs.map((d) => {
           const payload = { id: d._id, status: "approved" };
           if (d.type === "vehicleVerification") {
             payload.metadata = {
-              vehicleIdentificationNumber: d.metadata?.vehicleIdentificationNumber || "",
+              vehicleIdentificationNumber:
+                d.metadata?.vehicleIdentificationNumber || "",
               registrationNumber: d.metadata?.registrationNumber || "",
             };
           }
@@ -819,7 +824,7 @@ const DriverDetails = () => {
           metadata: {
             vehicleIdentificationNumber: v.vehicleIdentificationNumber || "",
             registrationNumber: v.registrationNumber || "",
-          }
+          },
         })),
       );
       toast.success("All pending items approved.");
@@ -839,7 +844,7 @@ const DriverDetails = () => {
     setBulkLoading(true);
     try {
       await api.updateDocs(
-        pendingDocs.map((d) => ({
+        approvablePendingDocs.map((d) => ({
           id: d._id,
           status: "rejected",
           rejectReason: rejectAllReason,
@@ -861,7 +866,7 @@ const DriverDetails = () => {
     }
   };
 
-  const totalPending = pendingDocs.length + pendingVehicles.length;
+  const totalPending = approvablePendingDocs.length + pendingVehicles.length;
 
   if (loading) {
     return (

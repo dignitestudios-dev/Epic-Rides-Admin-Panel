@@ -335,8 +335,9 @@ export const SECURITY_CONFIG = {
   passwordRequireSpecialChars: true,
   maxLoginAttempts: 5,
   lockoutDuration: 2 * 60 * 1000, // 2 minutes
-  otpLength: 6,
+  otpLength: 6, 
   otpExpiry: 10 * 60 * 1000, // 10 minutes
+  sessionTimeout: 5 * 60 * 1000, // 5 minutes
 };
 
 // Feature Flags

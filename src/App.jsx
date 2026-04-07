@@ -3,11 +3,15 @@ import {
   Routes,
   Route,
   Navigate,
+  useNavigate,
 } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppProvider } from "./contexts/AppContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
+import Modal from "./components/ui/Modal";
+import Button from "./components/ui/Button";
+import { useAuth } from "./contexts/AuthContext";
 
 // Auth pages
 import Login from "./pages/auth/Login";
@@ -48,6 +52,40 @@ import RiderDetail from "./pages/RiderDetail";
 import DriverDetail from "./pages/DriverDetail";
 
 import Revenue from "./pages/Revenue";
+
+const SessionTimeoutModal = () => {
+  const { showTimeoutModal, setShowTimeoutModal } = useAuth();
+  const navigate = useNavigate();
+
+  const handleClose = () => {
+    setShowTimeoutModal(false);
+    navigate("/auth/login");
+  };
+
+  return (
+    <Modal
+      isOpen={showTimeoutModal}
+      onClose={handleClose}
+      title="Session Expired"
+      showCloseButton={false}
+      closeOnOverlayClick={false}
+    >
+      <div className="text-center">
+        <div className="mb-4 text-gray-600 dark:text-gray-400">
+          Your session has expired due to 5 minutes of inactivity. Please log in
+          again to continue.
+        </div>
+        <Button
+          onClick={handleClose}
+          className="w-full"
+          variant="primary"
+        >
+          Login Again
+        </Button>
+      </div>
+    </Modal>
+  );
+};
 
 function App() {
   return (
@@ -97,15 +135,27 @@ function App() {
                           </Route> */}
 
                         <Route path="/user-management" element={<Users />} />
-                        <Route path="/user-management/rider/:id" element={<RiderDetail />} />
-                        <Route path="/user-management/driver/:id" element={<DriverDetail />} />
-                        <Route path="/vehicle-category" element={<VehicleCategoryManagement />} />
+                        <Route
+                          path="/user-management/rider/:id"
+                          element={<RiderDetail />}
+                        />
+                        <Route
+                          path="/user-management/driver/:id"
+                          element={<DriverDetail />}
+                        />
+                        <Route
+                          path="/vehicle-category"
+                          element={<VehicleCategoryManagement />}
+                        />
                         <Route path="/orders" element={<Orders />} />
                         <Route
                           path="/driver-requests"
                           element={<DriverRequests />}
                         />
-                        <Route path="/driver/:id" element={<DriverDetails />} />
+                        <Route
+                          path="/driver/:id"
+                          element={<DriverDetails />}
+                        />
                         <Route
                           path="/content-management"
                           element={<ContentManagement />}
@@ -124,10 +174,7 @@ function App() {
                           path="/notifications"
                           element={<Notifications />}
                         />
-                        <Route
-                          path="/history"
-                          element={<Emergencies />}
-                        />
+                        <Route path="/history" element={<Emergencies />} />
                         <Route
                           path="/user-detail/:id"
                           element={<UserDetailPage />}
@@ -157,6 +204,7 @@ function App() {
                   }
                 />
               </Routes>
+              <SessionTimeoutModal />
             </Router>
           </AppProvider>
         </AuthProvider>
