@@ -18,8 +18,7 @@ import { downloadCSV, formatDate } from "../utils/helpers";
 
 const statuses = [
   { value: "pending", label: "Pending" },
-  { value: "changes_requested", label: "Changes Requested" },
-  { value: "resubmitted", label: "Resubmitted" },
+  { value: "approved", label: "Approved" },
 ];
 
 const DriverRequests = () => {
@@ -54,7 +53,7 @@ const DriverRequests = () => {
       Email: driver.email,
       Phone: driver.phone || "—",
       "Registration Date": formatDate(driver.createdAt),
-      Status: driver.status || "Pending",
+      Status: driver.requiresApproval ? "Pending" : "Approved",
       Vehicles: driver.vehicleCount || 0,
       "Account Status": driver.isDeactivatedByAdmin ? "Deactivated" : "Active"
     }));
@@ -63,30 +62,16 @@ const DriverRequests = () => {
   };
 
   const getStatusBadge = (status) => {
-    switch (status?.toLowerCase()) {
-      case "pending":
+    console.log(status)
+    switch (status) {
+      case true:
         return (
           <Badge variant="warning" className="flex items-center gap-1">
             <Clock className="w-3 h-3" />
             Pending
           </Badge>
         );
-      case "changes requested":
-      case "changes_requested":
-        return (
-          <Badge variant="danger" className="flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Changes Requested
-          </Badge>
-        );
-      case "resubmitted":
-        return (
-          <Badge variant="info" className="flex items-center gap-1">
-            <FileText className="w-3 h-3" />
-            Resubmitted
-          </Badge>
-        );
-      case "approved":
+      case false:
         return (
           <Badge variant="success" className="flex items-center gap-1">
             <CheckCircle className="w-3 h-3" />
@@ -134,13 +119,15 @@ const DriverRequests = () => {
     //   render: (val) => <span className="text-gray-600">{formatDate(val)}</span>,
     // },
     {
-      key: "status",
+      key: "requiresApproval",
       label: "Current Status",
-      render: (val) => (
+      render: (val) => {
+      console.log(val)  
+        return(
         <div className="flex items-center gap-3">
-          {getStatusBadge(val || "Pending")}
+          {getStatusBadge(val)}
         </div>
-      ),
+      )},
     },
     {
       key: "action",
