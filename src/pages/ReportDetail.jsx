@@ -72,9 +72,14 @@ const ReportDetail = () => {
   };
 
   const handleUserStatusToggle = async (userId, type, currentStatus) => {
+    const userType = type.toLowerCase() === "user" ? "rider" : "driver";
     try {
-      const newStatus = currentStatus === "active" ? "blocked" : "active";
-      const response = await api.updateUserStatus(userId, type.toLowerCase(), newStatus);
+      const isDeactivated =
+        typeof currentStatus === "boolean"
+          ? currentStatus
+          : currentStatus?.toString().toLowerCase() !== "active";
+      const newStatus = isDeactivated ? "active" : "deactivated";
+      const response = await api.updateUserStatus(userId, userType, newStatus);
       if (response.success) {
         toast.success(`${type} account ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
         fetchReportDetail();
@@ -210,7 +215,7 @@ const ReportDetail = () => {
         {/* Left Column - Main Details */}
         <div className="lg:col-span-8 space-y-8">
           {/* Reason & Content */}
-          <InfoSection title="Violation Details" icon={<FileText className="w-5 h-5 text-amber-500" />}>
+          <InfoSection title="Violation Details / Report Reason" icon={<FileText className="w-5 h-5 text-amber-500" />}>
              <div className="p-6 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30 rounded-2xl">
                 <p className="text-gray-800 dark:text-gray-200 text-lg font-medium leading-relaxed italic">
                   "{report.reportReason || "No specific reason provided."}"
@@ -268,7 +273,7 @@ const ReportDetail = () => {
                 <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-gray-800">
                    <div>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ride Status</p>
-                      <Badge variant={report.relatedDetails.rideStatus === "completed" ? "success" : "danger"} className="mt-1">
+                      <Badge  variant={report.relatedDetails.rideStatus === "completed" ? "success" : "danger"} className="mt-1 capitalize">
                         {report.relatedDetails.rideStatus}
                       </Badge>
                    </div>
@@ -363,6 +368,7 @@ const ReportDetail = () => {
           <textarea
             value={adminNote}
             onChange={(e) => setAdminNote(e.target.value)}
+            maxLength={200}
             className="w-full min-h-[150px] p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all"
             placeholder="e.g., Violation confirmed. Driver has been issued a formal warning."
           />

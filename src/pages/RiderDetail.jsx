@@ -104,6 +104,7 @@ const RiderDetail = () => {
       label: "Status",
       render: (val) => (
         <Badge
+        className="capitalize"
           variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
         >
           {val}
@@ -171,7 +172,7 @@ const RiderDetail = () => {
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span>
-                  Account Created: {formatDate(personalInfo.createdAt)}
+                  Account Created: {formatDate(details.fullDetails.createdAt)}
                 </span>
               </div>
             </div>
@@ -223,7 +224,7 @@ const RiderDetail = () => {
             />
             <StatsCard
               title="Wallet Balance"
-              value={`$${walletBalance || 0}`}
+              value={`$${walletBalance.toFixed(2) || 0}`}
               icon={<Wallet />}
               colored
               index={3}
@@ -231,7 +232,7 @@ const RiderDetail = () => {
             <StatsCard
               title="Average Rating"
               value={parseFloat(
-                details?.personalInfo?.averageRating || 0,
+                details?.averageRating,
               ).toFixed(1)}
               icon={<Star />}
               colored

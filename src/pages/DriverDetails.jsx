@@ -487,7 +487,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
             </p>
 
             {/* Actions */}
-            {!isLicense && localStatus === "pending" && !isOld && (
+            {localStatus === "pending" && !isOld && (
               <div className="space-y-2 pt-1 border-t border-gray-50">
                 {!showRejectBox ? (
                   <div className="flex gap-2">
@@ -795,9 +795,7 @@ const DriverDetails = () => {
   );
 
   const pendingDocs = latestDocs.filter((d) => d.status === "pending");
-  const approvablePendingDocs = pendingDocs.filter(
-    (d) => d.type !== "driverLicense",
-  );
+  const approvablePendingDocs = pendingDocs; // Allow approval of all documents including licenses
   const pendingVehicles = vehicles.filter((v) => v.status === "pending");
   const activeVehicles = vehicles.filter((v) => v.status !== "old");
 
@@ -1017,7 +1015,7 @@ const DriverDetails = () => {
 
           {/* Pending / Active Documents */}
           {latestDocs.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
               {latestDocs.map((doc) => (
                 <DocCard
                   key={doc._id}
@@ -1042,7 +1040,7 @@ const DriverDetails = () => {
               <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Clock className="w-4 h-4" /> Historical Submissions (collapsed)
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
                 {oldDocs.map((doc) => (
                   <DocCard
                     key={doc._id}
@@ -1100,6 +1098,7 @@ const DriverDetails = () => {
           <textarea
             value={rejectAllReason}
             onChange={(e) => setRejectAllReason(e.target.value)}
+            maxLength={200}
             className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 outline-none transition-all text-sm"
             placeholder="e.g., Documents are expired or unreadable. Please resubmit."
           />

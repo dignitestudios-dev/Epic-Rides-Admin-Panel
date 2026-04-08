@@ -26,17 +26,18 @@ import useDebounce from "../hooks/global/useDebounce";
 import FilterBar from "../components/ui/FilterBar";
 import { useApp } from "../contexts/AppContext";
 import StatsCard from "../components/common/StatsCard";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Orders = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.defaultPageSize);
+  const [currentPage, setCurrentPage] = usePersistentState("orders_currentPage", 1);
+  const [pageSize, setPageSize] = usePersistentState("orders_pageSize", PAGINATION_CONFIG.defaultPageSize);
   const { appConfigs } = useApp();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [editingOrder, setEditingOrder] = useState(null);
   const [newOrderStatus, setNewOrderStatus] = useState("");
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = usePersistentState("orders_search", "");
   const searchDebounce = useDebounce(search);
 
   const defaultFilters = {
@@ -46,7 +47,7 @@ const Orders = () => {
     startDate: "",
     endDate: "",
   };
-  const [filters, setFilters] = useState(defaultFilters);
+  const [filters, setFilters] = usePersistentState("orders_filters", defaultFilters);
   const [apiFilters, setApiFilters] = useState(defaultFilters);
 
   const formattedFilters = [
@@ -437,7 +438,10 @@ const Orders = () => {
       <Card className="p-4">
         <FilterBar
           filters={formattedFilters}
-          onClear={() => setFilters(defaultFilters)}
+          onClear={() => {
+            setFilters(defaultFilters);
+            setSearch("");
+          }}
         />
       </Card>
 

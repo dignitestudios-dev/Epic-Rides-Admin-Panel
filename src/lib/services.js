@@ -31,7 +31,10 @@ API.interceptors.response.use(
   (error) => {
     if (error?.response?.status === 401) {
       localStorage.removeItem("authToken"); // Remove token if unauthorized
-      window.location.href = "/auth/login"; // Redirect to login page
+      // Don't redirect if already on login page
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/auth/login"; // Redirect to login page
+      }
     }
     console.log(error);
     console.log("API Error:", error.response?.data || error);
@@ -305,10 +308,12 @@ const getReports = (page = 1, limit = 10, status = "", sort = "desc") =>
     return API.get(url);
   });
 
-const getNotifications = (page = 1, limit = 10, search = "", sort = "desc") =>
+const getNotifications = (page = 1, limit = 10, search = "", sort = "desc", startDate = "", endDate = "") =>
   apiHandler(() => {
     let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
     return API.get(url);
   });
 

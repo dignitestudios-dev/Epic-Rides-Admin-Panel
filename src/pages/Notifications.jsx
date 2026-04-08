@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form";
 import { formatDateTime, downloadCSV } from "../utils/helpers";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 // ── Status Badge Helper ───────────────────────────────────────────────────────
 
@@ -53,14 +54,14 @@ const Notifications = () => {
   // Data state
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [page, setPage] = usePersistentState("notifications_page", 1);
+  const [limit, setLimit] = usePersistentState("notifications_limit", 10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalData, setTotalData] = useState(0);
 
   // Filters
-  const [search, setSearch] = useState("");
-  const [sort, setSort] = useState("desc"); // asc | desc
+  const [search, setSearch] = usePersistentState("notifications_search", "");
+  const [sort, setSort] = usePersistentState("notifications_sort", "desc"); // asc | desc
 
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -366,6 +367,7 @@ const Notifications = () => {
             {watchDeliveryType === "scheduled" && (
               <div className="mt-3">
                 <Input
+                 min={new Date().toISOString().slice(0, 16)}
                   label="Scheduled Date & Time"
                   type="datetime-local"
                   {...register("scheduledFor", {
@@ -401,18 +403,26 @@ const Notifications = () => {
         {previewData && (
           <div className="space-y-5">
             {/* Phone mockup preview */}
-            <div className="mx-auto w-full max-w-sm bg-gray-900 rounded-3xl p-4 shadow-2xl">
-              <div className="bg-white rounded-2xl p-4 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
-                    <Bell className="w-4 h-4 text-white" />
-                  </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Epic Rides</p>
-                </div>
-                <p className="text-sm font-bold text-gray-900">{previewData.title}</p>
-                <p className="text-xs text-gray-600 leading-relaxed">{previewData.message}</p>
-              </div>
-            </div>
+           <div className="mx-auto w-full max-w-sm bg-gray-900 rounded-3xl p-4 shadow-2xl">
+  <div className="bg-white rounded-2xl p-4 space-y-2">
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
+        <Bell className="w-4 h-4 text-white" />
+      </div>
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        Epic Rides
+      </p>
+    </div>
+
+    <p className="text-sm font-bold text-gray-900 break-words">
+      {previewData.title}
+    </p>
+
+    <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-normal">
+      {previewData.message}
+    </p>
+  </div>
+</div>
 
             {/* Preview phone summary */}
             <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">

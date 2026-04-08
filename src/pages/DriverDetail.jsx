@@ -1,5 +1,5 @@
-import React from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Mail, Phone, Calendar, Star, 
   MapPin, Car, FileText, CheckCircle, XCircle, Clock,
@@ -10,11 +10,13 @@ import {
   Hash,
   TrendingUp,
   Wallet,
+  Eye,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
+import Modal from "../components/ui/Modal";
 import StatsCard from "../components/common/StatsCard";
 import { formatDate } from "../utils/helpers";
 import Table from "../components/ui/Table";
@@ -23,6 +25,7 @@ const DriverDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { details, loading } = useGetUserDetails(id, "driver");
+  const [showAllDocsModal, setShowAllDocsModal] = useState(false);
 
   if (loading) {
     return (
@@ -154,7 +157,15 @@ const DriverDetail = () => {
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {formatDate(personalInfo.createdAt)}</span>
+                  <span>Account Created: {formatDate(details?.activityLogs?.accountCreationDate)}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span>Last Ride Taken: {formatDate(details?.activityLogs?.lastRideTaken)}</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span>Last Login: {formatDate(details?.activityLogs?.lastLogin)}</span>
                 </div>
               </div>
             </div>
@@ -189,12 +200,23 @@ const DriverDetail = () => {
 
           <Card>
             <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
-                Documents
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Documents
+                </h3>
+                <Link to={`/driver/${id}`} 
+                  variant="primary" 
+                  className="text-sm border rounded-md text-gray-600 px-3 p-1"
+                  size="sm"
+                  icon={<Eye className="w-4 h-4" />}
+                 
+                >
+                  View All
+                </Link>
+              </div>
               <div className="space-y-4">
-                {Object.entries(approvedDocuments || {}).map(([key, doc], idx) => (
+                {Object.entries(approvedDocuments || {}).slice(0, 3).map(([key, doc], idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <div>
                       <p className="text-sm font-medium text-gray-900 capitalize">{key}</p>
@@ -210,6 +232,11 @@ const DriverDetail = () => {
                   </div>
                 ))}
               </div>
+              {Object.entries(approvedDocuments || {}).length > 3 && (
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  +{Object.entries(approvedDocuments || {}).length - 3} more documents
+                </p>
+              )}
             </div>
           </Card>
         </div>
@@ -220,14 +247,14 @@ const DriverDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatsCard
               title="Total Rides"
-              value={rideStats?.totalCompleted || 0}
+              value={rideStats?.totalCompleted}
               // icon={<TrendingUp />}
               colored
               index={3}
             />
             <StatsCard
               title="Cancelled Rides"
-              value={rideStats?.totalCancelled || 0}
+              value={rideStats?.totalCancelled }
               // icon={<XCircle />}
               colored
               index={5}
@@ -367,14 +394,87 @@ const DriverDetail = () => {
                   />
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-                  <p className="text-gray-500 font-medium italic">No referral activities recorded yet.</p>
+                <div className="text-center py-12  rounded-2xl  ">
+                  <p className="text-gray-500 font-medium ">No referral activities recorded yet.</p>
                 </div>
               )}
             </div>
           </Card>
         </div>
       </div>
+
+      {/* View All Documents Modal */}
+      <Modal
+        isOpen={showAllDocsModal}
+        onClose={() => setShowAllDocsModal(false)}
+        title="All Driver Documents"
+        size="lg"
+      >
+        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-4">
+          {Object.entries(approvedDocuments || {}).length > 0 ? (
+            Object.entries(approvedDocuments || {}).map(([key, doc], idx) => (
+              <div 
+                key={idx} 
+                className="p-4 bg-gradient-to-r from-gray-50 to-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                      <h4 className="text-sm font-semibold text-gray-900 capitalize">{key.replace(/_/g, " ")}</h4>
+                    </div>
+                    <div className="space-y-1 text-xs text-gray-600 ml-8">
+                      <p><span className="font-medium">Status:</span> <span className="capitalize">{doc.status}</span></p>
+                      {doc.expiryDate && (
+                        <p><span className="font-medium">Expiry:</span> {formatDate(doc.expiryDate)}</p>
+                      )}
+                      {doc.verificationDate && (
+                        <p><span className="font-medium">Verified:</span> {formatDate(doc.verificationDate)}</p>
+                      )}
+                      {doc.url && (
+                        <p>
+                          <span className="font-medium">Document:</span>{" "}
+                          <a 
+                            href={doc.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 underline flex items-center gap-1"
+                          >
+                            View <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 ml-4">
+                    {doc.status === "approved" ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <CheckCircle className="w-6 h-6 text-green-500" />
+                        <span className="text-xs font-medium text-green-600">Approved</span>
+                      </div>
+                    ) : doc.status === "rejected" ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <XCircle className="w-6 h-6 text-red-500" />
+                        <span className="text-xs font-medium text-red-600">Rejected</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <Clock className="w-6 h-6 text-yellow-500" />
+                        <span className="text-xs font-medium text-yellow-600">Pending</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+              <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 font-medium">No documents found</p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

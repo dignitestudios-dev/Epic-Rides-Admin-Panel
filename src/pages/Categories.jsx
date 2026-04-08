@@ -35,11 +35,12 @@ import ImagesGallery from "../components/ui/ImagesGallery";
 import useCategoryActions from "../hooks/categories/useCategoryActions";
 import useCreateCategory from "../hooks/categories/useCreateCategory";
 import StatsCard from "../components/common/StatsCard";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Categories = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.defaultPageSize);
-  const [status, setStatus] = useState("");
+  const [currentPage, setCurrentPage] = usePersistentState("categories_currentPage", 1);
+  const [pageSize, setPageSize] = usePersistentState("categories_pageSize", PAGINATION_CONFIG.defaultPageSize);
+  const [status, setStatus] = usePersistentState("categories_status", "");
 
   // Product hooks
   const {

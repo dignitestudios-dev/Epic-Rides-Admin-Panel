@@ -8,6 +8,7 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -21,9 +22,9 @@ const Reports = () => {
   });
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState("");
-  const [sortOrder, setSortOrder] = useState("desc");
-  const [pageSize, setPageSize] = useState(10);
+  const [statusFilter, setStatusFilter] = usePersistentState("reports_statusFilter", "");
+  const [sortOrder, setSortOrder] = usePersistentState("reports_sortOrder", "desc");
+  const [pageSize, setPageSize] = usePersistentState("reports_pageSize", 10);
 
   const fetchReports = async () => {
     try {
@@ -182,7 +183,7 @@ const Reports = () => {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             options={[
-              { value: "", label: "All " },
+              { value: "", label: "All" },
               { value: "pending", label: "Pending" },
               { value: "resolved", label: "Resolved" },
             ]}

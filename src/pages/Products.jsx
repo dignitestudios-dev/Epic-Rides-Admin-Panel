@@ -34,12 +34,13 @@ import ImageUploader from "../components/ui/ImageUploader";
 import ImagesGallery from "../components/ui/ImagesGallery";
 import StatsCard from "../components/common/StatsCard";
 import toast from "react-hot-toast";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Products = () => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.defaultPageSize);
-  const [status, setStatus] = useState("");
-  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = usePersistentState("products_currentPage", 1);
+  const [pageSize, setPageSize] = usePersistentState("products_pageSize", PAGINATION_CONFIG.defaultPageSize);
+  const [status, setStatus] = usePersistentState("products_status", "");
+  const [search, setSearch] = usePersistentState("products_search", "");
   const searchDebounce = useDebounce(search);
 
   // Product hooks
@@ -436,7 +437,10 @@ const Products = () => {
               ],
             },
           ]}
-          onClear={() => setStatus("")}
+          onClear={() => {
+            setStatus("");
+            setSearch("");
+          }}
         />
       </Card>
 

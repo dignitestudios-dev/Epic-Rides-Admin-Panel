@@ -49,24 +49,26 @@ const FilterBar = ({
           />
         </div>
       )}
+
+      {filters.length > 0 && (
       <div className="flex items-center space-x-2">
         <FilterIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Filters:
         </span>
-      </div>
+      </div>)
+}
       {filters.map((filter) => {
         if (filter.type === "select") {
           return (
-            <div key={filter.key} className="min-w-[120px]">
-              <label className="sr-only">{filter.label}</label>
+            <div key={filter.key} className="min-w-[140px]">
+              <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                {filter.label}
+              </label>
               <Select
                 value={filter.value}
                 onChange={filter.onChange} // Remove e.target.value since custom Select passes value directly
-                options={[
-                  { value: "", label: `All ${filter.label}` },
-                  ...(filter.options || []),
-                ]}
+                options={[...(filter.options || [])]}
                 className={`py-1 px-3 text-sm ${filter.className || ""}`}
                 placeholder={filter.placeholder || filter.label}
               />
@@ -75,8 +77,10 @@ const FilterBar = ({
         }
         if (filter.type === "date") {
           return (
-            <div key={filter.key} className="min-w-[120px]">
-              <label className="sr-only">{filter.label}</label>
+            <div key={filter.key} className="min-w-[140px]">
+              <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+                {filter.label}
+              </label>
               <Input
                 type="date"
                 value={filter.value}
@@ -89,8 +93,10 @@ const FilterBar = ({
         }
         // Default to text input
         return (
-          <div key={filter.key} className="min-w-[120px]">
-            <label className="sr-only">{filter.label}</label>
+          <div key={filter.key} className="min-w-[140px]">
+            <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
+              {filter.label}
+            </label>
             <Input
               type="text"
               value={filter.value}
@@ -101,7 +107,7 @@ const FilterBar = ({
           </div>
         );
       })}
-      {showClear && (
+      {showClear && filters.length > 0 && (
         <Button
           variant="outline"
           size="sm"

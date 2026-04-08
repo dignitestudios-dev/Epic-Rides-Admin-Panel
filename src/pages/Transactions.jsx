@@ -31,6 +31,7 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([
@@ -102,7 +103,7 @@ const Transactions = () => {
 
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = usePersistentState("transactions_filters", {
     status: "",
     type: "",
     dateRange: { start: "", end: "" },

@@ -104,6 +104,7 @@ const ForgotPassword = () => {
             <Input
               label="Email address"
               type="email"
+              placeholder="Enter your email"
               autoComplete="email"
               {...register("email", {
                 required: "Email is required",

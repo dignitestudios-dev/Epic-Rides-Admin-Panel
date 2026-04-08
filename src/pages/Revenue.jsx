@@ -117,7 +117,7 @@ const Revenue = () => {
       key: "subscriptionStatus",
       label: "Status",
       render: (val) => (
-        <Badge variant={val?.toLowerCase() === "active" ? "success" : "danger"}>
+        <Badge className="capitalize" variant={val?.toLowerCase() === "active" ? "success" : "danger"}>
           {val}
         </Badge>
       ),
@@ -301,7 +301,7 @@ const Revenue = () => {
             searchable
             searchValue={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search by driver name or email..."
+            searchPlaceholder="Search by driver name..."
             filters={[
               {
                 key: "startDate",

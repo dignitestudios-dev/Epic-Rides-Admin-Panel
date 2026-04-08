@@ -41,7 +41,7 @@ const DriverRequests = () => {
     page,
     limit,
     debouncedSearch,
-    statusFilter?.target?.value
+    "pending"
   );
 
   const handleExport = () => {
@@ -174,19 +174,19 @@ const DriverRequests = () => {
             setPage(1);
           }}
           searchPlaceholder="Search by name, email or phone..."
-          filters={[
-            {
-              key: "status",
-              label: "Status",
-              type: "select",
-              options: statuses,
-              value: statusFilter?.target?.value,
-              onChange: (val) => {
-                setStatusFilter(val);
-                setPage(1);
-              },
-            },
-          ]}
+          // filters={[
+          //   {
+          //     key: "status",
+          //     label: "Status",
+          //     type: "select",
+          //     options: statuses,
+          //     value: statusFilter?.target?.value,
+          //     onChange: (val) => {
+          //       setStatusFilter(val);
+          //       setPage(1);
+          //     },
+          //   },
+          // ]}
           onClear={() => {
             setSearch("");
             setStatusFilter("");

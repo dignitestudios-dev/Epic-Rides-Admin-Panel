@@ -11,15 +11,16 @@ import useUserActions from "../hooks/users/useUserActions";
 import useDebounce from "../hooks/global/useDebounce";
 import { useNavigate } from "react-router-dom";
 import FilterBar from "../components/ui/FilterBar";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 
 const Users = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("rider"); // 'rider' or 'driver'
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGINATION_CONFIG.defaultPageSize);
-  const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [activeTab, setActiveTab] = usePersistentState("users_activeTab", "rider");
+  const [currentPage, setCurrentPage] = usePersistentState("users_currentPage", 1);
+  const [pageSize, setPageSize] = usePersistentState("users_pageSize", PAGINATION_CONFIG.defaultPageSize);
+  const [search, setSearch] = usePersistentState("users_search", "");
+  const [startDate, setStartDate] = usePersistentState("users_startDate", "");
+  const [endDate, setEndDate] = usePersistentState("users_endDate", "");
   const debouncedSearch = useDebounce(search, 500);
 
   const { users, loading, totalPages, totalData, refresh } = useGetUsers(
@@ -36,7 +37,6 @@ const Users = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
-    setSearch("");
   };
 
   // Reset page when search term or filters change

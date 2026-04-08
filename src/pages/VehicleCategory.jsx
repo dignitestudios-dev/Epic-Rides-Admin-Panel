@@ -90,7 +90,7 @@ const VehicleCategoryManagement = () => {
       key: "rideType",
       label: "Ride Type",
       render: (value) => (
-        <Badge variant={value === "luxury" ? "primary" : "secondary"}>
+        <Badge variant={ "secondary"}>
           <span className="capitalize">{value}</span>
         </Badge>
       ),
@@ -247,7 +247,7 @@ const VehicleCategoryManagement = () => {
               options: [
                 { value: "economy", label: "Economy" },
                 { value: "luxury", label: "Luxury" },
-                { value: "carpool", label: "Car Pool" },
+                // { value: "carpool", label: "Car Pool" },
               ],
             },
           ]}
