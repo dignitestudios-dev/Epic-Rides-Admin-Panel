@@ -4,6 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useApp } from "../../contexts/AppContext";
 import { Link, useNavigate } from "react-router-dom";
+import ConfirmModal from "../global/ConfirmModal";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const Header = () => {
   const { markNotificationAsRead, sidebarOpen, toggleMobileSidebar } = useApp();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const userMenuRef = useRef(null);
 
@@ -27,14 +29,19 @@ const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowUserMenu(false);
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = async () => {
     // await logout();
-    // setShowUserMenu(false);
     localStorage.removeItem("authToken");
     localStorage.removeItem("userData");
     localStorage.removeItem("lockedUntil");
     localStorage.removeItem("loginAttempts");
     setUser(null);
+    setShowLogoutConfirm(false);
     navigate("/auth/login");
   };
 
@@ -113,7 +120,7 @@ const Header = () => {
                 </div>
                 <div className="py-2">
                   <button
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                   >
                     <LogOut className="w-4 h-4 mr-3" />
@@ -125,6 +132,17 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+        title="Confirm Logout"
+        message="Are you sure you want to sign out? You will need to login again to access your account."
+        confirmText="Sign out"
+        cancelText="Cancel"
+      />
     </header>
   );
 };

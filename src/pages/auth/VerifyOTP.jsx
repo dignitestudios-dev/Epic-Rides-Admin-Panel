@@ -98,7 +98,6 @@ const VerifyOTP = () => {
     const payload = {
       email: location?.state?.email,
       otp: otpValue,
-      role: "admin",
     };
 
     const response = await verifyOTP(payload);
@@ -110,7 +109,7 @@ const VerifyOTP = () => {
       const email = location.state?.email;
       navigate("/auth/reset-password", { state: { email, verified: true } });
     } else {
-      setError(response.message || "Invalid OTP. Please try again.");
+      setError(response.error || "Invalid OTP. Please try again.");
       setOtp(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     }
@@ -123,7 +122,6 @@ const VerifyOTP = () => {
     // Simulate API call
     const payload = {
       email: location?.state?.email,
-      role: "admin",
     };
     const success = await forgotPassword(payload);
 

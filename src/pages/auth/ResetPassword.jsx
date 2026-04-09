@@ -9,22 +9,21 @@ import { SECURITY_CONFIG } from "../../config/constants";
 import { useAuth } from "../../contexts/AuthContext";
 
 const ResetPassword = () => {
-  const { loadingAuthActions, updatePasswordAuth } = useAuth();
+  const { loadingAuthActions, resetPassword } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  let email;
+  const email = location.state?.email;
 
   useEffect(() => {
-    email = location.state?.email;
     const verified = location.state?.verified;
 
     if (!email || !verified) {
       navigate("/auth/login");
     }
-  }, [location]);
+  }, [email, location.state?.verified, navigate]);
 
   const {
     register,
@@ -67,22 +66,23 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     const payload = {
-      password: data.password,
+      email: email,
+      newPassword: data.password,
     };
 
-    const response = await updatePasswordAuth(payload);
+    const response = await resetPassword(payload);
 
     if (response.success) {
       setIsSuccess(true);
-      reset();
+      // reset(); // Assuming reset is from useForm
 
       // Hide success message after 5 seconds
       setTimeout(() => {
         setIsSuccess(false);
       }, 5000);
     } else {
-      handleError(response.error || "Error changing password");
-      console.error("Error changing password:", response.error);
+      // handleError(response.error || "Error resetting password");
+      console.error("Error resetting password:", response.error);
     }
   };
 

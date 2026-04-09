@@ -21,7 +21,6 @@ const ForgotPassword = () => {
   const onSubmit = async (data) => {
     const payload = {
       email: data?.email,
-      role: "admin",
     };
     const success = await forgotPassword(payload);
     if (success) {

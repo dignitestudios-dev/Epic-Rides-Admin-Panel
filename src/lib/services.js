@@ -96,17 +96,13 @@ const login = (credentials) =>
   );
 
 const forgotPassword = (payload) =>
-  apiHandler(() => API.post("/auth/forgot", payload));
+  apiHandler(() => API.post("forgot-password", payload));
 
 const verifyOTP = (payload) =>
-  apiHandler(() =>
-    API.post("/auth/verify-otp", payload, {
-      headers: {
-        deviceuniqueid: payload.deviceuniqueid,
-        devicemodel: payload.devicemodel,
-      },
-    }),
-  );
+  apiHandler(() => API.post("verify-otp", payload));
+
+const resetPassword = (payload) =>
+  apiHandler(() => API.post("reset-password", payload));
 
 const updatePassword = (payload) =>
   apiHandler(() => API.post("/auth/update-password", payload));
@@ -339,6 +335,7 @@ export const api = {
   login,
   forgotPassword,
   verifyOTP,
+  resetPassword,
   updatePassword,
   updatePasswordAuth,
   logout,

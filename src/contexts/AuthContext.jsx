@@ -189,7 +189,7 @@ export const AuthProvider = ({ children }) => {
   const forgotPassword = async (payload) => {
     setLoadingAuthActions(true);
     try {
-      const response = await api.forgotPassword(payload);
+      const response = await api.forgotPassword({ email: payload.email });
       return response.success;
     } catch (error) {
       handleError(error);
@@ -203,27 +203,15 @@ export const AuthProvider = ({ children }) => {
   const verifyOTP = async (payload) => {
     setLoadingAuthActions(true);
     try {
-      // Generate device information
-      const deviceuniqueid = `device-${Date.now()}-${Math.floor(
-        Math.random() * 10000,
-      )}`;
-      const devicemodel = navigator.userAgent || "Unknown Device";
+      const response = await api.verifyOTP({
+        email: payload.email,
+        otp: payload.otp,
+      });
 
-      const payloadWithHeaders = {
-        ...payload,
-        deviceuniqueid,
-        devicemodel,
-      };
+      if (response?.data?.token) {
+        localStorage.setItem("authToken", response.data.token);
+      }
 
-      const response = await api.verifyOTP(payloadWithHeaders);
-      const userData = response.data.user;
-      const token = response.data.token;
-
-      // Store auth data
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userData", JSON.stringify(userData));
-
-      setUser(userData);
       handleSuccess(response.message, "OTP verified successfully");
       return { success: true };
     } catch (error) {
@@ -254,6 +242,32 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         error: error.message || "Failed to update password.",
+      };
+    } finally {
+      setLoadingAuthActions(false);
+    }
+  };
+
+  const resetPassword = async (payload) => {
+    setLoadingAuthActions(true);
+    try {
+      const response = await api.resetPassword({
+        email: payload.email,
+        newPassword: payload.newPassword,
+      });
+
+      if (response.success) {
+        localStorage.removeItem("authToken");
+        handleSuccess(response.message, "Password reset successfully");
+        return { success: true };
+      } else {
+        throw new Error(response.message || "Failed to reset password.");
+      }
+    } catch (error) {
+      handleError(error);
+      return {
+        success: false,
+        error: error.message || "Failed to reset password.",
       };
     } finally {
       setLoadingAuthActions(false);
@@ -346,6 +360,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     forgotPassword,
     verifyOTP,
+    resetPassword,
     updatePassword,
     updatePasswordAuth,
     register,
