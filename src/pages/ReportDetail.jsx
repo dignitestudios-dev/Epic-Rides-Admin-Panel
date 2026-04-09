@@ -266,7 +266,7 @@ const ReportDetail = () => {
         </div>
         {/* Right Column - Ride Details */}
         <div className="lg:col-span-4">
-          <InfoSection title="Incident Contest (Ride)" icon={<Navigation className="w-5 h-5 text-emerald-500" />}>
+          <InfoSection title="Incident Context (Ride)" icon={<Navigation className="w-5 h-5 text-emerald-500" />}>
             {report.relatedDetails ? (
               <div className="space-y-6">
                 {/* Status & ID */}

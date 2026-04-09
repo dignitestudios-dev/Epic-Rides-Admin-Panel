@@ -8,14 +8,13 @@ const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/";
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
-  timeout: API_CONFIG.timeout, // Set a timeout (optional)
+  timeout: API_CONFIG.timeout, 
   headers: API_CONFIG.headers,
 });
 
-// Request Interceptor
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("authToken"); // Retrieve token from storage
+    const token = localStorage.getItem("authToken");
     console.log("req token: ", token);
     if (token) {
       config.headers.authorization = `Bearer ${token}`;
@@ -30,10 +29,9 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem("authToken"); // Remove token if unauthorized
-      // Don't redirect if already on login page
+      localStorage.removeItem("authToken"); 
       if (!window.location.pathname.includes("/login")) {
-        window.location.href = "/auth/login"; // Redirect to login page
+        window.location.href = "/auth/login"; 
       }
     }
     console.log(error);
