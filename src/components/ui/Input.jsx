@@ -2,6 +2,7 @@ import { forwardRef } from 'react'
 
 const Input = forwardRef(({ 
   label, 
+  prefix,
   error, 
   helperText,
   leftIcon,
@@ -14,20 +15,25 @@ const Input = forwardRef(({
   
   return (
     <div className="space-y-1">
-      {label && (
+      {label && !prefix && (
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
           {label}
         </label>
       )}
-      <div className="relative">
-        {leftIcon && (
+      <div className="relative flex items-center">
+        {prefix && (
+          <span className="absolute left-3 w-28 text-xs font-medium text-gray-500 dark:text-gray-400 pointer-events-none whitespace-nowrap overflow-hidden text-ellipsis">
+            {prefix}:
+          </span>
+        )}
+        {leftIcon && !prefix && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             {leftIcon}
           </div>
         )}
         <input
           ref={ref}
-          className={`${baseClasses} ${errorClasses} ${leftIcon ? 'pl-10' : ''} ${rightIcon ? 'pr-10' : ''} ${className} bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600`}
+          className={`${baseClasses} ${errorClasses} ${prefix ? 'pl-32' : (leftIcon ? 'pl-10' : '')} ${rightIcon ? 'pr-10' : ''} ${className} bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600`}
           {...props}
         />
         {rightIcon && (

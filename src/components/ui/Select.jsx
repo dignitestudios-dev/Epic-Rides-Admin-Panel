@@ -5,6 +5,7 @@ const Select = forwardRef(
   (
     {
       label,
+      prefix,
       error,
       helperText,
       leftIcon,
@@ -171,13 +172,18 @@ const Select = forwardRef(
 
     return (
       <div className="space-y-1" ref={containerRef}>
-        {label && (
+        {label && !prefix && (
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             {label}
           </label>
         )}
         <div className="relative">
-          {leftIcon && (
+          {prefix && (
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 w-28 text-xs font-medium text-gray-500 dark:text-gray-400 pointer-events-none z-10 whitespace-nowrap overflow-hidden text-ellipsis">
+              {prefix}:
+            </span>
+          )}
+          {leftIcon && !prefix && (
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
               {leftIcon}
             </div>
@@ -190,7 +196,7 @@ const Select = forwardRef(
             onClick={handleToggle}
             disabled={disabled}
             name={name}
-            className={`${baseClasses} ${errorClasses} ${disabledClasses} ${className} flex items-center justify-between text-left`}
+            className={`${baseClasses} ${errorClasses} ${disabledClasses} ${className} flex items-center justify-between text-left ${prefix ? 'pl-32' : (leftIcon ? 'pl-10' : '')}`}
             {...props}
           >
             <span

@@ -105,7 +105,7 @@ const resetPassword = (payload) =>
   apiHandler(() => API.post("reset-password", payload));
 
 const updatePassword = (payload) =>
-  apiHandler(() => API.post("/auth/update-password", payload));
+  apiHandler(() => API.put("update-password", payload));
 
 const updatePasswordAuth = (payload) =>
   apiHandler(() => API.post("/auth/update-password-auth", payload));
@@ -118,11 +118,9 @@ const getAppConfigs = () => apiHandler(() => API.get("/global/config"));
 const updateAppConfigs = (payload) =>
   apiHandler(() => API.put("/global/config", payload));
 
-const getDashboardStats = () =>
-  apiHandler(() => API.get("/dashboard-stats"));
+const getDashboardStats = () => apiHandler(() => API.get("/dashboard-stats"));
 
-const getRideAnalytics = () =>
-  apiHandler(() => API.get("/ride-analytics"));
+const getRideAnalytics = () => apiHandler(() => API.get("/ride-analytics"));
 
 // Products API
 const createProduct = (productData) =>
@@ -207,8 +205,10 @@ const getAllDocs = (
       `/docs?status=${status}&page=${page}&limit=${limit}&search=${search}`,
     ),
   );
-const getDriverDocs = (driverId) => apiHandler(() => API.get(`/docs?driverId=${driverId}`));
-const getDriverVehicles = (driverId) => apiHandler(() => API.get(`/vehicles?driverId=${driverId}`));
+const getDriverDocs = (driverId) =>
+  apiHandler(() => API.get(`/docs?driverId=${driverId}`));
+const getDriverVehicles = (driverId) =>
+  apiHandler(() => API.get(`/vehicles?driverId=${driverId}`));
 
 const updateDocs = (documentsList = [], vehiclesList = []) =>
   apiHandler(() => {
@@ -256,7 +256,14 @@ const deleteVehicleType = (id) =>
   apiHandler(() => API.delete(`/vehicle-types/${id}`));
 
 // User Management API
-const getUsers = (type, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "", startDate = "", endDate = "") =>
+const getUsers = (
+  type,
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  search = "",
+  startDate = "",
+  endDate = "",
+) =>
   apiHandler(() => {
     let url = `/users?type=${type}&page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
@@ -265,7 +272,12 @@ const getUsers = (type, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, sea
     return API.get(url);
   });
 
-const getDrivers = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "", status = "") =>
+const getDrivers = (
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  search = "",
+  status = "",
+) =>
   apiHandler(() => {
     let url = `/drivers?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
@@ -273,12 +285,20 @@ const getDrivers = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search 
     return API.get(url);
   });
 
-const getUserDetail = (id, type) => apiHandler(() => API.get(`/users/${id}?type=${type}`));
+const getUserDetail = (id, type) =>
+  apiHandler(() => API.get(`/users/${id}?type=${type}`));
 
 const updateUserStatus = (id, type, status) =>
   apiHandler(() => API.patch(`/users/${id}/status`, { type, status }));
 
-const getSubscriptionRevenue = (page = 1, limit = 10, search = "", startDate = "", endDate = "", status = "") =>
+const getSubscriptionRevenue = (
+  page = 1,
+  limit = 10,
+  search = "",
+  startDate = "",
+  endDate = "",
+  status = "",
+) =>
   apiHandler(() => {
     let url = `/subscription-revenue?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
@@ -288,7 +308,13 @@ const getSubscriptionRevenue = (page = 1, limit = 10, search = "", startDate = "
     return API.get(url);
   });
 
-const getWithdrawalRevenue = (page = 1, limit = 10, search = "", startDate = "", endDate = "") =>
+const getWithdrawalRevenue = (
+  page = 1,
+  limit = 10,
+  search = "",
+  startDate = "",
+  endDate = "",
+) =>
   apiHandler(() => {
     let url = `/withdrawals?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
@@ -304,7 +330,14 @@ const getReports = (page = 1, limit = 10, status = "", sort = "desc") =>
     return API.get(url);
   });
 
-const getNotifications = (page = 1, limit = 10, search = "", sort = "desc", startDate = "", endDate = "") =>
+const getNotifications = (
+  page = 1,
+  limit = 10,
+  search = "",
+  sort = "desc",
+  startDate = "",
+  endDate = "",
+) =>
   apiHandler(() => {
     let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
@@ -319,8 +352,7 @@ const sendNotification = (payload) =>
 const resolveReport = (id, adminNotes = "") =>
   apiHandler(() => API.patch(`/reports/${id}/resolved`, { adminNotes }));
 
-const getReportById = (id) =>
-  apiHandler(() => API.get(`/reports/${id}`));
+const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
 export const api = {
   getUsers,

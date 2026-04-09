@@ -128,6 +128,10 @@ function App() {
                         />
 
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route
+                          path="/change-password"
+                          element={<ChangePassword />}
+                        />
 
                         {/* <Route path="/products">
                             <Route path="" element={<Products />} />

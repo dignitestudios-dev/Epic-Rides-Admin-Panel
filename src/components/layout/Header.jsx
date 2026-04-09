@@ -119,6 +119,14 @@ const Header = () => {
                   </p>
                 </div>
                 <div className="py-2">
+                  <Link
+                    to="/change-password"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border-b border-gray-100 dark:border-gray-700 mb-1"
+                  >
+                    <Shield className="w-4 h-4 mr-3" />
+                    Change Password
+                  </Link>
                   <button
                     onClick={handleLogoutClick}
                     className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"

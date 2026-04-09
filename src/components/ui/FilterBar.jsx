@@ -2,29 +2,10 @@ import React from "react";
 import Button from "./Button";
 import Input from "./Input";
 import Select from "./Select";
-import { Filter as FilterIcon, X as XIcon, Search } from "lucide-react";
+import { X as XIcon, Search, Calendar } from "lucide-react";
 
 /**
  * FilterBar - A highly reusable, professional filter bar for any page.
- *
- * Props:
- * - filters: Array of filter configs [{
- *     key: string,
- *     label: string,
- *     type: 'select' | 'input' | 'date',
- *     options?: Array<{ value: string, label: string }>,
- *     value: any,
- *     onChange: (value) => void,
- *     placeholder?: string,
- *     className?: string
- *   }]
- * - onClear: function to clear all filters
- * - showClear?: boolean (default: true)
- * - className?: string
- * - searchable?: boolean
- * - searchValue?: string
- * - onSearchChange?: (value) => void
- * - searchPlaceholder?: string
  */
 const FilterBar = ({
   filters = [],
@@ -50,27 +31,17 @@ const FilterBar = ({
         </div>
       )}
 
-      {filters.length > 0 && (
-      <div className="flex items-center space-x-2">
-        <FilterIcon className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Filters:
-        </span>
-      </div>)
-}
       {filters.map((filter) => {
         if (filter.type === "select") {
           return (
             <div key={filter.key} className="min-w-[140px]">
-              <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-                {filter.label}
-              </label>
               <Select
                 value={filter.value}
-                onChange={filter.onChange} // Remove e.target.value since custom Select passes value directly
+                onChange={filter.onChange}
                 options={[...(filter.options || [])]}
                 className={`py-1 px-3 text-sm ${filter.className || ""}`}
                 placeholder={filter.placeholder || filter.label}
+                prefix={filter.label}
               />
             </div>
           );
@@ -78,15 +49,14 @@ const FilterBar = ({
         if (filter.type === "date") {
           return (
             <div key={filter.key} className="min-w-[140px]">
-              <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-                {filter.label}
-              </label>
               <Input
                 type="date"
                 value={filter.value}
                 onChange={(e) => filter.onChange(e.target.value)}
                 placeholder={filter.placeholder || filter.label}
                 className={`${filter.className || ""}`}
+                leftIcon={<Calendar className="w-4 h-4 text-gray-400" />}
+                prefix={filter.label}
               />
             </div>
           );
@@ -94,15 +64,13 @@ const FilterBar = ({
         // Default to text input
         return (
           <div key={filter.key} className="min-w-[140px]">
-            <label className="block mb-1 text-xs font-medium text-gray-600 dark:text-gray-300">
-              {filter.label}
-            </label>
             <Input
               type="text"
               value={filter.value}
               onChange={(e) => filter.onChange(e.target.value)}
               placeholder={filter.placeholder || filter.label}
               className={`${filter.className || ""}`}
+              prefix={filter.label}
             />
           </div>
         );
