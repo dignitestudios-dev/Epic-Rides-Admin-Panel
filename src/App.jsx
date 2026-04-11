@@ -9,6 +9,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { AppProvider } from "./contexts/AppContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import Modal from "./components/ui/Modal";
 import Button from "./components/ui/Button";
 import { useAuth } from "./contexts/AuthContext";
@@ -119,8 +120,8 @@ function App() {
                 <Route
                   path="/*"
                   element={
-                    // <ProtectedRoute>
-                    <Layout>
+                    <ProtectedRoute>
+                      <Layout>
                       <Routes>
                         <Route
                           path="/"
@@ -204,7 +205,7 @@ function App() {
                         <Route path="/docs" element={<Documentation />} />
                       </Routes>
                     </Layout>
-                    // </ProtectedRoute>
+                  </ProtectedRoute>
                   }
                 />
               </Routes>

@@ -76,10 +76,10 @@ const ResetPassword = () => {
       setIsSuccess(true);
       // reset(); // Assuming reset is from useForm
 
-      // Hide success message after 5 seconds
-      setTimeout(() => {
-        setIsSuccess(false);
-      }, 5000);
+      // // Hide success message after 5 seconds
+      // setTimeout(() => {
+      //   setIsSuccess(false);
+      // }, 5000);
     } else {
       // handleError(response.error || "Error resetting password");
       console.error("Error resetting password:", response.error);
@@ -135,6 +135,7 @@ const ResetPassword = () => {
             <Input
               label="New Password"
               type={showPassword ? "text" : "password"}
+              placeholder="Enter your new password"
               autoComplete="new-password"
               {...register("password", {
                 required: "Password is required",
@@ -159,6 +160,7 @@ const ResetPassword = () => {
 
             <Input
               label="Confirm New Password"
+              placeholder="Re-enter your new password"
               type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               {...register("confirmPassword", {

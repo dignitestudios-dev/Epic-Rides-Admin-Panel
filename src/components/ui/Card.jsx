@@ -6,7 +6,7 @@ const Card = forwardRef(
     ref
   ) => {
     const baseClasses =
-      "bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200";
+      "bg-white dark:bg-gray-800  rounded-lg border border-gray-200 dark:border-gray-700 transition-colors duration-200";
     const hoverClasses = hover ? "card-hover cursor-pointer" : "";
     const classes = `${baseClasses} ${hoverClasses} ${padding} ${className}`;
 

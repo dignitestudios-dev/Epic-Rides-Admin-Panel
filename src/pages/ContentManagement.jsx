@@ -18,7 +18,7 @@ const ContentManagement = () => {
   };
 
   const handleSave = () => {
-    console.log("Updated Pricing Settings:", pricing);
+    // console.log("Updated Pricing Settings:", pricing);
     
     // TODO: Call API to save settings in backend
   };

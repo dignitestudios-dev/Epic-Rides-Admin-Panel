@@ -180,7 +180,7 @@ const Categories = () => {
   };
 
   const handleDelete = async (categoryId) => {
-    console.log(categoryId);
+    // console.log(categoryId);
     const success = await deleteCategory(categoryId);
     if (success) {
       getAllCategories();

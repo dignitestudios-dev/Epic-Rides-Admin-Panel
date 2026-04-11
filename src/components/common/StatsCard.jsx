@@ -48,9 +48,9 @@ const StatsCard = ({
   const colorObj = COLOR_ORDER[index % COLOR_ORDER.length];
 
   return (
-    <Card>
-      <div className="flex items-center">
-        <div className="flex-1">
+    <Card className="flex justify-between items-center">
+      <div className="flex items-center w-full justify-between">
+        <div className="flex-1 items-center">
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
             {title}
           </p>
@@ -89,7 +89,7 @@ const StatsCard = ({
           )}
         </div>
         {icon && (
-          <div className={`p-3 rounded-lg ${colorObj.bg}`}>
+          <div className={`p-3 ml-4 rounded-lg ${colorObj.bg}`}>
             {React.cloneElement(icon, {
               className: `w-6 h-6 ${colorObj.text}`,
             })}

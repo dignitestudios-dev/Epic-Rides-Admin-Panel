@@ -348,12 +348,24 @@ export const AuthProvider = ({ children }) => {
     }
   }, [lockedUntil]);
 
+  const hasPermission = (permission) => {
+    if (!user) return false;
+    // Admin has all permissions
+    if (user.role === "admin") return true;
+    return user.permissions?.includes(permission) || false;
+  };
+  const hasRole = (role) => {
+    return user?.role === role;
+  };
+
   const value = {
     user,
     loading,
     loadingAuthActions,
     isAuthenticated: !!user,
     isLockedOut: isLockedOut(),
+    hasPermission,
+    hasRole,
     loginAttempts,
     remainingLockTime,
     login,

@@ -7,7 +7,6 @@ import Popup from "../components/ui/Popup";
 import { useForm } from "react-hook-form";
 import { SECURITY_CONFIG } from "../config/constants";
 import { useAuth } from "../contexts/AuthContext";
-import { handleError } from "../utils/helpers";
 
 const ChangePassword = () => {
   const { updatePassword } = useAuth();
@@ -25,6 +24,7 @@ const ChangePassword = () => {
     reset,
   } = useForm();
   const watchNewPassword = watch("newPassword");
+  const watchCurrentPassword = watch("currentPassword");
 
   const validatePassword = (password) => {
     const errors = [];
@@ -75,12 +75,8 @@ const ChangePassword = () => {
         setTimeout(() => {
           setIsSuccess(false);
         }, 5000);
-      } else {
-        handleError(response.error || "Error changing password");
-        console.error("Error changing password:", response.error);
       }
     } catch (error) {
-      handleError(error.message || "Error changing password");
       console.error("Error changing password:", error);
     } finally {
       setIsLoading(false);
@@ -126,6 +122,7 @@ const ChangePassword = () => {
             {/* Current Password */}
             <Input
               label="Current Password"
+              placeholder="Enter your current password"
               type={showCurrentPassword ? "text" : "password"}
               autoComplete="current-password"
               {...register("currentPassword", {
@@ -151,11 +148,17 @@ const ChangePassword = () => {
             {/* New Password */}
             <Input
               label="New Password"
+              placeholder="Enter your new password"
               type={showNewPassword ? "text" : "password"}
               autoComplete="new-password"
               {...register("newPassword", {
                 required: "New password is required",
-                validate: validatePassword,
+                validate: {
+                  complexity: validatePassword,
+                  notSameAsCurrent: (value) =>
+                    value !== watchCurrentPassword ||
+                    "New password cannot be the same as the current password",
+                },
               })}
               error={errors.newPassword?.message}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
@@ -177,6 +180,7 @@ const ChangePassword = () => {
             {/* Confirm New Password */}
             <Input
               label="Confirm New Password"
+              placeholder="Re-enter your new password"
               type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               {...register("confirmPassword", {

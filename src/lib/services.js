@@ -15,7 +15,7 @@ const API = axios.create({
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
-    console.log("req token: ", token);
+    // console.log("req token: ", token);
     if (token) {
       config.headers.authorization = `Bearer ${token}`;
     }
@@ -51,6 +51,11 @@ const handleApiError = (error) => {
   }
   throw new Error(error?.message || error || "An Unexpected error occurred");
 };
+const formatDateForApi = (date) => {
+  if (!date) return "";
+  if (date.includes("T")) return date;
+  return `${date}T12:00:00.000Z`;
+};
 
 const handleApiResponse = (response) => {
   const responseData = response.data;
@@ -71,6 +76,7 @@ const apiHandler = async (apiCall) => {
     const response = await apiCall();
     return handleApiResponse(response);
   } catch (error) {
+    console.log(error)
     throw handleApiError(error);
   }
 };
@@ -180,7 +186,7 @@ const getOrders = (
 ) =>
   apiHandler(() =>
     API.get(
-      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${startDate}&endDate=${endDate}&search=${search}&page=${page}&limit=${limit}`,
+      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${formatDateForApi(startDate)}&endDate=${formatDateForApi(endDate)}&search=${search}&page=${page}&limit=${limit}`,
     ),
   );
 
@@ -265,8 +271,8 @@ const getUsers = (
   apiHandler(() => {
     let url = `/users?type=${type}&page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -303,8 +309,8 @@ const getSubscriptionRevenue = (
   apiHandler(() => {
     let url = `/subscription-revenue?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     if (status) url += `&subscriptionStatus=${status}`;
     return API.get(url);
   });
@@ -319,8 +325,8 @@ const getWithdrawalRevenue = (
   apiHandler(() => {
     let url = `/withdrawals?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -342,8 +348,8 @@ const getNotifications = (
   apiHandler(() => {
     let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     return API.get(url);
   });
 
