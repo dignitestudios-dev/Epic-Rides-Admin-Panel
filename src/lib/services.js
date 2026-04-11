@@ -283,6 +283,9 @@ const getDrivers = (
     return API.get(url);
   });
 
+const getRequestsCount = () =>
+  apiHandler(() => API.get("/requests-count"));
+
 const getUserDetail = (id, type) =>
   apiHandler(() => API.get(`/users/${id}?type=${type}`));
 
@@ -323,7 +326,7 @@ const getWithdrawalRevenue = (
 
 const getReports = (page = 1, limit = 10, status = "", sort = "desc") =>
   apiHandler(() => {
-    let url = `/reports?page=${page}&limit=${limit}&sort=${sort}`;
+    let url = `/reports?page=${page}&limit=${limit}`;
     if (status) url += `&status=${status}`;
     return API.get(url);
   });
@@ -355,6 +358,7 @@ const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 export const api = {
   getUsers,
   getDrivers,
+  getRequestsCount,
   getUserDetail,
   getDriverDocs,
   getDriverVehicles,

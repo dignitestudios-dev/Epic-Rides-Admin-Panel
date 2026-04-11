@@ -615,7 +615,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[15px] text-gray-700">
+              <span className="font-semibold capitalize text-[15px] text-gray-700">
                 {vehicle.make} {vehicle.model}
               </span>
               {isOld && (
@@ -926,7 +926,7 @@ const DriverDetails = () => {
 
           <div className="px-6 pb-6 pt-4 relative">
             {/* Overlapping Avatar */}
-            <div className="absolute -top-16 left-6 w-24 h-24 rounded-2xl border-[4px] border-white shadow-xl bg-gray-50 flex items-center justify-center overflow-hidden z-10 shrink-0">
+            <div className="absolute -top-16 left-6 w-24 h-24 rounded-2xl border-[4px] border-white shadow-xl bg-gray-50 flex items-center justify-center overflow-hidden z-0 shrink-0">
               {pInfo?.profilePicture ? (
                 <img
                   src={pInfo.profilePicture}

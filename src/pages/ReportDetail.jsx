@@ -123,58 +123,80 @@ const ReportDetail = () => {
     </Card>
   );
 
-  const UserInfoCard = ({ label, info, iconColor }) => {
-    if (!info) return null;
-    return (
-      <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-3">
-             <div className={`p-2 rounded-full ${iconColor} bg-opacity-10`}>
-                <User className={`w-5 h-5 ${iconColor}`} />
-             </div>
-             <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">{label}</p>
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white">{info.name}</h4>
-             </div>
+ const UserInfoCard = ({ label, info, iconColor }) => {
+  if (!info) return null;
+
+  return (
+    <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
+      
+      {/* Header */}
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`p-2 rounded-full ${iconColor} bg-opacity-10 shrink-0`}>
+            <User className={`w-5 h-5 ${iconColor}`} />
           </div>
-          <Badge variant={info.isDeactivatedByAdmin ? "danger" : "success"}>
-            {info.isDeactivatedByAdmin ? "Deactivated" : "Active"}
-          </Badge>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-5">
-          <div className="flex items-center text-gray-600 dark:text-gray-400">
-            <Mail className="w-4 h-4 mr-2" />
-            {info.email}
-          </div>
-          <div className="flex items-center text-gray-600 dark:text-gray-400">
-            <Phone className="w-4 h-4 mr-2" />
-            {info.phone}
+
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+              {label}
+            </p>
+            <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+              {info.name}
+            </h4>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="flex-1 text-xs"
-            onClick={() => navigate(getProfilePath(info.type, info.id))}
-          >
-            <ExternalLink className="w-3 h-3 mr-1" />
-            Profile
-          </Button>
-          <Button 
-            size="sm" 
-            variant={info.isDeactivatedByAdmin ? "success" : "danger"}
-            className="flex-1 text-xs"
-            onClick={() => handleUserStatusToggle(info.id, info.type, info.isDeactivatedByAdmin)}
-          >
-            {info.isDeactivatedByAdmin ? " Activate" : "Deactivate"}
-          </Button>
+        <Badge variant={info.isDeactivatedByAdmin ? "danger" : "success"}>
+          {info.isDeactivatedByAdmin ? "Deactivated" : "Active"}
+        </Badge>
+      </div>
+
+      {/* Info */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-5">
+        
+        {/* Email */}
+        <div className="flex items-center text-gray-600 dark:text-gray-400 min-w-0">
+          <Mail className="w-4 h-4 mr-2 shrink-0" />
+          <span className="truncate">{info.email}</span>
+        </div>
+
+        {/* Phone */}
+        <div className="flex items-center text-gray-600 dark:text-gray-400 min-w-0">
+          <Phone className="w-4 h-4 mr-2 shrink-0" />
+          <span className="truncate">{info.phone}</span>
         </div>
       </div>
-    );
-  };
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 text-xs"
+          onClick={() => navigate(getProfilePath(info.type, info.id))}
+        >
+          <ExternalLink className="w-3 h-3 mr-1" />
+          Profile
+        </Button>
+
+        <Button
+          size="sm"
+          variant={info.isDeactivatedByAdmin ? "success" : "danger"}
+          className="flex-1 text-xs"
+          onClick={() =>
+            handleUserStatusToggle(
+              info.id,
+              info.type,
+              info.isDeactivatedByAdmin
+            )
+          }
+        >
+          {info.isDeactivatedByAdmin ? "Activate" : "Deactivate"}
+        </Button>
+      </div>
+    </div>
+  );
+};
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500 pb-10">

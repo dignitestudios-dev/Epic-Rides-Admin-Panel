@@ -4,6 +4,7 @@ import { ChevronRight, X } from "lucide-react";
 import { APP_CONFIG } from "../../config/constants";
 import { useApp } from "../../contexts/AppContext";
 import * as Icons from "lucide-react";
+import useGetRequestsCount from "../../hooks/drivers/useGetRequestsCount";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -14,6 +15,7 @@ const Sidebar = () => {
     toggleMobileSidebar,
     toggleSidebar,
   } = useApp();
+  const { count: pendingRequestsCount } = useGetRequestsCount();
   const [expandedItems, setExpandedItems] = useState({});
 
   const toggleExpanded = (itemId) => {
@@ -67,21 +69,14 @@ const Sidebar = () => {
                 )}
                 {item?.id === "driver-management" && (
                   <div className="ml-auto flex items-center gap-1">
-                    {/* Pending badge */}
-                    {/* <span
-                      title="Pending / Under Review"
-                      className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
-                    >
-                      8
-                    </span> */}
-
-                    {/* Resubmitted badge */}
-                    {/* <span
-                      title="Resubmitted"
-                      className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
-                    >
-                      4
-                    </span> */}
+                    {pendingRequestsCount > 0 && (
+                      <span
+                        title="Pending Driver Requests"
+                        className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
+                      >
+                        {pendingRequestsCount}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -149,21 +144,14 @@ const Sidebar = () => {
             )}
             {item?.id === "driver-management" && (
               <div className="ml-auto flex items-center gap-1">
-                {/* Pending badge */}
-                {/* <span
-                  title="Pending / Under Review"
-                  className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
-                >
-                  8
-                </span> */}
-
-                {/* Resubmitted badge */}
-                {/* <span
-                  title="Resubmitted"
-                  className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-blue-500 text-white text-[10px] font-semibold leading-none"
-                >
-                  4
-                </span> */}
+                {pendingRequestsCount > 0 && (
+                  <span
+                    title="Pending Driver Requests"
+                    className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
+                  >
+                    {pendingRequestsCount}
+                  </span>
+                )}
               </div>
             )}
           </Link>

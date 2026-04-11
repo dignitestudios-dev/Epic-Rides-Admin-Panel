@@ -33,7 +33,6 @@ const Reports = () => {
         pagination.currentPage,
         pageSize,
         statusFilter,
-        sortOrder
       );
       if (response.success) {
         setReports(response.data.results);
@@ -53,7 +52,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchReports();
-  }, [pagination.currentPage, pageSize, statusFilter, sortOrder]);
+  }, [pagination.currentPage, pageSize, statusFilter]);
 
   const columns = [
     {
@@ -189,7 +188,7 @@ const Reports = () => {
             ]}
           />
         </div>
-        <div className="flex-1 max-w-xs">
+        {/* <div className="flex-1 max-w-xs">
           <Select
             label="Sort by Date"
             value={sortOrder}
@@ -199,7 +198,7 @@ const Reports = () => {
               { value: "asc", label: "Oldest First" },
             ]}
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Reports Table */}

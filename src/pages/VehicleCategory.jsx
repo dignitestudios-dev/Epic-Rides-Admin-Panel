@@ -59,7 +59,6 @@ const VehicleCategoryManagement = () => {
   const [vehicleToDelete, setVehicleToDelete] = useState(null);
 
   const defaultValues = {
-    make: "",
     model: "",
     rideType: "economy",
     notes: "",
@@ -76,11 +75,11 @@ const VehicleCategoryManagement = () => {
   } = useForm({ defaultValues });
 
   const columns = [
-    {
-      key: "make",
-      label: "Make",
-      render: (value) => <span className="capitalize">{value}</span>,
-    },
+    // {
+    //   key: "make",
+    //   label: "Make",
+    //   render: (value) => <span className="capitalize">{value}</span>,
+    // },
     {
       key: "model",
       label: "Model",
@@ -255,7 +254,7 @@ const VehicleCategoryManagement = () => {
             setSearch("");
             setRideType("");
           }}
-          searchPlaceholder="Search by make or model..."
+          searchPlaceholder="Search by model..."
           searchable={true}
           searchValue={search}
           onSearchChange={setSearch}
@@ -284,13 +283,6 @@ const VehicleCategoryManagement = () => {
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Make"
-              placeholder="e.g. Toyota"
-              {...register("make", { required: "Make is required" })}
-              disabled={loadingCreate || loadingActions || !!editingVehicle}
-              error={errors.make?.message}
-            />
             <Input
               label="Model"
               placeholder="e.g. Camry"
@@ -387,7 +379,7 @@ const VehicleCategoryManagement = () => {
           {vehicleToDelete && (
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
               <p className="text-sm font-medium text-gray-900 capitalize">
-                {vehicleToDelete.make} {vehicleToDelete.model}
+                {vehicleToDelete.model}
               </p>
               <p className="text-xs text-gray-500 capitalize">
                 Ride Type: {vehicleToDelete.rideType}
