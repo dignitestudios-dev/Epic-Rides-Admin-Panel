@@ -193,3 +193,17 @@ export const downloadCSV = (data, filename) => {
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
 };
+
+export const startOfDay = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
+ export const endOfDay = (date) => {
+  if (!date) return "";
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d.toISOString();
+};

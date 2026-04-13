@@ -1,375 +1,361 @@
 import React, { useState, useEffect } from "react";
-import {
-  BadgeDollarSign,
-  Download,
-  Search,
-  Filter,
-  ArrowUpRight,
-  ArrowDownRight,
-  TrendingUp,
-  Users,
-  Wallet,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
+import { Download } from "lucide-react";
+
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import DataTable from "../components/common/DataTable";
-import StatsCard from "../components/common/StatsCard";
 import FilterBar from "../components/ui/FilterBar";
-import CommissionTrendChart from "../components/ui/CommissionTrendChart";
-import { formatDate, formatCurrency, downloadCSV } from "../utils/helpers";
+
+import { formatDate, downloadCSV } from "../utils/helpers";
 import useGetSubscriptionRevenue from "../hooks/revenue/useGetSubscriptionRevenue";
 import useGetWithdrawalRevenue from "../hooks/revenue/useGetWithdrawalRevenue";
 import useDebounce from "../hooks/global/useDebounce";
 
+/* =========================
+   DATE HELPERS
+========================= */
+const startOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString();
+};
+
+const endOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d.toISOString();
+};
+
+const isValidRange = (start, end) => start && end;
+
+/* =========================
+   COMPONENT
+========================= */
 const Revenue = () => {
-  const [activeTab, setActiveTab] = useState("subscription"); // 'subscription' or 'withdrawal'
+  const [activeTab, setActiveTab] = useState("subscription");
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [search, setSearch] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [status, setStatus] = useState("");
 
-  const debouncedSearch = useDebounce(search, 500);
+  /* =========================
+     SEPARATE FILTER STATES
+  ========================= */
 
-  // Subscription Data
+  const [subFilters, setSubFilters] = useState({
+    search: "",
+    startDate: "",
+    endDate: "",
+    status: "",
+  });
+
+  const [withFilters, setWithFilters] = useState({
+    search: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  const subSearch = useDebounce(subFilters.search, 500);
+  const withSearch = useDebounce(withFilters.search, 500);
+
+  /* =========================
+     TAB CHANGE
+  ========================= */
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentPage(1);
+  };
+
+  /* =========================
+     DATE VALIDATION (CRITICAL FIX)
+  ========================= */
+
+  const subDateFrom = isValidRange(subFilters.startDate, subFilters.endDate)
+    ? startOfDay(subFilters.startDate)
+    : null;
+
+  const subDateTo = isValidRange(subFilters.startDate, subFilters.endDate)
+    ? endOfDay(subFilters.endDate)
+    : null;
+
+  const withDateFrom = isValidRange(withFilters.startDate, withFilters.endDate)
+    ? startOfDay(withFilters.startDate)
+    : null;
+
+  const withDateTo = isValidRange(withFilters.startDate, withFilters.endDate)
+    ? endOfDay(withFilters.endDate)
+    : null;
+
+  /* =========================
+     API CALLS
+  ========================= */
+
   const {
     data: subData,
-    stats: subStats,
     loading: subLoading,
     totalPages: subTotalPages,
     totalData: subTotalData,
   } = useGetSubscriptionRevenue(
     currentPage,
     pageSize,
-    debouncedSearch,
-    startDate,
-    endDate,
-    status?.target?.value,
+    subSearch,
+    subDateFrom,
+    subDateTo,
+    subFilters.status?.target?.value
   );
 
-  // Withdrawal Data
   const {
     data: withData,
-    stats: withStats,
     loading: withLoading,
     totalPages: withTotalPages,
     totalData: withTotalData,
   } = useGetWithdrawalRevenue(
     currentPage,
     pageSize,
-    debouncedSearch,
-    startDate,
-    endDate,
+    withSearch,
+    withDateFrom,
+    withDateTo
   );
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
+  /* =========================
+     UPDATE FILTERS
+  ========================= */
+
+  const updateSub = (key, value) => {
+    setSubFilters((p) => ({ ...p, [key]: value }));
     setCurrentPage(1);
-    setSearch("");
-    setStartDate("");
-    setEndDate("");
-    setStatus("");
   };
 
-  useEffect(() => {
+  const updateWith = (key, value) => {
+    setWithFilters((p) => ({ ...p, [key]: value }));
     setCurrentPage(1);
-  }, [debouncedSearch, startDate, endDate, status, activeTab]);
+  };
+
+  /* =========================
+     EXPORT
+  ========================= */
 
   const handleExport = () => {
     if (activeTab === "subscription") {
-      if (!subData || subData.length === 0) return;
-      const formattedData = subData.map(item => ({
-        "Driver Name": item.driverName,
-        "Email": item.email,
-        "Status": item.subscriptionStatus,
-        "Purchase Date": formatDate(item.purchaseDate),
-        "Expiry Date": formatDate(item.expiryDate),
-        "Amount": `$${item.amount || 0}`
+      if (!subData?.length) return;
+
+      const formatted = subData.map((i) => ({
+        "Driver Name": i.driverName,
+        Email: i.email,
+        Status: i.subscriptionStatus,
+        "Purchase Date": formatDate(i.purchaseDate),
+        "Expiry Date": formatDate(i.expiryDate),
+        Amount: `$${i.amount || 0}`,
       }));
-      downloadCSV(formattedData, "subscription_revenue_export");
+
+      downloadCSV(formatted, "subscription_revenue");
     } else {
-      if (!withData || withData.length === 0) return;
-      const formattedData = withData.map(item => ({
-        "Driver Name": item.driverName,
-        "Withdrawal Amount": `$${item.withdrawalAmount}`,
-        "Date": formatDate(item.date),
-        "Admin Commission (3%)": `$${item.adminCommission}`
+      if (!withData?.length) return;
+
+      const formatted = withData.map((i) => ({
+        "Driver Name": i.driverName,
+        "Withdrawal Amount": `$${i.withdrawalAmount}`,
+        Date: formatDate(i.date),
+        "Admin Commission": `$${i.adminCommission}`,
       }));
-      downloadCSV(formattedData, "withdrawal_commission_export");
+
+      downloadCSV(formatted, "withdrawal_commission");
     }
   };
 
+  /* =========================
+     UI DATA SWITCH
+  ========================= */
+
+  const tableData = activeTab === "subscription" ? subData : withData;
+  const loading = activeTab === "subscription" ? subLoading : withLoading;
+  const totalPages =
+    activeTab === "subscription" ? subTotalPages : withTotalPages;
+  const totalData =
+    activeTab === "subscription" ? subTotalData : withTotalData;
+
+  /* =========================
+     COLUMNS
+  ========================= */
+
   const subColumns = [
-    {
-      key: "driverName",
-      label: "Driver Name",
-      render: (val) => (
-        <span className="font-semibold text-gray-900">{val}</span>
-      ),
-    },
+    { key: "driverName", label: "Driver Name" },
     { key: "email", label: "Email" },
     {
       key: "subscriptionStatus",
       label: "Status",
-      render: (val) => (
-        <Badge className="capitalize" variant={val?.toLowerCase() === "active" ? "success" : "danger"}>
-          {val}
+      render: (v) => (
+        <Badge variant={v === "active" ? "success" : "danger"}>
+          {v}
         </Badge>
       ),
     },
     {
       key: "purchaseDate",
       label: "Purchase Date",
-      render: (val) => formatDate(val),
+      render: formatDate,
     },
     {
       key: "expiryDate",
       label: "Expiry Date",
-      render: (val) => (
-        <span className="font-medium text-gray-700">{formatDate(val)}</span>
-      ),
+      render: formatDate,
     },
     {
       key: "amount",
       label: "Amount",
-      render: (val) => (
-        <span className="font-bold text-green-600">${val || 0}</span>
-      ),
+      render: (v) => `$${v || 0}`,
     },
   ];
 
   const withColumns = [
-    {
-      key: "driverName",
-      label: "Driver Name",
-      render: (val) => (
-        <span className="font-semibold text-gray-900">{val}</span>
-      ),
-    },
+    { key: "driverName", label: "Driver Name" },
     {
       key: "withdrawalAmount",
       label: "Withdrawal Amount",
-      render: (val) => (
-        <span className="font-medium text-gray-700">${val}</span>
-      ),
+      render: (v) => `$${v}`,
     },
     {
       key: "adminCommission",
-      label: "Admin Commission (3%)",
-      render: (val) => (
-        <span className="font-bold text-primary-600">${val}</span>
-      ),
+      label: "Admin Commission",
+      render: (v) => `$${v}`,
     },
-    { 
-      key: "date", 
-      label: "Date", 
-      render: (val) => formatDate(val) 
+    {
+      key: "date",
+      label: "Date",
+      render: formatDate,
     },
   ];
 
+  /* =========================
+     UI
+  ========================= */
+
   return (
-    <div className=" space-y-6 bg-gray-50/50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Revenue Management
-          </h1>
-          <p className="text-gray-500 mt-1  text-sm">
-            Track your platform earnings and financial performance
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleExport}
-          className="shadow-lg shadow-primary-500/20"
-        >
+    <div className="space-y-6 min-h-screen bg-gray-50/50">
+
+      {/* HEADER */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Revenue Management</h1>
+
+        <Button onClick={handleExport}>
           Export CSV
         </Button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      {/* TABS */}
+      <div className="flex border-b">
         <button
           onClick={() => handleTabChange("subscription")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+          className={`px-4 py-2 ${
             activeTab === "subscription"
-              ? "text-[#39A300] border-b-2 border-[#39A300]"
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-green-600 border-b-2 border-green-600"
+              : "text-gray-500"
           }`}
         >
-          <div className="flex items-center gap-2 text-base">
-            <BadgeDollarSign className="w-4 h-4" />
-            Subscription Revenue
-          </div>
+          Subscription Revenue
         </button>
+
         <button
           onClick={() => handleTabChange("withdrawal")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+          className={`px-4 py-2 ${
             activeTab === "withdrawal"
-              ? "text-[#39A300] border-b-2 border-[#39A300]"
-              : "text-gray-500 hover:text-gray-700"
+              ? "text-green-600 border-b-2 border-green-600"
+              : "text-gray-500"
           }`}
         >
-          <div className="flex items-center gap-2 text-base">
-            <Wallet className="w-4 h-4" />
-            Withdrawal Commission
-          </div>
+          Withdrawal Commission
         </button>
       </div>
 
-      {/* Stats Section */}
-      {activeTab === "subscription" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Total Subscriptions"
-            value={subStats?.totalSubscriptionsPurchased || 0}
-            icon={<TrendingUp />}
-            colored
-            index={2}
-          />
-          <StatsCard
-            title="Active Subscriptions"
-            value={subStats?.totalActiveSubscriptions || 0}
-            icon={<CheckCircle2 />}
-            colored
-            index={3}
-          />
-          <StatsCard
-            title="Expired Subscriptions"
-            value={subStats?.totalExpiredSubscriptions || 0}
-            icon={<AlertCircle />}
-            colored
-            index={5}
-          />
-          <StatsCard
-            title="Total Revenue (USD)"
-            value={`$${subStats?.totalRevenue || 0}`}
-            icon={<Wallet />}
-            colored
-            index={3}
-          />
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 max-w-4xl">
-          <StatsCard
-            title="Total Withdrawals Processed"
-            value={withStats?.totalWithdrawalsProcessed || 0}
-            icon={<TrendingUp />}
-            colored
-            index={2}
-          />
-          <StatsCard
-            title="Total Commission Revenue"
-            value={`$${withStats?.totalCommissionRevenue.toFixed(2) || 0}`}
-            icon={<Wallet />}
-            description="3% on every withdrawal"
-            colored
-            index={3}
-          />
-        </div>
-      )}
-
-      {/* Charts Section */}
-      {/* <div className="grid grid-cols-1 gap-6">
-        <Card className="border-none shadow-xl shadow-gray-200/50 p-6 rounded-3xl">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-gray-900">
-              {activeTab === "subscription"
-                ? "Subscription Revenue Trend"
-                : "Commission Earnings Trend"}
-            </h2>
-            <div className="flex items-center gap-2 text-sm font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">
-              <TrendingUp className="w-4 h-4" />
-              <span>+12.5% from last week</span>
-            </div>
-          </div>
-          <CommissionTrendChart />
-        </Card>
-      </div> */}
-
-      {/* Main Table Section */}
-      <Card className="border-none shadow-xl shadow-gray-200/50 overflow-hidden rounded-3xl">
-        <div className="p-6 border-b border-gray-100">
+      {/* FILTERS (FULLY SEPARATED + VALID RANGE ONLY) */}
+      <Card>
+        {activeTab === "subscription" ? (
           <FilterBar
             searchable
-            searchValue={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search by driver name..."
+            searchValue={subFilters.search}
+            onSearchChange={(v) => updateSub("search", v)}
             filters={[
               {
                 key: "startDate",
-                label: "Start Date",
                 type: "date",
-                value: startDate,
-                onChange: setStartDate,
+                value: subFilters.startDate,
+                onChange: (v) => updateSub("startDate", v),
               },
               {
                 key: "endDate",
-                label: "End Date",
                 type: "date",
-                value: endDate,
-                onChange: setEndDate,
+                value: subFilters.endDate,
+                onChange: (v) => updateSub("endDate", v),
               },
-              ...(activeTab === "subscription"
-                ? [
-                    {
-                      key: "status",
-                      label: "Status",
-                      type: "select",
-                      value: status?.target?.value,
-                      onChange: setStatus,
-                      options: [
-                        { value: "active", label: "Active" },
-                        { value: "expired", label: "Expired" },
-                      ],
-                    },
-                  ]
-                : []),
+              {
+                key: "status",
+                type: "select",
+                value: subFilters.status?.target?.value,
+                onChange: (v) => updateSub("status", v),
+                options: [
+                  { value: "active", label: "Active" },
+                  { value: "expired", label: "Expired" },
+                ],
+              },
             ]}
-            onClear={() => {
-              setSearch("");
-              setStartDate("");
-              setEndDate("");
-              setStatus("");
-            }}
+            onClear={() =>
+              setSubFilters({
+                search: "",
+                startDate: "",
+                endDate: "",
+                status: "",
+              })
+            }
           />
-        </div>
+        ) : (
+          <FilterBar
+            searchable
+            searchValue={withFilters.search}
+            onSearchChange={(v) => updateWith("search", v)}
+            filters={[
+              {
+                key: "startDate",
+                type: "date",
+                value: withFilters.startDate,
+                onChange: (v) => updateWith("startDate", v),
+              },
+              {
+                key: "endDate",
+                type: "date",
+                value: withFilters.endDate,
+                onChange: (v) => updateWith("endDate", v),
+              },
+            ]}
+            onClear={() =>
+              setWithFilters({
+                search: "",
+                startDate: "",
+                endDate: "",
+              })
+            }
+          />
+        )}
+      </Card>
 
+      {/* TABLE */}
+      <Card>
         <DataTable
-          title={
-            activeTab === "subscription"
-              ? "Subscription History"
-              : "Withdrawal Earnings"
-          }
-          data={activeTab === "subscription" ? subData : withData}
+          data={tableData}
           columns={activeTab === "subscription" ? subColumns : withColumns}
-          loading={activeTab === "subscription" ? subLoading : withLoading}
-          totalPages={
-            activeTab === "subscription" ? subTotalPages : withTotalPages
-          }
-          totalData={
-            activeTab === "subscription" ? subTotalData : withTotalData
-          }
+          loading={loading}
+          totalPages={totalPages}
+          totalData={totalData}
           currentPage={currentPage}
           pageSize={pageSize}
           onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
+          onPageSizeChange={(s) => {
+            setPageSize(s);
             setCurrentPage(1);
           }}
-          addButton={false}
         />
       </Card>
     </div>
   );
 };
-
 
 export default Revenue;
