@@ -192,6 +192,7 @@ const VehicleCategoryManagement = () => {
           rideType: data.rideType,
           isActive: data.isActive === "true",
           notes: data.notes,
+          model:data.model
         };
         const success = await updateVehicleType(editingVehicle._id, payload);
         if (success) {
@@ -287,7 +288,7 @@ const VehicleCategoryManagement = () => {
               label="Model"
               placeholder="e.g. Camry"
               {...register("model", { required: "Model is required" })}
-              disabled={loadingCreate || loadingActions || !!editingVehicle}
+              disabled={loadingCreate || loadingActions }
               error={errors.model?.message}
             />
 
