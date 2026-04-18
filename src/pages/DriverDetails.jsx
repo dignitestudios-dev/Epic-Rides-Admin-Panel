@@ -31,6 +31,7 @@ import {
   Phone,
   Calendar,
   ChevronDown,
+  CreditCard,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 
@@ -992,9 +993,15 @@ const DriverDetails = () => {
                 {pInfo?.phone || pInfo?.phoneNumber || "—"}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                <CreditCard  className="w-3.5 h-3.5 text-gray-400" />{" "}
+                {userDetails?.fullDetails?.ssn
+                  ? userDetails.fullDetails.ssn.replace(/^(\d{3})(\d{2})(\d{4})$/, "$1-$2-$3")
+                  : "—"}
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <Calendar className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {pInfo?.joinedAt
-                  ? `Joined ${formatDate(pInfo.joinedAt)}`
+                {userDetails?.fullDetails.createdAt
+                  ? `Joined ${formatDate(userDetails?.fullDetails.createdAt)}`
                   : "Onboarding"}
               </div>
             </div>

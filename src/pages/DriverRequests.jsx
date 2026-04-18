@@ -109,6 +109,11 @@ const DriverRequests = () => {
       render: (val) => <span className="text-gray-600 truncate max-w-[220px] block">{val}</span>,
     },
     {
+      key: "ssn",
+      label: "SSN Number",
+      render: (val) => <span className="text-gray-600 truncate max-w-[220px] block">{val}</span>,
+    },
+    {
       key: "phone",
       label: "Phone Number",
       render: (val) => <span className="text-gray-600">{val || "—"}</span>,
