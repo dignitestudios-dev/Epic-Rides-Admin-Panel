@@ -149,6 +149,13 @@ export const MENU_ITEMS = [
     path: "/revenue",
     children: [],
   },
+  {
+    id: "promo-codes",
+    label: "Promo Codes",
+    icon: "Tag",
+    path: "/promo-codes",
+    children: [],
+  },
   // {
   //   id: "history",
   //   label: "History",

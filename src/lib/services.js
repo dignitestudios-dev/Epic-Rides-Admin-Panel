@@ -8,7 +8,7 @@ const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/";
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
-  timeout: API_CONFIG.timeout, 
+  timeout: API_CONFIG.timeout,
   headers: API_CONFIG.headers,
 });
 
@@ -29,9 +29,9 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error?.response?.status === 401) {
-      localStorage.removeItem("authToken"); 
+      localStorage.removeItem("authToken");
       if (!window.location.pathname.includes("/login")) {
-        window.location.href = "/auth/login"; 
+        window.location.href = "/auth/login";
       }
     }
     console.log(error);
@@ -76,7 +76,7 @@ const apiHandler = async (apiCall) => {
     const response = await apiCall();
     return handleApiResponse(response);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     throw handleApiError(error);
   }
 };
@@ -289,8 +289,7 @@ const getDrivers = (
     return API.get(url);
   });
 
-const getRequestsCount = () =>
-  apiHandler(() => API.get("/requests-count"));
+const getRequestsCount = () => apiHandler(() => API.get("/requests-count"));
 
 const getUserDetail = (id, type) =>
   apiHandler(() => API.get(`/users/${id}?type=${type}`));
@@ -361,6 +360,19 @@ const resolveReport = (id, adminNotes = "") =>
 
 const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
+// Promo Codes API
+const getPromoCodes = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
+  apiHandler(() => API.get(`/promo-code?page=${page}&limit=${limit}`));
+
+const createPromoCode = (payload) =>
+  apiHandler(() => API.post("/promo-code", payload));
+
+const updatePromoCode = (id, payload) =>
+  apiHandler(() => API.patch(`/promo-code/${id}`, payload));
+
+const deletePromoCode = (id) =>
+  apiHandler(() => API.delete(`/promo-code/${id}`));
+
 export const api = {
   getUsers,
   getDrivers,
@@ -407,4 +419,8 @@ export const api = {
   getReportById,
   getNotifications,
   sendNotification,
+  getPromoCodes,
+  createPromoCode,
+  updatePromoCode,
+  deletePromoCode,
 };
