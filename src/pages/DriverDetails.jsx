@@ -659,39 +659,27 @@ const VehicleCard = ({ vehicle, onRespond }) => {
             </div>
           )}
 
-          {localStatus !== "old" && (
+          {localStatus === "pending" && (
             <div className="space-y-2">
               {!showReject ? (
                 <div className="flex gap-2">
                   <button
                     disabled={loading}
                     onClick={() => respond("approved")}
-                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition disabled:opacity-50 flex items-center justify-center gap-1 ${
-                      localStatus === "approved"
-                        ? "bg-emerald-600 text-white"
-                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                    }`}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
                   >
                     {loading ? (
-                      <LoadingSpinner color={localStatus === "approved" ? "white" : "emerald"} />
+                      <LoadingSpinner color="emerald" />
                     ) : (
-                      <>
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        {localStatus === "approved" ? "Approved" : "Approve Vehicle"}
-                      </>
+                      <><CheckCircle className="w-3.5 h-3.5" /> Approve Vehicle</>
                     )}
                   </button>
                   <button
                     disabled={loading}
                     onClick={() => setShowReject(true)}
-                    className={`flex-1 py-2 rounded-lg text-xs font-medium transition disabled:opacity-50 flex items-center justify-center gap-1 ${
-                      localStatus === "rejected"
-                        ? "bg-red-600 text-white"
-                        : "bg-red-50 text-red-600 hover:bg-red-100"
-                    }`}
+                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
-                    {localStatus === "rejected" ? "Rejected" : "Reject Vehicle"}
+                    <XCircle className="w-3.5 h-3.5" /> Reject Vehicle
                   </button>
                 </div>
               ) : (
@@ -715,15 +703,21 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                       onClick={() => respond("rejected")}
                       className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1"
                     >
-                      {loading ? (
-                        <LoadingSpinner color="white" />
-                      ) : (
-                        "Confirm Reject"
-                      )}
+                      {loading ? <LoadingSpinner color="white" /> : "Confirm Reject"}
                     </button>
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {localStatus !== "pending" && localStatus !== "old" && (
+            <div
+              className={`text-center text-xs py-1.5 rounded-lg font-medium ${
+                localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
+              }`}
+            >
+              {localStatus === "approved" ? "✓ Vehicle Approved" : "✕ Vehicle Rejected"}
             </div>
           )}
         </div>
