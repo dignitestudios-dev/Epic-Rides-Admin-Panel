@@ -63,7 +63,9 @@ const PromoCodeFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => 
     const newErrors = {};
     if (!form.code.trim()) newErrors.code = "Code is required.";
     else if (/\s/.test(form.code)) newErrors.code = "Code must not contain spaces.";
+    else if (form.code.length > 15) newErrors.code = "Code must be 15 characters or less.";
     if (!form.description.trim()) newErrors.description = "Description is required.";
+    else if (form.description.length > 200) newErrors.description = "Description must be 200 characters or less.";
     if (!form.discountPercent) newErrors.discountPercent = "Discount is required.";
     if (!form.targetAge) newErrors.targetAge = "Target age is required.";
     if (!form.expiresAt) {
@@ -108,23 +110,37 @@ const PromoCodeFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => 
       size="md"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Code"
-          name="code"
-          value={form.code}
-          onChange={handleChange}
-          placeholder="e.g. SAVE10"
-          error={errors.code}
-          className="uppercase"
-        />
-        <Input
-          label="Description"
-          name="description"
-          value={form.description}
-          onChange={handleChange}
-          placeholder="e.g. Flat 10% discount for users of age 18"
-          error={errors.description}
-        />
+        <div className="space-y-1">
+          <Input
+            label="Code"
+            name="code"
+            value={form.code}
+            onChange={handleChange}
+            placeholder="e.g. SAVE10"
+            error={errors.code}
+            maxLength={15}
+            className="uppercase"
+          />
+          <p className="text-xs text-gray-400 text-right">{form.code.length}/15</p>
+        </div>
+        <div className="space-y-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Description</label>
+          <textarea
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="e.g. Flat 10% discount for users of age 18"
+            maxLength={200}
+            rows={3}
+            className={`block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm resize-none ${
+              errors.description ? "border-red-300" : "border-gray-300 dark:border-gray-600"
+            }`}
+          />
+          <div className="flex justify-between">
+            {errors.description ? <p className="text-sm text-red-600">{errors.description}</p> : <span />}
+            <p className="text-xs text-gray-400">{form.description.length}/200</p>
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <Input
             label="Discount (%)"
@@ -142,6 +158,7 @@ const PromoCodeFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => 
             name="targetAge"
             type="number"
             min="1"
+            max="100"
             value={form.targetAge}
             onChange={handleChange}
             placeholder="18"
@@ -206,9 +223,8 @@ const ViewModal = ({ isOpen, onClose, promo }) => {
   if (!promo) return null;
   const rows = [
     { label: "Code", value: promo.code },
-    { label: "Description", value: promo.description },
     { label: "Discount", value: `${promo.discountPercent}%` },
-    { label: "Target Age", value: promo.targetAge },
+    { label: "Target Age", value: `${promo.targetAge}+` },
     { label: "Expires At", value: formatDate(promo.expiresAt) },
     {
       label: "Status",
@@ -222,18 +238,25 @@ const ViewModal = ({ isOpen, onClose, promo }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Promo Code Details" size="sm">
-      <div className="space-y-3">
+      <div className="space-y-1">
         {rows.map(({ label, value }) => (
           <div
             key={label}
             className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
           >
-            <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{label}</span>
+            <span className="text-sm font-medium text-gray-900 dark:text-white ml-4 text-right">
               {value}
             </span>
           </div>
         ))}
+        {/* Description full text below */}
+        <div className="pt-3">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Description</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-white break-words whitespace-pre-wrap">
+            {promo.description || "—"}
+          </p>
+        </div>
       </div>
     </Modal>
   );
@@ -293,6 +316,10 @@ const PromoCodes = () => {
     if (ok) setDeleteTarget(null);
   };
 
+  const handleToggleActive = async (row) => {
+    await updatePromoCode(row._id, { isActive: !row.isActive });
+  };
+
   const columns = [
     {
       key: "code",
@@ -338,10 +365,25 @@ const PromoCodes = () => {
     {
       key: "isActive",
       label: "Status",
-      render: (value) => (
-        <Badge variant={value ? "success" : "danger"}>
-          {value ? "Active" : "Inactive"}
-        </Badge>
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          <Badge variant={value ? "success" : "danger"}>
+            {value ? "Active" : "Inactive"}
+          </Badge>
+          <button
+            onClick={() => handleToggleActive(row)}
+            disabled={actionLoading}
+            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
+              value ? "bg-[#39A300]" : "bg-gray-200"
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                value ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
+          </button>
+        </div>
       ),
     },
     {
