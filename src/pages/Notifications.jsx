@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Send,
   Bell,
@@ -6,12 +6,12 @@ import {
   UserCheck,
   Download,
   Plus,
-  ArrowUpDown,
   ArrowUp,
   ArrowDown,
   Eye,
   Loader2,
-  CheckCircle,
+  Search,
+  X,
 } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -48,10 +48,145 @@ const recipientIcon = (type) => {
   }
 };
 
+// ── User Picker ───────────────────────────────────────────────────────────────
+
+const UserPicker = ({ type, selectedId, onChange }) => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [search, setSearch] = useState("");
+  const [pickerPage, setPickerPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const listRef = useRef(null);
+  const PAGE_SIZE = 20;
+
+  const fetchUsers = useCallback(async (pageNum, reset = false) => {
+    if (pageNum === 1) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const res = await api.getUsers(type, pageNum, PAGE_SIZE, "", "", "");
+      const fetched = res.data || [];
+      setUsers((prev) => reset ? fetched : [...prev, ...fetched]);
+      const totalPages = res.pagination?.totalPages || 1;
+      setHasMore(pageNum < totalPages);
+    } catch {}
+    finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [type]);
+
+  useEffect(() => {
+    setUsers([]);
+    setPickerPage(1);
+    setHasMore(true);
+    setSearch("");
+    fetchUsers(1, true);
+  }, [type]);
+
+  const handleScroll = () => {
+    const el = listRef.current;
+    if (!el || loadingMore || !hasMore) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
+      const next = pickerPage + 1;
+      setPickerPage(next);
+      fetchUsers(next);
+    }
+  };
+
+  const filtered = users.filter((u) =>
+    !search ||
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+      {/* Search */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Search ${type}s...`}
+          className="flex-1 text-sm bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
+        />
+        {search && (
+          <button type="button" onClick={() => setSearch("")}>
+            <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
+          </button>
+        )}
+      </div>
+
+      {/* List */}
+      <div
+        ref={listRef}
+        onScroll={handleScroll}
+        className="max-h-52 overflow-y-auto"
+      >
+        {loading ? (
+          <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-sm">Loading...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-sm text-gray-400 py-6">No {type}s found.</p>
+        ) : (
+          <>
+            {filtered.map((u) => {
+              const id = u.id || u._id;
+              const isSelected = selectedId === id;
+              return (
+                <div
+                  key={id}
+                  onClick={() => onChange(isSelected ? null : id)}
+                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${
+                    isSelected
+                      ? "bg-primary-50 dark:bg-primary-900/20"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {/* Radio indicator */}
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
+                    isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
+                  }`}>
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
+                    {u.name?.charAt(0).toUpperCase() || "?"}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{u.name || "—"}</p>
+                    <p className="text-xs text-gray-400 truncate">{u.email || "—"}</p>
+                  </div>
+                </div>
+              );
+            })}
+            {loadingMore && (
+              <div className="flex items-center justify-center py-3 gap-2 text-gray-400">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="text-xs">Loading more...</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* Footer */}
+      {selectedId && (
+        <div className="px-3 py-2 bg-primary-50 dark:bg-primary-900/20 border-t border-gray-100 dark:border-gray-700">
+          <p className="text-xs font-semibold text-primary-700 dark:text-primary-300">
+            1 recipient selected
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const Notifications = () => {
-  // Data state
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = usePersistentState("notifications_page", 1);
@@ -59,17 +194,16 @@ const Notifications = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalData, setTotalData] = useState(0);
 
-  // Filters
   const [search, setSearch] = usePersistentState("notifications_search", "");
-  const [sort, setSort] = usePersistentState("notifications_sort", "desc"); // asc | desc
+  const [sort, setSort] = usePersistentState("notifications_sort", "desc");
 
-  // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [previewData, setPreviewData] = useState(null);
   const [sending, setSending] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   const {
     register,
@@ -91,9 +225,10 @@ const Notifications = () => {
   const watchMessage = watch("message") || "";
   const watchAudienceType = watch("audienceType");
   const watchDeliveryType = watch("deliveryType");
-  const watchScheduledFor = watch("scheduledFor");
 
-  // ── Fetch ───────────────────────────────────────────────────────────────────
+  const isSpecific = watchAudienceType === "rider_only" || watchAudienceType === "driver_only";
+
+  // ── Fetch ────────────────────────────────────────────────────────────────────
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
@@ -113,7 +248,7 @@ const Notifications = () => {
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
-  // ── Handlers ────────────────────────────────────────────────────────────────
+  // ── Handlers ─────────────────────────────────────────────────────────────────
 
   const handleExport = () => {
     if (!notifications.length) return;
@@ -134,7 +269,11 @@ const Notifications = () => {
   };
 
   const handlePreview = (formValues) => {
-    setPreviewData(formValues);
+    if (isSpecific && !selectedUserId) {
+      toast.error("Please select a recipient.");
+      return;
+    }
+    setPreviewData({ ...formValues, recipientId: isSpecific ? selectedUserId : null });
     setShowPreviewModal(true);
   };
 
@@ -142,13 +281,20 @@ const Notifications = () => {
     if (!previewData) return;
     setSending(true);
     try {
+      const specific = previewData.audienceType === "rider_only" || previewData.audienceType === "driver_only";
       const payload = {
         title: previewData.title,
         message: previewData.message,
-        recipientType: previewData.audienceType, // already lowercase: both/riders/drivers
+        recipientType: previewData.audienceType === "both"
+          ? "both"
+          : previewData.audienceType === "riders" || previewData.audienceType === "rider_only"
+          ? "rider"
+          : "driver",
       };
-      // Only include scheduledFor when scheduling is requested
-      if (previewData.deliveryType === "scheduled" && previewData.scheduledFor) {
+      if (specific && previewData.recipientId) {
+        payload.recipientId = previewData.recipientId;
+      }
+      if (!specific && previewData.deliveryType === "scheduled" && previewData.scheduledFor) {
         payload.scheduledFor = new Date(previewData.scheduledFor).toISOString();
       }
       await api.sendNotification(payload);
@@ -156,6 +302,7 @@ const Notifications = () => {
       setShowPreviewModal(false);
       setShowCreateModal(false);
       setPreviewData(null);
+      setSelectedUserId(null);
       reset();
       fetchNotifications();
     } catch (err) {
@@ -170,7 +317,7 @@ const Notifications = () => {
     setPage(1);
   };
 
-  // ── Table Columns ────────────────────────────────────────────────────────────
+  // ── Table Columns ─────────────────────────────────────────────────────────────
 
   const columns = [
     {
@@ -201,45 +348,32 @@ const Notifications = () => {
           onClick={toggleSort}
         >
           Date &amp; Time
-          {sort === "desc" ? (
-            <ArrowDown className="w-3.5 h-3.5" />
-          ) : (
-            <ArrowUp className="w-3.5 h-3.5" />
-          )}
+          {sort === "desc" ? <ArrowDown className="w-3.5 h-3.5" /> : <ArrowUp className="w-3.5 h-3.5" />}
         </button>
       ),
       render: (val) => (
-        <div className="text-sm text-gray-600">
-          {val ? formatDateTime(val) : "—"}
-        </div>
+        <div className="text-sm text-gray-600">{val ? formatDateTime(val) : "—"}</div>
       ),
     },
     {
       key: "status",
       label: "Status",
       render: (val) => (
-        <Badge variant={statusVariant(val)}>
-          {val || "Unknown"}
-        </Badge>
+        <Badge variant={statusVariant(val)}>{val || "Unknown"}</Badge>
       ),
     },
     {
       key: "actions",
       label: "Actions",
       render: (_, row) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Eye className="w-4 h-4" />}
-          onClick={() => handleView(row)}
-        >
+        <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => handleView(row)}>
           View
         </Button>
       ),
     },
   ];
 
-  // ── Render ───────────────────────────────────────────────────────────────────
+  // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
@@ -252,17 +386,13 @@ const Notifications = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            icon={<Download className="w-4 h-4" />}
-            onClick={handleExport}
-          >
+          <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
             Export CSV
           </Button>
           <Button
             variant="primary"
             icon={<Plus className="w-4 h-4" />}
-            onClick={() => { reset(); setShowCreateModal(true); }}
+            onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
           >
             Send Notification
           </Button>
@@ -297,30 +427,48 @@ const Notifications = () => {
         />
       </Card>
 
-      {/* ── Create / Send Modal ─────────────────────────────────────────────── */}
+      {/* ── Create / Send Modal ───────────────────────────────────────────────── */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         title="Send Push Notification"
         size="md"
       >
-        <form
-          onSubmit={handleSubmit(handlePreview)}
-          className="space-y-5"
-        >
+        <form onSubmit={handleSubmit(handlePreview)} className="space-y-5">
           {/* Recipient Type */}
           <Select
             label="Recipient Type"
             value={watchAudienceType}
             options={[
               { value: "both", label: "Both (Riders & Drivers)" },
-              { value: "drivers", label: "Drivers only" },
-              { value: "riders", label: "Riders only" },
+              { value: "drivers", label: "Drivers Only" },
+              { value: "riders", label: "Riders Only" },
+              { value: "rider_only", label: "Rider Only (Single)" },
+              { value: "driver_only", label: "Driver Only (Single)" },
             ]}
-            {...register("audienceType", { required: "Recipient type is required" })}
+            {...register("audienceType", { required: "Recipient type is required",
+              onChange: () => setSelectedUserId(null),
+            })}
             error={errors.audienceType?.message}
             placeholder="Select recipient type"
           />
+
+          {/* User Picker — single selection */}
+          {isSpecific && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
+                Select {watchAudienceType === "rider_only" ? "Rider" : "Driver"}
+                {selectedUserId && (
+                  <span className="ml-2 text-xs font-normal text-primary-600">(1 selected)</span>
+                )}
+              </label>
+              <UserPicker
+                type={watchAudienceType === "rider_only" ? "rider" : "driver"}
+                selectedId={selectedUserId}
+                onChange={setSelectedUserId}
+              />
+            </div>
+          )}
 
           {/* Title */}
           <div>
@@ -351,35 +499,37 @@ const Notifications = () => {
             <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/200</p>
           </div>
 
-          {/* Delivery Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Delivery</label>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" value="immediate" {...register("deliveryType")} />
-                <span className="text-sm">Send Immediately</span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" value="scheduled" {...register("deliveryType")} />
-                <span className="text-sm">Schedule</span>
-              </label>
-            </div>
-            {watchDeliveryType === "scheduled" && (
-              <div className="mt-3">
-                <Input
-                 min={new Date().toISOString().slice(0, 16)}
-                  label="Scheduled Date & Time"
-                  type="datetime-local"
-                  {...register("scheduledFor", {
-                    required: watchDeliveryType === "scheduled"
-                      ? "Schedule date/time is required"
-                      : false,
-                  })}
-                  error={errors.scheduledFor?.message}
-                />
+          {/* Delivery — hidden for single user */}
+          {!isSpecific && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Delivery</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="immediate" {...register("deliveryType")} />
+                  <span className="text-sm">Send Immediately</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="scheduled" {...register("deliveryType")} />
+                  <span className="text-sm">Schedule</span>
+                </label>
               </div>
-            )}
-          </div>
+              {watchDeliveryType === "scheduled" && (
+                <div className="mt-3">
+                  <Input
+                    min={new Date().toISOString().slice(0, 16)}
+                    label="Scheduled Date & Time"
+                    type="datetime-local"
+                    {...register("scheduledFor", {
+                      required: watchDeliveryType === "scheduled"
+                        ? "Schedule date/time is required"
+                        : false,
+                    })}
+                    error={errors.scheduledFor?.message}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
@@ -393,7 +543,7 @@ const Notifications = () => {
         </form>
       </Modal>
 
-      {/* ── Preview / Confirm Modal ─────────────────────────────────────────── */}
+      {/* ── Preview / Confirm Modal ───────────────────────────────────────────── */}
       <Modal
         isOpen={showPreviewModal}
         onClose={() => setShowPreviewModal(false)}
@@ -402,54 +552,48 @@ const Notifications = () => {
       >
         {previewData && (
           <div className="space-y-5">
-            {/* Phone mockup preview */}
-           <div className="mx-auto w-full max-w-sm bg-gray-900 rounded-3xl p-4 shadow-2xl">
-  <div className="bg-white rounded-2xl p-4 space-y-2">
-    <div className="flex items-center gap-2">
-      <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
-        <Bell className="w-4 h-4 text-white" />
-      </div>
-      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-        Epic Rides
-      </p>
-    </div>
+            <div className="mx-auto w-full max-w-sm bg-gray-900 rounded-3xl p-4 shadow-2xl">
+              <div className="bg-white rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
+                    <Bell className="w-4 h-4 text-white" />
+                  </div>
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Epic Rides</p>
+                </div>
+                <p className="text-sm font-bold text-gray-900 break-words">{previewData.title}</p>
+                <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-normal">{previewData.message}</p>
+              </div>
+            </div>
 
-    <p className="text-sm font-bold text-gray-900 break-words">
-      {previewData.title}
-    </p>
-
-    <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-normal">
-      {previewData.message}
-    </p>
-  </div>
-</div>
-
-            {/* Preview phone summary */}
             <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-500">Recipients</span>
-                <span className="font-semibold text-gray-800 capitalize">{previewData.audienceType}</span>
+                <span className="font-semibold text-gray-800 capitalize">
+                  {previewData.audienceType === "rider_only"
+                    ? "1 Rider"
+                    : previewData.audienceType === "driver_only"
+                    ? "1 Driver"
+                    : previewData.audienceType}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Delivery</span>
                 <span className="font-semibold text-gray-800">
-                  {previewData.deliveryType === "scheduled" ? "Scheduled" : "Immediate"}
+                  {previewData.audienceType === "rider_only" || previewData.audienceType === "driver_only"
+                    ? "Immediate"
+                    : previewData.deliveryType === "scheduled" ? "Scheduled" : "Immediate"}
                 </span>
               </div>
               {previewData.deliveryType === "scheduled" && previewData.scheduledFor && (
                 <div className="flex justify-between">
                   <span className="text-gray-500">Scheduled For</span>
-                  <span className="font-semibold text-gray-800">
-                    {formatDateTime(previewData.scheduledFor)}
-                  </span>
+                  <span className="font-semibold text-gray-800">{formatDateTime(previewData.scheduledFor)}</span>
                 </div>
               )}
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setShowPreviewModal(false)}>
-                Back
-              </Button>
+              <Button variant="ghost" onClick={() => setShowPreviewModal(false)}>Back</Button>
               <Button
                 variant="success"
                 icon={sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -464,7 +608,7 @@ const Notifications = () => {
         )}
       </Modal>
 
-      {/* ── Detail Modal ────────────────────────────────────────────────────── */}
+      {/* ── Detail Modal ──────────────────────────────────────────────────────── */}
       <Modal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
@@ -500,9 +644,7 @@ const Notifications = () => {
             </div>
 
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={() => setShowDetailModal(false)}>
-                Close
-              </Button>
+              <Button variant="ghost" onClick={() => setShowDetailModal(false)}>Close</Button>
             </div>
           </div>
         )}
