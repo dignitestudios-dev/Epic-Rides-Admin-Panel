@@ -75,9 +75,22 @@ const Users = () => {
       label: "Phone",
       render: (value) => <span className="text-gray-600">{value || "—"}</span>,
     },
+    ...(activeTab === "driver" ? [{
+      key: "subscriptionStatus",
+      label: "Subscription",
+      render: (value) => {
+        const v = value?.toLowerCase();
+        const variant = v === "active" ? "success" : v === "expired" ? "danger" : "warning";
+        return (
+          <Badge variant={variant}>
+            {value || "—"}
+          </Badge>
+        );
+      },
+    }] : []),
     {
       key: "status",
-      label: "Status",
+      label: "Access",
       render: (value, row) => (
         <div className="flex items-center gap-3">
           <Badge variant={value?.toLowerCase() === "active" ? "success" : "danger"}>

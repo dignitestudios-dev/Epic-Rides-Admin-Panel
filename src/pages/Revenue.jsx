@@ -183,9 +183,9 @@ const Revenue = () => {
     { key: "email", label: "Email" },
     {
       key: "subscriptionStatus",
-      label: "Status",
+      label: "subscription Status",
       render: (v) => (
-        <Badge variant={v === "active" ? "success" : "danger"}>
+        <Badge className="ml-10" variant={v === "active" ? "success" : "danger"}>
           {v}
         </Badge>
       ),
@@ -263,7 +263,7 @@ const Revenue = () => {
               : "text-gray-500"
           }`}
         >
-          Withdrawal Commission
+          Withdrawal 
         </button>
       </div>
 

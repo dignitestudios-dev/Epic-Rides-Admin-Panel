@@ -58,7 +58,7 @@ const DriverDetail = () => {
     revenue,
     referralInfo
   } = details;
-
+console.log(details)
   const historyColumns = [
     { 
       key: "createdAt", 
@@ -193,6 +193,10 @@ const DriverDetail = () => {
                 <div className="flex justify-between">
                   <span className="text-gray-500">Color</span>
                   <span className="font-medium text-gray-900">{vehicleDetails?.color}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Type</span>
+                  <span className="font-medium capitalize text-gray-900">{vehicleDetails?.vehicleType}</span>
                 </div>
               </div>
             </div>
