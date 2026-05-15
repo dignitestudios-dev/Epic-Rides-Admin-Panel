@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Download,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  DollarSign,
+  ArrowDownCircle,
+  TrendingUp,
+} from "lucide-react";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import DataTable from "../components/common/DataTable";
 import FilterBar from "../components/ui/FilterBar";
+import StatsCard from "../components/common/StatsCard";
 
 import { formatDate, downloadCSV } from "../utils/helpers";
 import useGetSubscriptionRevenue from "../hooks/revenue/useGetSubscriptionRevenue";
@@ -33,6 +43,7 @@ const isValidRange = (start, end) => start && end;
    COMPONENT
 ========================= */
 const Revenue = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("subscription");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -92,6 +103,7 @@ const Revenue = () => {
 
   const {
     data: subData,
+    stats: subStats,
     loading: subLoading,
     totalPages: subTotalPages,
     totalData: subTotalData,
@@ -106,6 +118,7 @@ const Revenue = () => {
 
   const {
     data: withData,
+    stats: withStats,
     loading: withLoading,
     totalPages: withTotalPages,
     totalData: withTotalData,
@@ -179,7 +192,21 @@ const Revenue = () => {
   ========================= */
 
   const subColumns = [
-    { key: "driverName", label: "Driver Name" },
+    {
+      key: "driverFirstName",
+      label: "Driver Name",
+      render: (_, row) => {
+        const name = [row.driverFirstName, row.driverLastName].filter(Boolean).join(" ") || "—";
+        return (
+          <button
+            onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
+            className="text-primary-600 hover:underline font-medium text-left"
+          >
+            {name}
+          </button>
+        );
+      },
+    },
     { key: "email", label: "Email" },
     {
       key: "subscriptionStatus",
@@ -208,7 +235,21 @@ const Revenue = () => {
   ];
 
   const withColumns = [
-    { key: "driverName", label: "Driver Name" },
+    {
+      key: "driverFirstName",
+      label: "Driver Name",
+      render: (_, row) => {
+        const name = [row.driverFirstName, row.driverLastName].filter(Boolean).join(" ") || "—";
+        return (
+          <button
+            onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
+            className="text-primary-600 hover:underline font-medium text-left"
+          >
+            {name}
+          </button>
+        );
+      },
+    },
     {
       key: "withdrawalAmount",
       label: "Withdrawal Amount",
@@ -230,13 +271,27 @@ const Revenue = () => {
      UI
   ========================= */
 
+  /* =========================
+     DATE RANGE DESCRIPTION
+  ========================= */
+  const getDayRangeDesc = (startDate, endDate) => {
+    if (!startDate || !endDate) return null;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const days = Math.round((end - start) / (1000 * 60 * 60 * 24));
+    if (days < 0) return null;
+    return `Last ${days} day${days !== 1 ? "s" : ""} (${startDate} – ${endDate})`;
+  };
+
+  const subDateDesc = getDayRangeDesc(subFilters.startDate, subFilters.endDate);
+  const withDateDesc = getDayRangeDesc(withFilters.startDate, withFilters.endDate);
+
   return (
     <div className="space-y-6 min-h-screen bg-gray-50/50">
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Revenue Management</h1>
-
         <Button onClick={handleExport}>
           Export CSV
         </Button>
@@ -254,7 +309,6 @@ const Revenue = () => {
         >
           Subscription Revenue
         </button>
-
         <button
           onClick={() => handleTabChange("withdrawal")}
           className={`px-4 py-2 ${
@@ -263,11 +317,68 @@ const Revenue = () => {
               : "text-gray-500"
           }`}
         >
-          Withdrawal 
+          Withdrawal
         </button>
       </div>
 
-      {/* FILTERS (FULLY SEPARATED + VALID RANGE ONLY) */}
+      {/* STATS CARDS */}
+      {activeTab === "subscription" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <StatsCard
+            title="Total Subscriptions"
+            value={subStats?.totalSubscriptionsPurchased ?? "—"}
+            description={subDateDesc}
+            icon={<CreditCard />}
+            colored
+            index={0}
+          />
+          <StatsCard
+            title="Active Subscriptions"
+            value={subStats?.totalActiveSubscriptions ?? "—"}
+            description={subDateDesc}
+            icon={<CheckCircle />}
+            colored
+            index={3}
+          />
+          <StatsCard
+            title="Expired Subscriptions"
+            value={subStats?.totalExpiredSubscriptions ?? "—"}
+            description={subDateDesc}
+            icon={<XCircle />}
+            colored
+            index={4}
+          />
+          <StatsCard
+            title="Total Revenue"
+            value={`$${subStats?.totalRevenue ?? 0}`}
+            description={subDateDesc}
+            icon={<DollarSign />}
+            colored
+            index={1}
+          />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <StatsCard
+            title="Total Withdrawals Processed"
+            value={withStats?.totalWithdrawalsProcessed ?? "—"}
+            description={withDateDesc}
+            icon={<ArrowDownCircle />}
+            colored
+            index={0}
+          />
+          <StatsCard
+            title="Total Commission Revenue"
+            value={`$${withStats?.totalCommissionRevenue ?? 0}`}
+            description={withDateDesc}
+            icon={<TrendingUp />}
+            colored
+            index={3}
+          />
+        </div>
+      )}
+
+      {/* FILTERS */}
       <Card>
         {activeTab === "subscription" ? (
           <FilterBar

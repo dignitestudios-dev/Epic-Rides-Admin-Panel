@@ -49,7 +49,7 @@ const DriverRequests = () => {
     
     const dataToExport = drivers.map(driver => ({
       ID: driver._id,
-      Name: driver.name,
+      Name: [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "—",
       Email: driver.email,
       Phone: driver.phone || "—",
       "Registration Date": formatDate(driver.createdAt),
@@ -90,18 +90,21 @@ const DriverRequests = () => {
 
   const columns = [
     {
-      key: "name",
+      key: "firstName",
       label: "Driver Name",
-      render: (_, row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
-            {row.name?.charAt(0).toUpperCase()}
+      render: (_, row) => {
+        const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || "—";
+        return (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <span className="font-bold text-gray-900 dark:text-white capitalize truncate max-w-[200px]">
+              {name}
+            </span>
           </div>
-          <span className="font-bold text-gray-900 dark:text-white capitalize truncate max-w-[200px]">
-            {row.name}
-          </span>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "email",

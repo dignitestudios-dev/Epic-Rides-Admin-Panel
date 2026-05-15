@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,19 +12,55 @@ import {
   Wallet,
   TrendingUp,
   XCircle,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
-import { formatDate } from "../utils/helpers";
+import Modal from "../components/ui/Modal";
+import { formatDate, handleError, handleSuccess } from "../utils/helpers";
 import Table from "../components/ui/Table";
 import StatsCard from "../components/common/StatsCard";
+import EditProfileModal from "../components/common/EditProfileModal";
+import { api } from "../lib/services";
 
 const RiderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { details, loading } = useGetUserDetails(id, "rider");
+  const { details, loading, refresh } = useGetUserDetails(id, "rider");
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const editInitialData = useMemo(
+    () => ({
+      firstName: details?.fullDetails?.firstName || "",
+      lastName: details?.fullDetails?.lastName || "",
+      email: details?.personalInfo?.email || details?.fullDetails?.email || "",
+      subscriptionStatus: details?.fullDetails?.subscriptionStatus || "",
+      balance:
+        details?.walletBalance !== undefined
+          ? details.walletBalance
+          : (details?.fullDetails?.balance ?? ""),
+    }),
+    [details],
+  );
+
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const response = await api.deleteUser(id, "rider");
+      handleSuccess(response?.message, "Rider deleted successfully");
+      setDeleteModalOpen(false);
+      navigate("/user-management");
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -68,7 +104,7 @@ const RiderDetail = () => {
     {
       key: "driver",
       label: "Driver",
-      render: (driver) => driver?.name || "N/A",
+      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
     },
     {
       key: "pickupPoint",
@@ -136,7 +172,7 @@ const RiderDetail = () => {
                 {personalInfo?.profilePicture ? (
                   <img
                     src={personalInfo.profilePicture}
-                    alt={personalInfo.name}
+                   alt={[personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "Profile"}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.src = "";
@@ -148,7 +184,7 @@ const RiderDetail = () => {
                 )}
               </div>
               <h2 className="text-xl font-bold text-gray-900">
-                {personalInfo?.name}
+               {[personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "N/A"}
               </h2>
               <Badge
                 variant={
@@ -158,6 +194,24 @@ const RiderDetail = () => {
               >
                 {personalInfo.status}
               </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setEditModalOpen(true)}
+                icon={<Pencil className="w-3.5 h-3.5" />}
+              >
+                Edit Profile
+              </Button>
+              <Button
+                variant="danger"
+                size="sm"
+                className="mt-2"
+                onClick={() => setDeleteModalOpen(true)}
+                icon={<Trash2 className="w-3.5 h-3.5" />}
+              >
+                Delete Rider
+              </Button>
             </div>
 
             <div className="space-y-4 pt-6 border-t border-gray-100 text-sm font-medium text-gray-700">
@@ -302,6 +356,45 @@ const RiderDetail = () => {
           </Card>
         </div>
       </div>
+
+      <EditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        userId={id}
+        type="rider"
+        initialData={editInitialData}
+        onSuccess={refresh}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Rider"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Are you sure you want to delete this rider?</p>
+              <p className="text-sm text-gray-500 mt-1">
+                This action is permanent and cannot be undone. All data associated with this rider will be removed.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <Button variant="ghost" onClick={() => setDeleteModalOpen(false)} disabled={deleteLoading}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteLoading}>
+              Yes, Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

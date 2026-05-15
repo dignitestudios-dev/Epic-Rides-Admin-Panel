@@ -96,7 +96,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
 
   const filtered = users.filter((u) =>
     !search ||
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    [u.firstName, u.lastName].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()) ||
     u.email?.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -153,10 +153,10 @@ const UserPicker = ({ type, selectedId, onChange }) => {
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
                   <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
-                    {u.name?.charAt(0).toUpperCase() || "?"}
+                    {[u.firstName, u.lastName].filter(Boolean).join(" ").charAt(0).toUpperCase() || "?"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{u.name || "—"}</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}</p>
                     <p className="text-xs text-gray-400 truncate">{u.email || "—"}</p>
                   </div>
                 </div>

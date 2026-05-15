@@ -54,6 +54,7 @@ import DriverDetail from "./pages/DriverDetail";
 
 import Revenue from "./pages/Revenue";
 import PromoCodes from "./pages/PromoCodes";
+import CancelledRides from "./pages/CancelledRides";
 
 const SessionTimeoutModal = () => {
   const { showTimeoutModal, setShowTimeoutModal } = useAuth();
@@ -173,6 +174,7 @@ function App() {
                         />
                         <Route path="/revenue" element={<Revenue />} />
                         <Route path="/promo-codes" element={<PromoCodes />} />
+                        <Route path="/cancelled-rides" element={<CancelledRides />} />
                         <Route
                           path="/reports-detail/:id"
                           element={<ReportDetail />}

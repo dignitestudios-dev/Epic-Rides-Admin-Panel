@@ -150,6 +150,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "cancelled-rides",
+    label: "Cancelled Rides",
+    icon: "XCircle",
+    path: "/cancelled-rides",
+    children: [],
+  },
+  {
     id: "promo-codes",
     label: "Promo Codes",
     icon: "Tag",

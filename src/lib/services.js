@@ -3,8 +3,8 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-// const DEV_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
-const STAGING_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/";
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -276,6 +276,19 @@ const getUsers = (
     return API.get(url);
   });
 
+const exportUsers = (type, { status, sort, startDate, endDate, search, fields } = {}) => {
+  const params = new URLSearchParams();
+  params.append("type", type);
+  if (status) params.append("status", status);
+  if (sort) params.append("sort", sort);
+  if (startDate) params.append("startDate", startDate);
+  if (endDate) params.append("endDate", endDate);
+  if (search) params.append("search", search);
+  if (fields?.length) fields.forEach((f) => params.append("fields", f));
+  // Bypass apiHandler — response is raw CSV, not JSON with {success}
+  return API.get(`/users/export?${params.toString()}`, { responseType: "blob" });
+};
+
 const getDrivers = (
   page = 1,
   limit = PAGINATION_CONFIG.defaultPageSize,
@@ -296,6 +309,17 @@ const getUserDetail = (id, type) =>
 
 const updateUserStatus = (id, type, status) =>
   apiHandler(() => API.patch(`/users/${id}/status`, { type, status }));
+
+const updateUser = (id, data) =>
+  apiHandler(() =>
+    API.patch(`/users/${id}`, data),
+  );
+
+const deleteUser = (id, type) =>
+  apiHandler(() => API.delete(`/users/${id}?type=${type}`));
+
+const getDriverTransactions = (driverId, page = 1, limit = 10) =>
+  apiHandler(() => API.get(`/drivers/${driverId}/transactions?page=${page}&limit=${limit}`));
 
 const getSubscriptionRevenue = (
   page = 1,
@@ -355,6 +379,16 @@ const getNotifications = (
 const sendNotification = (payload) =>
   apiHandler(() => API.post("/notifications", payload));
 
+const getAdminNotifications = (page = 1, limit = 10) =>
+  apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
+
+const getRides = (page = 1, limit = 10, search = "") =>
+  apiHandler(() => {
+    let url = `/rides?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${search}`;
+    return API.get(url);
+  });
+
 const resolveReport = (id, adminNotes = "") =>
   apiHandler(() => API.patch(`/reports/${id}/resolved`, { adminNotes }));
 
@@ -375,12 +409,16 @@ const deletePromoCode = (id) =>
 
 export const api = {
   getUsers,
+  exportUsers,
   getDrivers,
   getRequestsCount,
   getUserDetail,
   getDriverDocs,
   getDriverVehicles,
   updateUserStatus,
+  updateUser,
+  deleteUser,
+  getDriverTransactions,
   getSubscriptionRevenue,
   getWithdrawalRevenue,
   updateDocs,
@@ -419,6 +457,8 @@ export const api = {
   getReportById,
   getNotifications,
   sendNotification,
+  getAdminNotifications,
+  getRides,
   getPromoCodes,
   createPromoCode,
   updatePromoCode,

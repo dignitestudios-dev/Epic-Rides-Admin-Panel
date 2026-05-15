@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { 
   ArrowLeft, User, Mail, Phone, Calendar, Star, 
@@ -11,6 +11,10 @@ import {
   TrendingUp,
   Wallet,
   Eye,
+  Pencil,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import Button from "../components/ui/Button";
@@ -18,14 +22,61 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import StatsCard from "../components/common/StatsCard";
-import { formatDate } from "../utils/helpers";
+import { formatDate, handleError, handleSuccess } from "../utils/helpers";
 import Table from "../components/ui/Table";
+import EditProfileModal from "../components/common/EditProfileModal";
+import { api } from "../lib/services";
 
 const DriverDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { details, loading } = useGetUserDetails(id, "driver");
+  const { details, loading, refresh } = useGetUserDetails(id, "driver");
   const [showAllDocsModal, setShowAllDocsModal] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [subscriptionHistory, setSubscriptionHistory] = useState([]);
+  const [subHistoryLoading, setSubHistoryLoading] = useState(false);
+  const [subPage, setSubPage] = useState(1);
+  const [subTotalPages, setSubTotalPages] = useState(1);
+  const [subTotal, setSubTotal] = useState(0);
+  const SUB_LIMIT = 10;
+
+  React.useEffect(() => {
+    if (!id) return;
+    setSubHistoryLoading(true);
+    api.getDriverTransactions(id, subPage, SUB_LIMIT)
+      .then((res) => {
+        setSubscriptionHistory(res?.data?.transactions || []);
+        setSubTotalPages(res?.data?.pagination?.totalPages || 1);
+        setSubTotal(res?.data?.totalTransactions ?? 0);
+      })
+      .catch(() => setSubscriptionHistory([]))
+      .finally(() => setSubHistoryLoading(false));
+  }, [id, subPage]);
+
+  const editInitialData = useMemo(() => ({
+    firstName: details?.fullDetails?.firstName || details?.personalInfo?.firstName || "",
+    lastName: details?.fullDetails?.lastName || details?.personalInfo?.lastName || "",
+    email: details?.personalInfo?.email || details?.fullDetails?.email || "",
+    subscriptionStatus: details?.fullDetails?.subscriptionStatus || details?.subscriptionStatus || "",
+    balance: details?.walletBalance !== undefined ? details.walletBalance : (details?.fullDetails?.balance ?? ""),
+  }), [details]);
+
+  const handleDelete = async () => {
+    setDeleteLoading(true);
+    try {
+      const response = await api.deleteUser(id, "driver");
+      handleSuccess(response?.message, "Driver deleted successfully");
+      setDeleteModalOpen(false);
+      navigate("/user-management");
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -58,6 +109,9 @@ const DriverDetail = () => {
     revenue,
     referralInfo
   } = details;
+
+  const fullName = [personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "N/A";
+
 console.log(details)
   const historyColumns = [
     { 
@@ -68,7 +122,7 @@ console.log(details)
     { 
       key: "user", 
       label: "Rider", 
-      render: (user) => user?.name || "N/A" 
+      render: (user) => [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "N/A"
     },
     { 
       key: "pickupPoint", 
@@ -132,18 +186,36 @@ console.log(details)
                   {personalInfo?.profilePicture ? (
                     <img 
                       src={personalInfo.profilePicture} 
-                      alt={personalInfo.name} 
-                      className="w-full h-full object-cover"
+                   alt={fullName} 
+                   className="w-full h-full object-cover"
                       onError={(e) => { e.target.src = ""; e.target.style.display = "none"; }} 
                     />
                   ) : (
                     <User className="w-12 h-12 text-blue-600" />
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">{personalInfo?.name}</h2>
+                <h2 className="text-xl font-bold text-gray-900">{fullName}</h2>
                 <Badge variant={personalInfo.status === "Active" ? "success" : "danger"} className="mt-2">
                   {personalInfo.status}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => setEditModalOpen(true)}
+                  icon={<Pencil className="w-3.5 h-3.5" />}
+                >
+                  Edit Profile
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setDeleteModalOpen(true)}
+                  icon={<Trash2 className="w-3.5 h-3.5" />}
+                >
+                  Delete Driver
+                </Button>
               </div>
 
               <div className="space-y-4 pt-6 border-t border-gray-100 text-sm">
@@ -371,9 +443,9 @@ console.log(details)
                     data={referralInfo.referrals} 
                     columns={[
                       { 
-                        key: "name", 
+                        key: "firstName", 
                         label: "Referred Driver",
-                        render: (val) => <span className="font-medium text-gray-900">{val}</span>
+                        render: (_, row) => <span className="font-medium text-gray-900">{[row.firstName, row.lastName].filter(Boolean).join(" ") || "N/A"}</span>
                       },
                       // { 
                       //   key: "date", 
@@ -404,11 +476,104 @@ console.log(details)
               )}
             </div>
           </Card>
+
+          {/* Subscription History */}
+          <Card>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Subscription History ({subTotal})
+              </h3>
+              {subHistoryLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600" />
+                </div>
+              ) : subscriptionHistory.length > 0 ? (
+                <>
+                  <div className="overflow-x-auto">
+                    <Table
+                      data={subscriptionHistory}
+                      columns={[
+                        {
+                          key: "createdAt",
+                          label: "Date",
+                          render: (val) => formatDate(val),
+                        },
+                        {
+                          key: "amount",
+                          label: "Amount",
+                          render: (val) => `$${val ?? 0}`,
+                        },
+                        {
+                          key: "purpose",
+                          label: "Purpose",
+                          render: (val) => (
+                            <span className="capitalize">
+                              {val?.replace(/_/g, " ") || "—"}
+                            </span>
+                          ),
+                        },
+                        {
+                          key: "status",
+                          label: "Status",
+                          render: (val) => (
+                            <Badge variant={val?.toLowerCase() === "success" ? "success" : "danger"}>
+                              {val}
+                            </Badge>
+                          ),
+                        },
+                        {
+                          key: "isActivationTransaction",
+                          label: "Type",
+                          render: (val) => (
+                            <Badge variant={val ? "primary" : "default"}>
+                              {val ? "Activation" : "Renewal"}
+                            </Badge>
+                          ),
+                        },
+                      ]}
+                    />
+                  </div>
+                  {subTotalPages > 1 && (
+                    <div className="flex items-center justify-end gap-1 pt-4 border-t border-gray-100 mt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={subPage === 1 || subHistoryLoading}
+                        onClick={() => setSubPage((p) => p - 1)}
+                      >
+                        <ChevronLeft size={16} />
+                      </Button>
+                      {Array.from({ length: subTotalPages }, (_, i) => i + 1).map((p) => (
+                        <Button
+                          key={p}
+                          variant={subPage === p ? "primary" : "outline"}
+                          size="sm"
+                          disabled={subHistoryLoading}
+                          onClick={() => setSubPage(p)}
+                        >
+                          {p}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={subPage === subTotalPages || subHistoryLoading}
+                        onClick={() => setSubPage((p) => p + 1)}
+                      >
+                        <ChevronRight size={16} />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-500 text-center py-4">No subscription history found</p>
+              )}
+            </div>
+          </Card>
         </div>
       </div>
 
-      {/* View All Documents Modal */}
-      <Modal
+      {/* View All Documents Modal */}      <Modal
         isOpen={showAllDocsModal}
         onClose={() => setShowAllDocsModal(false)}
         title="All Driver Documents"
@@ -477,6 +642,45 @@ console.log(details)
               <p className="text-gray-500 font-medium">No documents found</p>
             </div>
           )}
+        </div>
+      </Modal>
+
+      <EditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        userId={id}
+        type="driver"
+        initialData={editInitialData}
+        onSuccess={refresh}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Delete Driver"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+              <Trash2 className="w-5 h-5 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900">Are you sure you want to delete this driver?</p>
+              <p className="text-sm text-gray-500 mt-1">
+                This action is permanent and cannot be undone. All data associated with this driver will be removed.
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <Button variant="ghost" onClick={() => setDeleteModalOpen(false)} disabled={deleteLoading}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleDelete} loading={deleteLoading}>
+              Yes, Delete
+            </Button>
+          </div>
         </div>
       </Modal>
     </div>

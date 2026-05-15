@@ -1,5 +1,5 @@
 // pages/DriverDetails.jsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
 import { formatDate, handleError } from "../utils/helpers";
@@ -8,6 +8,7 @@ import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
+import EditProfileModal from "../components/common/EditProfileModal";
 import {
   ArrowLeft,
   Car,
@@ -32,6 +33,7 @@ import {
   Calendar,
   ChevronDown,
   CreditCard,
+  Pencil,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 
@@ -736,6 +738,7 @@ const DriverDetails = () => {
   const [docs, setDocs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const [bulkRejectMode, setBulkRejectMode] = useState(false);
   const [bulkReasons, setBulkReasons] = useState({});
@@ -744,11 +747,25 @@ const DriverDetails = () => {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectAllReason, setRejectAllReason] = useState("");
 
-  const { details: userDetails, loading: userLoading } = useGetUserDetails(
+  const { details: userDetails, loading: userLoading, refresh: refreshUser } = useGetUserDetails(
     id,
     "driver",
   );
   const pInfo = userDetails?.personalInfo;
+
+  const editInitialData = useMemo(
+    () => ({
+      firstName: userDetails?.fullDetails?.firstName || "",
+      lastName: userDetails?.fullDetails?.lastName || "",
+      email: pInfo?.email || userDetails?.fullDetails?.email || "",
+      subscriptionStatus: userDetails?.fullDetails?.subscriptionStatus || "",
+      balance:
+        userDetails?.walletBalance !== undefined
+          ? userDetails.walletBalance
+          : (userDetails?.fullDetails?.balance ?? ""),
+    }),
+    [userDetails, pInfo],
+  );
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -884,6 +901,13 @@ const DriverDetails = () => {
           </button>
 
           <div className="flex items-center gap-2">
+            <button
+              disabled={userLoading}
+              onClick={() => setEditModalOpen(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" /> Edit Profile
+            </button>
             {totalPending > 0 && (
               <>
                 <button
@@ -938,7 +962,7 @@ const DriverDetails = () => {
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 ml-[116px]">
               <div>
                 <h1 className="text-[26px] font-bold text-gray-900 leading-none mb-2">
-                  {pInfo?.name || "Driver Application"}
+                  {[pInfo?.firstName, pInfo?.lastName].filter(Boolean).join(" ") || "Driver Application"}
                 </h1>
                 <div className="flex items-center gap-3">
                   <p className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
@@ -1084,6 +1108,16 @@ const DriverDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        userId={id}
+        type="driver"
+        initialData={editInitialData}
+        onSuccess={refreshUser}
+      />
 
       {/* Reject All Modal */}
       <Modal
