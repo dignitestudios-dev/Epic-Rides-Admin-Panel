@@ -4,7 +4,7 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 // Create an Axios instance
 
 // const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+const STAGING_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -321,6 +321,9 @@ const deleteUser = (id, type) =>
 const getDriverTransactions = (driverId, page = 1, limit = 10) =>
   apiHandler(() => API.get(`/drivers/${driverId}/transactions?page=${page}&limit=${limit}`));
 
+const getBirdsEyeView = () =>
+  apiHandler(() => API.get("/birds-eye-view"));
+
 const getSubscriptionRevenue = (
   page = 1,
   limit = 10,
@@ -419,6 +422,7 @@ export const api = {
   updateUser,
   deleteUser,
   getDriverTransactions,
+  getBirdsEyeView,
   getSubscriptionRevenue,
   getWithdrawalRevenue,
   updateDocs,

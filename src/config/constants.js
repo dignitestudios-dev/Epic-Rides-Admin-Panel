@@ -163,6 +163,13 @@ export const MENU_ITEMS = [
     path: "/promo-codes",
     children: [],
   },
+  {
+    id: "birds-eye-view",
+    label: "Bird's Eye View",
+    icon: "Map",
+    path: "/birds-eye-view",
+    children: [],
+  },
   // {
   //   id: "history",
   //   label: "History",
