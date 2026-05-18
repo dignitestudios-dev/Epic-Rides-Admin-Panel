@@ -23,36 +23,36 @@ export const AuthProvider = ({ children }) => {
   const [showTimeoutModal, setShowTimeoutModal] = useState(false);
 
   // Inactivity timer logic
-  // useEffect(() => {
-  //   let timer;
-  //   const resetTimer = () => {
-  //     if (timer) clearTimeout(timer);
-  //     if (user && !showTimeoutModal) {
-  //       timer = setTimeout(async () => {
-  //         // Automatic logout on timeout
-  //         await logout();
-  //         setShowTimeoutModal(true);
-  //       }, SECURITY_CONFIG.sessionTimeout);
-  //     }
-  //   };
+  useEffect(() => {
+    let timer;
+    const resetTimer = () => {
+      if (timer) clearTimeout(timer);
+      if (user && !showTimeoutModal) {
+        timer = setTimeout(async () => {
+          // Automatic logout on timeout
+          await logout();
+          setShowTimeoutModal(true);
+        }, SECURITY_CONFIG.sessionTimeout);
+      }
+    };
 
-  //   if (user) {
-  //     const events = [
-  //       "mousemove",
-  //       "mousedown",
-  //       "keypress",
-  //       "scroll",
-  //       "touchstart",
-  //     ];
-  //     events.forEach((event) => window.addEventListener(event, resetTimer));
-  //     resetTimer();
+    if (user) {
+      const events = [
+        "mousemove",
+        "mousedown",
+        "keypress",
+        "scroll",
+        "touchstart",
+      ];
+      events.forEach((event) => window.addEventListener(event, resetTimer));
+      resetTimer();
 
-  //     return () => {
-  //       if (timer) clearTimeout(timer);
-  //       events.forEach((event) => window.removeEventListener(event, resetTimer));
-  //     };
-  //   }
-  // }, [user, showTimeoutModal]);
+      return () => {
+        if (timer) clearTimeout(timer);
+        events.forEach((event) => window.removeEventListener(event, resetTimer));
+      };
+    }
+  }, [user, showTimeoutModal]);
 
   // Check if user is locked out
   const isLockedOut = () => {
