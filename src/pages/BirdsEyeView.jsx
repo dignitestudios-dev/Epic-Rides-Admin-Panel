@@ -26,8 +26,8 @@ import { api } from "../lib/services";
 // ── Constants ────────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 10_000; // ms
 const ANIMATION_DURATION = 2500; // ms — smooth marker travel time
-// Default map center (Karachi — matches sample data; overridden by geolocation)
-const DEFAULT_CENTER = { lat: 24.8685, lng: 67.0779 };
+// Default map center — Orlando, Florida
+const DEFAULT_CENTER = { lat: 28.5383, lng: -81.3792 };
 
 const MAP_OPTIONS = {
   disableDefaultUI: false,
@@ -413,16 +413,6 @@ const BirdsEyeView = () => {
     return () => clearInterval(clockRef);
   }, []);
 
-  // Geolocation — center map on admin on first load
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) =>
-        setMapCenter({ lat: coords.latitude, lng: coords.longitude }),
-      () => {} // silently fall back to DEFAULT_CENTER
-    );
-  }, []);
-
   // Smooth animated positions
   const smoothPositions = useSmoothPositions(drivers);
 
@@ -438,15 +428,8 @@ const BirdsEyeView = () => {
   );
 
   const handleRecenter = useCallback(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const pos = { lat: coords.latitude, lng: coords.longitude };
-        mapRef.current?.panTo(pos);
-        mapRef.current?.setZoom(14);
-      },
-      () => {}
-    );
+    mapRef.current?.panTo(DEFAULT_CENTER);
+    mapRef.current?.setZoom(13);
   }, []);
 
   const filteredDrivers = useMemo(
