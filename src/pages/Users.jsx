@@ -201,7 +201,7 @@ const Users = () => {
       render: (value) => {
         const v = value?.toLowerCase();
         const variant = v === "active" ? "success" : v === "expired" ? "danger" : "warning";
-        return <Badge variant={variant}>{value || "—"}</Badge>;
+        return <Badge variant={variant}>{value === null ? "unpaid" : value === "active" ? "paid" : "unpaid"}</Badge>;
       },
     }] : []),
     {

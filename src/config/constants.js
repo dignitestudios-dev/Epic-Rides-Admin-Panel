@@ -124,7 +124,7 @@ export const MENU_ITEMS = [
   {
     id: "reports",
     label: "Reports",
-    icon: "BarChart",
+    icon: "Info",
     path: "/reports",
     children: [],
   },
