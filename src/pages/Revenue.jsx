@@ -368,7 +368,7 @@ const Revenue = () => {
             index={0}
           />
           <StatsCard
-            title="Total Commission Revenue"
+            title="Total Card Fees"
             value={`$${withStats?.totalCommissionRevenue ?? 0}`}
             description={withDateDesc}
             icon={<TrendingUp />}
