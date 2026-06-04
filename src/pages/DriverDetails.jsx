@@ -293,6 +293,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(doc.status);
   const [showRejectBox, setShowRejectBox] = useState(false);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [reason, setReason] = useState("");
   const [imgError, setImgError] = useState({});
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -353,6 +354,31 @@ const DocCard = ({ doc, onRespond, isOld }) => {
           initialIndex={viewerIdx}
           onClose={() => setViewerOpen(false)}
         />
+      )}
+      {showApproveConfirm && (
+        <Modal
+          isOpen={showApproveConfirm}
+          onClose={() => setShowApproveConfirm(false)}
+          title="Confirm Approval"
+          size="sm"
+        >
+          <p className="text-sm text-gray-500 mb-6">
+            Are you sure you want to approve <strong className="text-gray-900">{docTypeLabel}</strong>? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              loading={loading}
+              disabled={loading}
+              onClick={() => { setShowApproveConfirm(false); respond("approved"); }}
+            >
+              Yes, Approve
+            </Button>
+          </div>
+        </Modal>
       )}
       <div
         className={`border rounded-2xl bg-white shadow-sm flex flex-col gap-3 transition-all duration-200 overflow-hidden ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
@@ -496,7 +522,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
                   <div className="flex gap-2">
                     <button
                       disabled={loading}
-                      onClick={() => respond("approved")}
+                      onClick={() => setShowApproveConfirm(true)}
                       className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
                     >
                       {loading ? (
@@ -568,6 +594,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(vehicle.status);
   const [showReject, setShowReject] = useState(false);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [reason, setReason] = useState("");
 
   const isOld = vehicle.status === "old";
@@ -605,13 +632,39 @@ const VehicleCard = ({ vehicle, onRespond }) => {
   };
 
   return (
-    <div
-      className={`border rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-200 ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
-    >
+    <>
+      {showApproveConfirm && (
+        <Modal
+          isOpen={showApproveConfirm}
+          onClose={() => setShowApproveConfirm(false)}
+          title="Confirm Approval"
+          size="sm"
+        >
+          <p className="text-sm text-gray-500 mb-6">
+            Are you sure you want to approve <strong className="text-gray-900">{vehicle.make} {vehicle.model}</strong>? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
+              Cancel
+            </Button>
+            <Button
+              variant="success"
+              loading={loading}
+              disabled={loading}
+              onClick={() => { setShowApproveConfirm(false); respond("approved"); }}
+            >
+              Yes, Approve
+            </Button>
+          </div>
+        </Modal>
+      )}
       <div
-        className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
-        onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
+        className={`border rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-200 ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
       >
+        <div
+          className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
+          onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
+        >
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
             <Car className="w-5 h-5 text-blue-500" />
@@ -667,7 +720,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                 <div className="flex gap-2">
                   <button
                     disabled={loading}
-                    onClick={() => respond("approved")}
+                    onClick={() => setShowApproveConfirm(true)}
                     className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
                   >
                     {loading ? (
@@ -724,11 +777,12 @@ const VehicleCard = ({ vehicle, onRespond }) => {
           )}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+
 
 const DriverDetails = () => {
   const { id } = useParams();
@@ -745,6 +799,7 @@ const DriverDetails = () => {
   const [bulkLoading, setBulkLoading] = useState(false);
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [approveAllModalOpen, setApproveAllModalOpen] = useState(false);
   const [rejectAllReason, setRejectAllReason] = useState("");
 
   const { details: userDetails, loading: userLoading, refresh: refreshUser } = useGetUserDetails(
@@ -912,7 +967,7 @@ const DriverDetails = () => {
               <>
                 <button
                   disabled={bulkLoading}
-                  onClick={handleApproveAll}
+                  onClick={() => setApproveAllModalOpen(true)}
                   className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {bulkLoading ? (
@@ -1118,6 +1173,31 @@ const DriverDetails = () => {
         initialData={editInitialData}
         onSuccess={refreshUser}
       />
+
+      {/* Approve All Confirmation Modal */}
+      <Modal
+        isOpen={approveAllModalOpen}
+        onClose={() => setApproveAllModalOpen(false)}
+        title="Confirm Approve All"
+        size="sm"
+      >
+        <p className="text-sm text-gray-500 mb-6">
+          Are you sure you want to approve all <strong className="text-gray-900">{totalPending}</strong> pending document(s) and vehicle(s)? This action cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={() => setApproveAllModalOpen(false)} disabled={bulkLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            loading={bulkLoading}
+            disabled={bulkLoading}
+            onClick={() => { setApproveAllModalOpen(false); handleApproveAll(); }}
+          >
+            Yes, Approve All
+          </Button>
+        </div>
+      </Modal>
 
       {/* Reject All Modal */}
       <Modal
