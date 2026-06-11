@@ -3,7 +3,7 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/"; // Production URL
 // const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
@@ -410,6 +410,23 @@ const updatePromoCode = (id, payload) =>
 const deletePromoCode = (id) =>
   apiHandler(() => API.delete(`/promo-code/${id}`));
 
+// Ride Rates & Peak Windows API
+const getRideRates = () => apiHandler(() => API.get("/ride-rates"));
+
+const updateRideRate = (rideType, payload) =>
+  apiHandler(() => API.put(`/ride-rates/${rideType}`, payload));
+
+const getPeakWindows = () => apiHandler(() => API.get("/peak-windows"));
+
+const createPeakWindow = (payload) =>
+  apiHandler(() => API.post("/peak-windows", payload));
+
+const updatePeakWindow = (id, payload) =>
+  apiHandler(() => API.put(`/peak-windows/${id}`, payload));
+
+const deletePeakWindow = (id) =>
+  apiHandler(() => API.delete(`/peak-windows/${id}`));
+
 export const api = {
   getUsers,
   exportUsers,
@@ -467,4 +484,10 @@ export const api = {
   createPromoCode,
   updatePromoCode,
   deletePromoCode,
+  getRideRates,
+  updateRideRate,
+  getPeakWindows,
+  createPeakWindow,
+  updatePeakWindow,
+  deletePeakWindow,
 };

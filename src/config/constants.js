@@ -164,6 +164,20 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "ride-rates",
+    label: "Ride Rates",
+    icon: "Gauge",
+    path: "/ride-rates",
+    children: [],
+  },
+  {
+    id: "peak-windows",
+    label: "Peak Windows",
+    icon: "Clock3",
+    path: "/peak-windows",
+    children: [],
+  },
+  {
     id: "birds-eye-view",
     label: "Bird's Eye View",
     icon: "Map",
