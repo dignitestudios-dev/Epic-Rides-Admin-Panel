@@ -42,7 +42,7 @@ const MAP_OPTIONS = {
   ],
 };
 
-// ── SVG car icons ─────────────────────────────────────────────────────────────
+// ── SVG icons ─────────────────────────────────────────────────────────────
 const ECONOMY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 46" width="56" height="46">
   <defs>
     <filter id="es" x="-25%" y="-25%" width="150%" height="150%">
@@ -80,6 +80,19 @@ const LUXURY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48" 
   </g>
 </svg>`;
 
+const RIDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <defs>
+    <filter id="rs" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+    </filter>
+  </defs>
+  <g filter="url(#rs)">
+    <circle cx="20" cy="20" r="16" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
+    <circle cx="20" cy="14" r="5" fill="#ffffff"/>
+    <path d="M11 26 Q20 18 29 26 Q29 29 20 29 Q11 29 11 26 Z" fill="#ffffff"/>
+  </g>
+</svg>`;
+
 const svgToDataUrl = (svg) =>
   `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 
@@ -87,10 +100,10 @@ const svgToDataUrl = (svg) =>
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-function useSmoothPositions(drivers) {
+function useSmoothPositions(items) {
   const [positions, setPositions] = useState({});
-  const rafRef = useRef({}); // per-driver rAF id
-  const currentPos = useRef({}); // per-driver latest interpolated position
+  const rafRef = useRef({}); // per-item rAF id
+  const currentPos = useRef({}); // per-item latest interpolated position
 
   // Only cancel all animations on unmount
   useEffect(() => {
@@ -100,20 +113,20 @@ function useSmoothPositions(drivers) {
   }, []);
 
   useEffect(() => {
-    if (!drivers.length) return;
+    if (!items || !items.length) return;
 
-    drivers.forEach((driver) => {
-      const newLat = driver.location?.coordinates?.[1];
-      const newLng = driver.location?.coordinates?.[0];
+    items.forEach((item) => {
+      const newLat = item.location?.coordinates?.[1];
+      const newLng = item.location?.coordinates?.[0];
       if (newLat == null || newLng == null) return;
 
-      const prev = currentPos.current[driver.id];
+      const prev = currentPos.current[item.id];
 
-      // First time seeing this driver — snap immediately
+      // First time seeing this item — snap immediately
       if (!prev) {
         const pos = { lat: newLat, lng: newLng };
-        currentPos.current[driver.id] = pos;
-        setPositions((p) => ({ ...p, [driver.id]: pos }));
+        currentPos.current[item.id] = pos;
+        setPositions((p) => ({ ...p, [item.id]: pos }));
         return;
       }
 
@@ -124,9 +137,9 @@ function useSmoothPositions(drivers) {
       )
         return;
 
-      // Cancel any in-progress animation for this driver
-      if (rafRef.current[driver.id]) {
-        cancelAnimationFrame(rafRef.current[driver.id]);
+      // Cancel any in-progress animation for this item
+      if (rafRef.current[item.id]) {
+        cancelAnimationFrame(rafRef.current[item.id]);
       }
 
       const startLat = prev.lat;
@@ -140,17 +153,17 @@ function useSmoothPositions(drivers) {
         const lng = startLng + (newLng - startLng) * e;
         const pos = { lat, lng };
 
-        currentPos.current[driver.id] = pos;
-        setPositions((p) => ({ ...p, [driver.id]: pos }));
+        currentPos.current[item.id] = pos;
+        setPositions((p) => ({ ...p, [item.id]: pos }));
 
         if (t < 1) {
-          rafRef.current[driver.id] = requestAnimationFrame(step);
+          rafRef.current[item.id] = requestAnimationFrame(step);
         }
       };
 
-      rafRef.current[driver.id] = requestAnimationFrame(step);
+      rafRef.current[item.id] = requestAnimationFrame(step);
     });
-  }, [drivers]);
+  }, [items]);
 
   return positions;
 }
@@ -245,6 +258,89 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
   );
 });
 DriverCard.displayName = "DriverCard";
+
+// ── Rider sidebar card ────────────────────────────────────────────────────────
+const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
+  const name =
+    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "Unknown";
+  const isOnTrip = rider.rideStatus === "accepted";
+
+  return (
+    <div
+      className={`p-3 rounded-xl border transition-all ${
+        isSelected
+          ? "border-primary-400 bg-primary-50 shadow-sm"
+          : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+            {rider.profilePicture ? (
+              <img
+                src={rider.profilePicture}
+                alt={name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : (
+              <User className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
+          {/* Status dot */}
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+              isOnTrip ? "bg-blue-500" : "bg-amber-500"
+            }`}
+          />
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+            <Phone className="w-3 h-3" />
+            {rider.phone || "—"}
+          </p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <Badge
+              variant={isOnTrip ? "primary" : "warning"}
+              className="text-[10px] px-1.5 py-0.5"
+            >
+              {isOnTrip ? "Accepted" : "Requested"}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 mt-2.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 text-xs"
+          icon={<Navigation className="w-3.5 h-3.5" />}
+          onClick={() => onLocate(rider)}
+        >
+          Locate
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 text-xs"
+          icon={<Eye className="w-3.5 h-3.5" />}
+          onClick={() => onView(rider)}
+        >
+          Details
+        </Button>
+      </div>
+    </div>
+  );
+});
+RiderCard.displayName = "RiderCard";
 
 // ── Driver detail modal ───────────────────────────────────────────────────────
 const DriverDetailModal = ({ driver, isOpen, onClose }) => {
@@ -353,13 +449,94 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
   );
 };
 
+// ── Rider detail modal ────────────────────────────────────────────────────────
+const RiderDetailModal = ({ rider, isOpen, onClose }) => {
+  const navigate = useNavigate();
+  if (!rider) return null;
+
+  const name =
+    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "—";
+  const isOnTrip = rider.rideStatus === "accepted";
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Rider Details" size="sm">
+      <div className="space-y-4">
+        {/* Profile row */}
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
+            {rider.profilePicture ? (
+              <img
+                src={rider.profilePicture}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-8 h-8 text-gray-400" />
+            )}
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-gray-900">{name}</h3>
+            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+              <Phone className="w-3.5 h-3.5" />
+              {rider.phone || "—"}
+            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge variant={isOnTrip ? "primary" : "warning"}>
+                {isOnTrip ? "Accepted" : "Requested"}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Pickup Info */}
+        <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
+            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <MapPin className="w-4 h-4" /> Pickup Details
+            </p>
+            <div className="text-gray-600 text-sm">
+              <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
+            </div>
+        </div>
+
+        {/* Location */}
+        <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
+          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5" /> Current Location
+          </p>
+          <p className="text-gray-700 font-mono text-xs">
+            {rider.location?.coordinates?.[1]?.toFixed(6)},{" "}
+            {rider.location?.coordinates?.[0]?.toFixed(6)}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+          <Button variant="ghost" onClick={onClose}>
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onClose();
+              navigate(`/user-management/rider/${rider.id}`);
+            }}
+          >
+            Full Profile
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 const BirdsEyeView = () => {
-  const [drivers, setDrivers] = useState([]);
+  const [data, setData] = useState({ drivers: [], riders: [], totalDrivers: 0, totalRiders: 0 });
+  const [activeTab, setActiveTab] = useState("drivers");
   const [loading, setLoading] = useState(true);
   const [liveTime, setLiveTime] = useState(new Date());
   const [selectedId, setSelectedId] = useState(null);
-  const [detailDriver, setDetailDriver] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
   const [search, setSearch] = useState("");
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
 
@@ -385,14 +562,30 @@ const BirdsEyeView = () => {
         scaledSize: new window.google.maps.Size(68, 48),
         anchor: new window.google.maps.Point(34, 48),
       },
+      rider: {
+        url: svgToDataUrl(RIDER_SVG),
+        scaledSize: new window.google.maps.Size(40, 40),
+        anchor: new window.google.maps.Point(20, 20),
+      },
     };
   }, [isLoaded]);
 
-  // Fetch drivers
-  const fetchDrivers = useCallback(async () => {
+  // Fetch data
+  const fetchData = useCallback(async () => {
     try {
       const res = await api.getBirdsEyeView();
-      setDrivers(res?.data || []);
+      if (res?.data) {
+        if (res.data.drivers !== undefined || res.data.riders !== undefined) {
+          setData({
+            drivers: res.data.drivers || [],
+            riders: res.data.riders || [],
+            totalDrivers: res.data.totalDrivers || 0,
+            totalRiders: res.data.totalRiders || 0
+          });
+        } else {
+          setData({ drivers: Array.isArray(res.data) ? res.data : [], riders: [], totalDrivers: 0, totalRiders: 0 });
+        }
+      }
     } catch (_e) {
       // Keep existing data on poll failure; silent fail
     } finally {
@@ -402,10 +595,10 @@ const BirdsEyeView = () => {
 
   // Initial fetch + polling
   useEffect(() => {
-    fetchDrivers();
-    pollRef.current = setInterval(fetchDrivers, POLL_INTERVAL);
+    fetchData();
+    pollRef.current = setInterval(fetchData, POLL_INTERVAL);
     return () => clearInterval(pollRef.current);
-  }, [fetchDrivers]);
+  }, [fetchData]);
 
   // Live clock — ticks every second independently of polling
   useEffect(() => {
@@ -413,16 +606,16 @@ const BirdsEyeView = () => {
     return () => clearInterval(clockRef);
   }, []);
 
-  // Smooth animated positions
-  const smoothPositions = useSmoothPositions(drivers);
+  const activeItems = activeTab === "drivers" ? data.drivers : data.riders;
+  const smoothPositions = useSmoothPositions(activeItems);
 
   const handleLocate = useCallback(
-    (driver) => {
-      const pos = smoothPositions[driver.id];
+    (item) => {
+      const pos = smoothPositions[item.id];
       if (!pos || !mapRef.current) return;
       mapRef.current.panTo(pos);
       mapRef.current.setZoom(16);
-      setSelectedId(driver.id);
+      setSelectedId(item.id);
     },
     [smoothPositions]
   );
@@ -432,20 +625,23 @@ const BirdsEyeView = () => {
     mapRef.current?.setZoom(13);
   }, []);
 
-  const filteredDrivers = useMemo(
+  const filteredItems = useMemo(
     () =>
-      drivers.filter((d) => {
+      activeItems.filter((item) => {
         if (!search) return true;
-        const name = [d.firstName, d.lastName].join(" ").toLowerCase();
-        return name.includes(search.toLowerCase()) || (d.phone || "").includes(search);
+        const name = [item.firstName, item.lastName].join(" ").toLowerCase();
+        return name.includes(search.toLowerCase()) || (item.phone || "").includes(search);
       }),
-    [drivers, search]
+    [activeItems, search]
   );
 
-  const economyCount = drivers.filter(
+  const economyCount = data.drivers.filter(
     (d) => d.vehicleType?.toLowerCase() !== "luxury"
   ).length;
-  const luxuryCount = drivers.length - economyCount;
+  const luxuryCount = data.drivers.length - economyCount;
+
+  const requestedCount = data.riders.filter((r) => r.rideStatus === "requested").length;
+  const acceptedCount = data.riders.filter((r) => r.rideStatus === "accepted").length;
 
   if (loadError) {
     return (
@@ -463,7 +659,6 @@ const BirdsEyeView = () => {
   }
 
   return (
-    // Break out of Layout's p-6 padding and max-w constraint
     <div
       className="-m-6 flex overflow-hidden"
       style={{ height: "calc(100vh - 80px)" }}
@@ -486,24 +681,31 @@ const BirdsEyeView = () => {
             }}
           >
             {icons &&
-              drivers.map((driver) => {
-                const pos = smoothPositions[driver.id];
+              activeItems.map((item) => {
+                const pos = smoothPositions[item.id];
                 if (!pos) return null;
-                const isLuxury = driver.vehicleType?.toLowerCase() === "luxury";
+
+                let iconToUse;
+                if (activeTab === "drivers") {
+                  iconToUse = item.vehicleType?.toLowerCase() === "luxury" ? icons.luxury : icons.economy;
+                } else {
+                  iconToUse = icons.rider;
+                }
+
                 return (
                   <Marker
-                    key={driver.id}
+                    key={item.id}
                     position={pos}
-                    icon={isLuxury ? icons.luxury : icons.economy}
+                    icon={iconToUse}
                     title={
-                      [driver.firstName, driver.lastName]
+                      [item.firstName, item.lastName]
                         .filter(Boolean)
-                        .join(" ") || "Driver"
+                        .join(" ") || (activeTab === "drivers" ? "Driver" : "Rider")
                     }
-                    zIndex={selectedId === driver.id ? 100 : 1}
+                    zIndex={selectedId === item.id ? 100 : 1}
                     onClick={() => {
-                      setSelectedId(driver.id);
-                      setDetailDriver(driver);
+                      setSelectedId(item.id);
+                      setDetailItem(item);
                     }}
                   />
                 );
@@ -511,7 +713,7 @@ const BirdsEyeView = () => {
           </GoogleMap>
         )}
 
-        {/* Top-left overlay pills — single row, no overlap */}
+        {/* Top-left overlay pills */}
         <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none select-none">
           {/* Live + clock */}
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700">
@@ -525,7 +727,7 @@ const BirdsEyeView = () => {
           {/* Online count */}
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-1.5 text-xs font-medium text-gray-700">
             <Users className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
-            {drivers.length} online
+            {activeItems.length} online
           </div>
         </div>
 
@@ -533,7 +735,7 @@ const BirdsEyeView = () => {
         <button
           className="absolute left-3 bottom-28 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
           onClick={handleRecenter}
-          title="Center on my location"
+          title="Center on default location"
         >
           <MapPin className="w-4.5 h-4.5 text-primary-600" />
         </button>
@@ -541,7 +743,7 @@ const BirdsEyeView = () => {
         {/* Manual refresh */}
         <button
           className="absolute left-3 bottom-16 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
-          onClick={fetchDrivers}
+          onClick={fetchData}
           title="Refresh now"
         >
           <RefreshCw className="w-4 h-4 text-gray-600" />
@@ -552,28 +754,77 @@ const BirdsEyeView = () => {
       <div className="w-72 bg-white border-l border-gray-200 flex flex-col flex-shrink-0">
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900">Active Drivers</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-gray-900">Birds Eye View</h2>
             <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
               Auto-refresh 10s
             </span>
           </div>
 
-          {/* Quick stats */}
-          <div className="flex gap-2 mt-2.5">
-            <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
-              <p className="text-xs text-green-600 font-medium">Economy</p>
-              <p className="text-lg font-bold text-green-700">{economyCount}</p>
-            </div>
-            <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
-              <p className="text-xs text-amber-600 font-medium">Luxury</p>
-              <p className="text-lg font-bold text-amber-700">{luxuryCount}</p>
-            </div>
-            <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
-              <p className="text-xs text-blue-600 font-medium">Total</p>
-              <p className="text-lg font-bold text-blue-700">{drivers.length}</p>
-            </div>
+          {/* Tabs */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "drivers"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => {
+                setActiveTab("drivers");
+                setSelectedId(null);
+                handleRecenter();
+              }}
+            >
+              Drivers ({data.totalDrivers || data.drivers.length})
+            </button>
+            <button
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "riders"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => {
+                setActiveTab("riders");
+                setSelectedId(null);
+                handleRecenter();
+              }}
+            >
+              Riders ({data.totalRiders || data.riders.length})
+            </button>
           </div>
+
+          {/* Quick stats */}
+          {activeTab === "drivers" ? (
+            <div className="flex gap-2 mt-2.5">
+              <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
+                <p className="text-xs text-green-600 font-medium">Economy</p>
+                <p className="text-lg font-bold text-green-700">{economyCount}</p>
+              </div>
+              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
+                <p className="text-xs text-amber-600 font-medium">Luxury</p>
+                <p className="text-lg font-bold text-amber-700">{luxuryCount}</p>
+              </div>
+              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
+                <p className="text-xs text-blue-600 font-medium">Total</p>
+                <p className="text-lg font-bold text-blue-700">{data.drivers.length}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2 mt-2.5">
+              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
+                <p className="text-xs text-amber-600 font-medium">Requested</p>
+                <p className="text-lg font-bold text-amber-700">{requestedCount}</p>
+              </div>
+              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
+                <p className="text-xs text-blue-600 font-medium">Accepted</p>
+                <p className="text-lg font-bold text-blue-700">{acceptedCount}</p>
+              </div>
+              <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
+                <p className="text-xs text-gray-600 font-medium">Total</p>
+                <p className="text-lg font-bold text-gray-700">{data.riders.length}</p>
+              </div>
+            </div>
+          )}
 
           {/* Search */}
           <input
@@ -587,27 +838,40 @@ const BirdsEyeView = () => {
 
         {/* Legend */}
         <div className="px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-green-700">
-              <span className="w-2 h-2 rounded-sm bg-green-500 flex-shrink-0" />
-              Economy
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
-              <span className="w-2 h-2 rounded-sm bg-amber-500 flex-shrink-0" />
-              Luxury
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-              On Trip
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
-              <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
-              Available
-            </span>
-          </div>
+          {activeTab === "drivers" ? (
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-green-700">
+                <span className="w-2 h-2 rounded-sm bg-green-500 flex-shrink-0" />
+                Economy
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                <span className="w-2 h-2 rounded-sm bg-amber-500 flex-shrink-0" />
+                Luxury
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                On Trip
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                Available
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                Requested
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                Accepted
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Driver list */}
+        {/* List */}
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
           {loading ? (
             // Skeleton
@@ -629,11 +893,11 @@ const BirdsEyeView = () => {
                 </div>
               </div>
             ))
-          ) : filteredDrivers.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 text-center">
               <Car className="w-12 h-12 mb-3 opacity-30" />
               <p className="text-sm font-medium text-gray-500">
-                {search ? "No drivers match your search" : "No active drivers"}
+                {search ? "No matches found" : `No active ${activeTab}`}
               </p>
               {search && (
                 <button
@@ -645,28 +909,49 @@ const BirdsEyeView = () => {
               )}
             </div>
           ) : (
-            filteredDrivers.map((driver) => (
-              <DriverCard
-                key={driver.id}
-                driver={driver}
-                isSelected={selectedId === driver.id}
-                onLocate={handleLocate}
-                onView={(d) => {
-                  setDetailDriver(d);
-                  setSelectedId(d.id);
-                }}
-              />
-            ))
+            filteredItems.map((item) =>
+              activeTab === "drivers" ? (
+                <DriverCard
+                  key={item.id}
+                  driver={item}
+                  isSelected={selectedId === item.id}
+                  onLocate={handleLocate}
+                  onView={(d) => {
+                    setDetailItem(d);
+                    setSelectedId(d.id);
+                  }}
+                />
+              ) : (
+                <RiderCard
+                  key={item.id}
+                  rider={item}
+                  isSelected={selectedId === item.id}
+                  onLocate={handleLocate}
+                  onView={(r) => {
+                    setDetailItem(r);
+                    setSelectedId(r.id);
+                  }}
+                />
+              )
+            )
           )}
         </div>
       </div>
 
-      {/* Driver detail modal */}
-      <DriverDetailModal
-        driver={detailDriver}
-        isOpen={!!detailDriver}
-        onClose={() => setDetailDriver(null)}
-      />
+      {/* Detail Modals */}
+      {activeTab === "drivers" ? (
+        <DriverDetailModal
+          driver={detailItem}
+          isOpen={!!detailItem}
+          onClose={() => setDetailItem(null)}
+        />
+      ) : (
+        <RiderDetailModal
+          rider={detailItem}
+          isOpen={!!detailItem}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
     </div>
   );
 };
