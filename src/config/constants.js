@@ -157,10 +157,31 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "completed-rides",
+    label: "Completed Rides",
+    icon: "CheckCircle2",
+    path: "/completed-rides",
+    children: [],
+  },
+  {
     id: "promo-codes",
     label: "Promo Codes",
     icon: "Tag",
     path: "/promo-codes",
+    children: [],
+  },
+  {
+    id: "ride-rates",
+    label: "Ride Rates",
+    icon: "Gauge",
+    path: "/ride-rates",
+    children: [],
+  },
+  {
+    id: "peak-windows",
+    label: "Peak Windows",
+    icon: "Clock3",
+    path: "/peak-windows",
     children: [],
   },
   {
