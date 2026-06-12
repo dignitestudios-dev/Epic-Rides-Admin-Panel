@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Edit2, Plus, RefreshCcw } from "lucide-react";
@@ -22,25 +22,31 @@ const rateSchema = z
   .object({
     rideType: z.string().min(1),
     brackets: z.array(bracketSchema).min(1, "At least one bracket is required"),
-    peakSurchargePerMile: z.coerce.number().min(0, "Peak surcharge cannot be negative"),
+    peakSurchargePerMile: z.coerce.number().min(0).max(100000, "Peak surcharge cannot exceed 100000"),
     discountPercentage: z.coerce.number().min(0).max(100),
-    isActive: z.coerce.boolean(),
   })
   .superRefine((value, ctx) => {
     value.brackets.forEach((bracket, index) => {
-      if (bracket.maxMiles !== null && bracket.maxMiles !== "" && Number(bracket.maxMiles) <= bracket.minMiles) {
+      const normalizedMax =
+        bracket.maxMiles === null || bracket.maxMiles === "" ? null : Number(bracket.maxMiles);
+
+      if (normalizedMax !== null && normalizedMax <= bracket.minMiles) {
         ctx.addIssue({
           code: "custom",
           message: "Max miles must be greater than min miles",
           path: ["brackets", index, "maxMiles"],
         });
       }
+
       if (index > 0) {
         const prev = value.brackets[index - 1];
-        if (bracket.minMiles < Number(prev.maxMiles ?? prev.minMiles)) {
+        const prevMax = prev.maxMiles === null || prev.maxMiles === "" ? null : Number(prev.maxMiles);
+        const expectedMin = prevMax === null ? prev.minMiles + 1 : prevMax + 1;
+
+        if (bracket.minMiles !== expectedMin) {
           ctx.addIssue({
             code: "custom",
-            message: "Brackets must be in ascending order and non-overlapping",
+            message: `Min miles must start at ${expectedMin} to avoid overlapping ranges`,
             path: ["brackets", index, "minMiles"],
           });
         }
@@ -50,11 +56,46 @@ const rateSchema = z
 
 const emptyRate = {
   rideType: "",
-  brackets: [{ minMiles: 0, maxMiles: "", ratePerMile: 0 }],
+  brackets: [{ minMiles: 0, maxMiles: 5, ratePerMile: 0 }],
   peakSurchargePerMile: 0,
   discountPercentage: 0,
-  isActive: true,
 };
+
+const buildNextBracket = (brackets) => {
+  const lastBracket = brackets[brackets.length - 1];
+  const lastMax = lastBracket?.maxMiles === "" || lastBracket?.maxMiles == null ? null : Number(lastBracket.maxMiles);
+  const minMiles = brackets.length === 0 ? 0 : lastMax == null ? Number(lastBracket.minMiles) + 1 : lastMax + 1;
+  const maxMiles = minMiles + 4;
+
+  return {
+    minMiles,
+    maxMiles,
+    ratePerMile: 0,
+  };
+};
+
+const normalizeBrackets = (brackets) =>
+  brackets.map((bracket, index) => {
+    const normalized = {
+      ...bracket,
+      minMiles: Number(bracket.minMiles),
+      ratePerMile: Number(bracket.ratePerMile),
+      maxMiles:
+        bracket.maxMiles === "" || bracket.maxMiles === null || bracket.maxMiles === undefined
+          ? null
+          : Number(bracket.maxMiles),
+    };
+
+    if (index > 0) {
+      const prev = brackets[index - 1];
+      const prevMax = prev.maxMiles === "" || prev.maxMiles === null || prev.maxMiles === undefined
+        ? Number(prev.minMiles)
+        : Number(prev.maxMiles);
+      normalized.minMiles = prevMax + 1;
+    }
+
+    return normalized;
+  });
 
 const RideRates = () => {
   const { data, loading, updateRideRate } = useRideRatesActions();
@@ -75,7 +116,6 @@ const RideRates = () => {
         : emptyRate.brackets,
       peakSurchargePerMile: editingRate.peakSurchargePerMile ?? 0,
       discountPercentage: editingRate.discountPercentage ?? 0,
-      isActive: editingRate.isActive ?? true,
     };
   }, [editingRate]);
 
@@ -84,6 +124,7 @@ const RideRates = () => {
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(rateSchema),
@@ -99,16 +140,37 @@ const RideRates = () => {
     reset(defaultValues);
   }, [defaultValues, reset]);
 
+  const watchedBrackets = useWatch({ control, name: "brackets" });
+
+  useEffect(() => {
+    if (!watchedBrackets?.length) return;
+
+    watchedBrackets.forEach((bracket, index) => {
+      if (index === 0) return;
+
+      const prev = watchedBrackets[index - 1];
+      const prevMax =
+        prev?.maxMiles === "" || prev?.maxMiles === null || prev?.maxMiles === undefined
+          ? Number(prev?.minMiles)
+          : Number(prev.maxMiles);
+      const nextMin = prevMax + 1;
+
+      if (Number(bracket?.minMiles) !== nextMin) {
+        setValue(`brackets.${index}.minMiles`, nextMin, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+      }
+    });
+  }, [watchedBrackets, setValue]);
+
   const openEditor = (rate) => setEditingRate(rate);
   const closeEditor = () => setEditingRate(null);
 
   const onSubmit = async (values) => {
     await updateRideRate(editingRate.rideType, {
       ...values,
-      brackets: values.brackets.map((bracket) => ({
-        ...bracket,
-        maxMiles: bracket.maxMiles === "" ? null : bracket.maxMiles,
-      })),
+      brackets: normalizeBrackets(values.brackets),
     });
     closeEditor();
   };
@@ -121,7 +183,7 @@ const RideRates = () => {
           <div>
             <h1 className="text-3xl font-bold">Ride Rates</h1>
             <p className="mt-2 max-w-2xl text-sm text-gray-300">
-              Manage tiered ride pricing, peak surcharge, discounts, and the active state for each ride type.
+              Manage tiered ride pricing, peak surcharge, and discounts for each ride type.
             </p>
           </div>
           <div className="text-sm text-gray-300">
@@ -145,9 +207,6 @@ const RideRates = () => {
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-white capitalize">
                       {rate.rideType}
                     </h2>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {rate.isActive ? "Active pricing model" : "Inactive pricing model"}
-                    </p>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => openEditor(rate)} icon={<Edit2 className="h-4 w-4" />}>
                     Edit
@@ -175,7 +234,7 @@ const RideRates = () => {
                   ))}
                 </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-xl bg-primary-50 px-4 py-3 dark:bg-primary-950/40">
                     <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Peak surcharge</div>
                     <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
@@ -186,12 +245,6 @@ const RideRates = () => {
                     <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Discount</div>
                     <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
                       {Number(rate.discountPercentage || 0)}%
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
-                    <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Status</div>
-                    <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                      {rate.isActive ? "Enabled" : "Disabled"}
                     </div>
                   </div>
                 </div>
@@ -208,13 +261,22 @@ const RideRates = () => {
         size="xl"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Input label="Peak surcharge per mile" type="number" step="0.01" {...register("peakSurchargePerMile")} error={errors.peakSurchargePerMile?.message} />
-            <Input label="Discount percentage" type="number" step="0.01" {...register("discountPercentage")} error={errors.discountPercentage?.message} />
-            <label className="flex items-center gap-3 rounded-xl border border-gray-300 px-4 py-3 dark:border-gray-700">
-              <input type="checkbox" {...register("isActive")} className="h-4 w-4 rounded border-gray-300 text-primary-600" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Active</span>
-            </label>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <Input
+              label="Peak surcharge per mile"
+              type="number"
+              step="0.01"
+              max="100000"
+              {...register("peakSurchargePerMile")}
+              error={errors.peakSurchargePerMile?.message}
+            />
+            <Input
+              label="Discount percentage"
+              type="number"
+              step="0.01"
+              {...register("discountPercentage")}
+              error={errors.discountPercentage?.message}
+            />
           </div>
 
           <div className="space-y-4">
@@ -224,7 +286,7 @@ const RideRates = () => {
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => append({ minMiles: 0, maxMiles: "", ratePerMile: 0 })}
+                onClick={() => append(buildNextBracket(fields))}
                 icon={<Plus className="h-4 w-4" />}
               >
                 Add bracket
@@ -235,9 +297,29 @@ const RideRates = () => {
               {fields.map((field, index) => (
                 <div key={field.id} className="rounded-xl border border-gray-200 p-4 dark:border-gray-700">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <Input label="Min miles" type="number" step="0.01" {...register(`brackets.${index}.minMiles`)} error={errors.brackets?.[index]?.minMiles?.message} />
-                    <Input label="Max miles" type="number" step="0.01" placeholder="Leave blank for infinity" {...register(`brackets.${index}.maxMiles`)} error={errors.brackets?.[index]?.maxMiles?.message} />
-                    <Input label="Rate per mile" type="number" step="0.01" {...register(`brackets.${index}.ratePerMile`)} error={errors.brackets?.[index]?.ratePerMile?.message} />
+                    <Input
+                      label="Min miles"
+                      type="number"
+                      step="1"
+                      {...register(`brackets.${index}.minMiles`)}
+                      error={errors.brackets?.[index]?.minMiles?.message}
+                      readOnly={index > 0}
+                    />
+                    <Input
+                      label="Max miles"
+                      type="number"
+                      step="1"
+                      placeholder="Leave blank for infinity"
+                      {...register(`brackets.${index}.maxMiles`)}
+                      error={errors.brackets?.[index]?.maxMiles?.message}
+                    />
+                    <Input
+                      label="Rate per mile"
+                      type="number"
+                      step="0.01"
+                      {...register(`brackets.${index}.ratePerMile`)}
+                      error={errors.brackets?.[index]?.ratePerMile?.message}
+                    />
                   </div>
                   <div className="mt-3 flex justify-end">
                     <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)} disabled={fields.length === 1}>
@@ -250,8 +332,12 @@ const RideRates = () => {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={closeEditor}>Cancel</Button>
-            <Button type="submit" loading={loading}>Save Changes</Button>
+            <Button type="button" variant="outline" onClick={closeEditor}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={loading}>
+              Save Changes
+            </Button>
           </div>
         </form>
       </Modal>

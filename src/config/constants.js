@@ -157,6 +157,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "completed-rides",
+    label: "Completed Rides",
+    icon: "CheckCircle2",
+    path: "/completed-rides",
+    children: [],
+  },
+  {
     id: "promo-codes",
     label: "Promo Codes",
     icon: "Tag",

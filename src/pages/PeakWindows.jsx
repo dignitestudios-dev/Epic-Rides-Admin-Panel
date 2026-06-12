@@ -8,6 +8,14 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Modal from "../components/ui/Modal";
 import usePeakWindowsActions from "../hooks/ride-rates/usePeakWindowsActions";
+import { handleError } from "../utils/helpers";
+
+const getWindowRange = (window) => ({
+  startHour: Number(window.startHour),
+  endHour: Number(window.endHour),
+});
+
+const overlaps = (a, b) => Math.max(a.startHour, b.startHour) < Math.min(a.endHour, b.endHour);
 
 const peakWindowSchema = z
   .object({
@@ -35,6 +43,7 @@ const PeakWindows = () => {
   const { loading, peakWindows, createPeakWindow, updatePeakWindow, deletePeakWindow } =
     usePeakWindowsActions();
   const [editingWindow, setEditingWindow] = useState(null);
+  const editingWindowId = editingWindow?.id || editingWindow?._id || null;
 
   const defaultValues = useMemo(() => editingWindow || emptyWindow, [editingWindow]);
 
@@ -53,6 +62,18 @@ const PeakWindows = () => {
   }, [defaultValues, reset]);
 
   const onSubmit = async (values) => {
+    const nextRange = getWindowRange(values);
+    const hasConflict = peakWindows.some((window) => {
+      const windowId = window.id || window._id;
+      if (editingWindowId && windowId === editingWindowId) return false;
+      return overlaps(nextRange, getWindowRange(window));
+    });
+
+    if (hasConflict) {
+      handleError(new Error("This time range overlaps an existing peak window"));
+      return;
+    }
+
     if (editingWindow?.id || editingWindow?._id) {
       await updatePeakWindow(editingWindow.id || editingWindow._id, values);
     } else {

@@ -55,6 +55,7 @@ import DriverDetail from "./pages/DriverDetail";
 import Revenue from "./pages/Revenue";
 import PromoCodes from "./pages/PromoCodes";
 import CancelledRides from "./pages/CancelledRides";
+import CompletedRides from "./pages/CompletedRides";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
@@ -180,6 +181,7 @@ function App() {
                         <Route path="/ride-rates" element={<RideRates />} />
                         <Route path="/peak-windows" element={<PeakWindows />} />
                         <Route path="/cancelled-rides" element={<CancelledRides />} />
+                        <Route path="/completed-rides" element={<CompletedRides />} />
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
                         <Route
                           path="/reports-detail/:id"

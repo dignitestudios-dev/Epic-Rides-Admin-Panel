@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "../../lib/services";
 import { handleError } from "../../utils/helpers";
 
-const useGetRides = (page, limit, search) => {
+const useGetRides = (page, limit, search, rideStatus = "") => {
   const [rides, setRides] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -12,7 +12,7 @@ const useGetRides = (page, limit, search) => {
   const fetchRides = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.getRides(page, limit, search);
+      const response = await api.getRides(page, limit, search, rideStatus);
       setRides(response.data?.results || []);
       setStats(response.data?.stats || null);
       setTotalPages(response.pagination?.totalPages || 1);
@@ -22,7 +22,7 @@ const useGetRides = (page, limit, search) => {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, search]);
+  }, [page, limit, search, rideStatus]);
 
   useEffect(() => {
     fetchRides();

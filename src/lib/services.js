@@ -385,10 +385,11 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
-const getRides = (page = 1, limit = 10, search = "") =>
+const getRides = (page = 1, limit = 10, search = "", rideStatus = "") =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
+    if (rideStatus) url += `&rideStatus=${rideStatus}`;
     return API.get(url);
   });
 
