@@ -43,40 +43,116 @@ const MAP_OPTIONS = {
 };
 
 // ── SVG icons ─────────────────────────────────────────────────────────────
-const ECONOMY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 46" width="56" height="46">
+const ECONOMY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="60" height="30">
   <defs>
-    <filter id="es" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.35)"/>
+    <linearGradient id="econBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78909c"/>
+      <stop offset="30%" stop-color="#b0bec5"/>
+      <stop offset="50%" stop-color="#eceff1"/>
+      <stop offset="70%" stop-color="#b0bec5"/>
+      <stop offset="100%" stop-color="#78909c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
     </filter>
   </defs>
-  <g filter="url(#es)">
-    <rect x="3" y="15" width="50" height="20" rx="5" fill="#22c55e"/>
-    <path d="M11 15 L17 5 L39 5 L45 15Z" fill="#16a34a"/>
-    <rect x="12" y="6" width="11" height="9" rx="2" fill="#bbf7d0" opacity="0.92"/>
-    <rect x="26" y="6" width="13" height="9" rx="2" fill="#bbf7d0" opacity="0.92"/>
-    <circle cx="15" cy="35" r="5.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <circle cx="41" cy="35" r="5.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <rect x="3" y="24" width="9" height="5" rx="2" fill="#fef08a" opacity="0.85"/>
-    <rect x="44" y="24" width="9" height="5" rx="2" fill="#fca5a5" opacity="0.85"/>
+  <g transform="translate(200, 0) rotate(90)">
+    <g filter="url(#shadow)">
+      <!-- Tires -->
+      <rect x="12" y="30" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="80" y="30" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="12" y="140" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="80" y="140" width="8" height="24" rx="3" fill="#111"/>
+      
+      <!-- Main Body -->
+      <path d="M 25 20 C 35 5, 65 5, 75 20 L 85 70 L 85 160 C 85 185, 65 195, 50 195 C 35 195, 15 185, 15 160 L 15 70 Z" fill="url(#econBody)"/>
+      
+      <!-- Windshield -->
+      <path d="M 22 75 C 35 60, 65 60, 78 75 L 72 90 C 60 85, 40 85, 28 90 Z" fill="url(#glass)"/>
+      
+      <!-- Rear Window -->
+      <path d="M 28 135 C 40 140, 60 140, 72 135 L 78 145 C 65 155, 35 155, 22 145 Z" fill="url(#glass)"/>
+      
+      <!-- Roof -->
+      <path d="M 28 90 C 40 85, 60 85, 72 90 L 72 135 C 60 140, 40 140, 28 135 Z" fill="#cfd8dc"/>
+
+      <!-- Side Windows -->
+      <path d="M 20 80 L 26 95 L 26 130 L 20 140 Z" fill="url(#glass)"/>
+      <path d="M 80 80 L 74 95 L 74 130 L 80 140 Z" fill="url(#glass)"/>
+      
+      <!-- Mirrors -->
+      <path d="M 15 78 C 10 78, 10 85, 18 85 Z" fill="#78909c"/>
+      <path d="M 85 78 C 90 78, 90 85, 82 85 Z" fill="#78909c"/>
+      
+      <!-- Headlights -->
+      <path d="M 25 22 C 30 18, 35 18, 38 20 L 35 28 C 30 28, 25 26, 22 25 Z" fill="#fef08a"/>
+      <path d="M 75 22 C 70 18, 65 18, 62 20 L 65 28 C 70 28, 75 26, 78 25 Z" fill="#fef08a"/>
+      
+      <!-- Taillights -->
+      <path d="M 22 180 C 28 185, 35 185, 38 182 L 35 175 L 20 175 Z" fill="#ef4444"/>
+      <path d="M 78 180 C 72 185, 65 185, 62 182 L 65 175 L 80 175 Z" fill="#ef4444"/>
+    </g>
   </g>
 </svg>`;
 
-const LUXURY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48" width="68" height="48">
+const LUXURY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 100" width="68" height="32">
   <defs>
-    <filter id="ls" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.35)"/>
+    <linearGradient id="luxBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="20%" stop-color="#1f2937"/>
+      <stop offset="50%" stop-color="#374151"/>
+      <stop offset="80%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="luxGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#030712"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <filter id="luxShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.5"/>
     </filter>
   </defs>
-  <g filter="url(#ls)">
-    <rect x="3" y="17" width="62" height="20" rx="6" fill="#f59e0b"/>
-    <path d="M12 17 L18 5 L50 5 L56 17Z" fill="#d97706"/>
-    <rect x="13" y="6" width="14" height="10" rx="2" fill="#fef3c7" opacity="0.92"/>
-    <rect x="30" y="6" width="18" height="10" rx="2" fill="#fef3c7" opacity="0.92"/>
-    <circle cx="17" cy="37" r="6" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <circle cx="51" cy="37" r="6" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <rect x="3" y="25" width="10" height="5" rx="2" fill="#fef08a" opacity="0.9"/>
-    <rect x="55" y="25" width="10" height="5" rx="2" fill="#fca5a5" opacity="0.9"/>
-    <path d="M30 2 L32 6 L34 2 L36 6 L38 2" stroke="#f59e0b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <g transform="translate(210, 0) rotate(90)">
+    <g filter="url(#luxShadow)">
+      <!-- Tires -->
+      <rect x="10" y="30" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="80" y="30" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="10" y="145" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="80" y="145" width="10" height="28" rx="3" fill="#000"/>
+      
+      <!-- Main Body -->
+      <path d="M 22 15 C 35 0, 65 0, 78 15 L 88 60 L 88 175 C 88 200, 65 205, 50 205 C 35 205, 12 200, 12 175 L 12 60 Z" fill="url(#luxBody)"/>
+      
+      <!-- Windshield -->
+      <path d="M 20 70 C 35 55, 65 55, 80 70 L 75 85 C 60 80, 40 80, 25 85 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Panoramic Roof & Rear Window -->
+      <path d="M 25 85 C 40 80, 60 80, 75 85 L 75 155 C 60 160, 40 160, 25 155 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Side Windows -->
+      <path d="M 18 75 L 23 88 L 23 150 L 18 160 Z" fill="url(#luxGlass)"/>
+      <path d="M 82 75 L 77 88 L 77 150 L 82 160 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Mirrors -->
+      <path d="M 12 73 C 6 73, 6 82, 16 82 Z" fill="#1f2937"/>
+      <path d="M 88 73 C 94 73, 94 82, 84 82 Z" fill="#1f2937"/>
+      
+      <!-- Headlights -->
+      <path d="M 22 18 C 28 14, 38 15, 40 18 L 35 25 C 30 25, 24 22, 20 22 Z" fill="#ffffff"/>
+      <path d="M 78 18 C 72 14, 62 15, 60 18 L 65 25 C 70 25, 76 22, 80 22 Z" fill="#ffffff"/>
+      
+      <!-- Taillights -->
+      <path d="M 18 190 C 25 195, 38 195, 45 190 L 45 185 L 15 185 Z" fill="#ef4444"/>
+      <path d="M 82 190 C 75 195, 62 195, 55 190 L 55 185 L 85 185 Z" fill="#ef4444"/>
+      
+      <!-- Chrome Trim -->
+      <path d="M 40 15 L 60 15" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 45 195 L 55 195" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+    </g>
   </g>
 </svg>`;
 
@@ -100,7 +176,7 @@ const svgToDataUrl = (svg) =>
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-function useSmoothPositions(items) {
+function useSmoothPositions(items, keyExtractor) {
   const [positions, setPositions] = useState({});
   const rafRef = useRef({}); // per-item rAF id
   const currentPos = useRef({}); // per-item latest interpolated position
@@ -116,17 +192,18 @@ function useSmoothPositions(items) {
     if (!items || !items.length) return;
 
     items.forEach((item) => {
+      const uid = keyExtractor(item);
       const newLat = item.location?.coordinates?.[1];
       const newLng = item.location?.coordinates?.[0];
       if (newLat == null || newLng == null) return;
 
-      const prev = currentPos.current[item.id];
+      const prev = currentPos.current[uid];
 
       // First time seeing this item — snap immediately
       if (!prev) {
         const pos = { lat: newLat, lng: newLng };
-        currentPos.current[item.id] = pos;
-        setPositions((p) => ({ ...p, [item.id]: pos }));
+        currentPos.current[uid] = pos;
+        setPositions((p) => ({ ...p, [uid]: pos }));
         return;
       }
 
@@ -138,8 +215,8 @@ function useSmoothPositions(items) {
         return;
 
       // Cancel any in-progress animation for this item
-      if (rafRef.current[item.id]) {
-        cancelAnimationFrame(rafRef.current[item.id]);
+      if (rafRef.current[uid]) {
+        cancelAnimationFrame(rafRef.current[uid]);
       }
 
       const startLat = prev.lat;
@@ -153,17 +230,17 @@ function useSmoothPositions(items) {
         const lng = startLng + (newLng - startLng) * e;
         const pos = { lat, lng };
 
-        currentPos.current[item.id] = pos;
-        setPositions((p) => ({ ...p, [item.id]: pos }));
+        currentPos.current[uid] = pos;
+        setPositions((p) => ({ ...p, [uid]: pos }));
 
         if (t < 1) {
-          rafRef.current[item.id] = requestAnimationFrame(step);
+          rafRef.current[uid] = requestAnimationFrame(step);
         }
       };
 
-      rafRef.current[item.id] = requestAnimationFrame(step);
+      rafRef.current[uid] = requestAnimationFrame(step);
     });
-  }, [items]);
+  }, [items, keyExtractor]);
 
   return positions;
 }
@@ -554,13 +631,13 @@ const BirdsEyeView = () => {
     return {
       economy: {
         url: svgToDataUrl(ECONOMY_SVG),
-        scaledSize: new window.google.maps.Size(56, 46),
-        anchor: new window.google.maps.Point(28, 46),
+        scaledSize: new window.google.maps.Size(60, 30),
+        anchor: new window.google.maps.Point(30, 15),
       },
       luxury: {
         url: svgToDataUrl(LUXURY_SVG),
-        scaledSize: new window.google.maps.Size(68, 48),
-        anchor: new window.google.maps.Point(34, 48),
+        scaledSize: new window.google.maps.Size(68, 32),
+        anchor: new window.google.maps.Point(34, 16),
       },
       rider: {
         url: svgToDataUrl(RIDER_SVG),
@@ -606,12 +683,29 @@ const BirdsEyeView = () => {
     return () => clearInterval(clockRef);
   }, []);
 
-  const activeItems = activeTab === "drivers" ? data.drivers : data.riders;
-  const smoothPositions = useSmoothPositions(activeItems);
+  const { drivers, riders } = useMemo(() => {
+    const d = (data.drivers || []).map((item, i) => ({
+      ...item,
+      _type: "drivers",
+      _uid: `drivers-${item.id}-${item.activeRideId || i}`,
+    }));
+    const r = (data.riders || []).map((item, i) => ({
+      ...item,
+      _type: "riders",
+      _uid: `riders-${item.id}-${item.activeRideId || i}`,
+    }));
+    return { drivers: d, riders: r };
+  }, [data]);
+
+  const activeItems = activeTab === "drivers" ? drivers : riders;
+  const allItems = useMemo(() => [...drivers, ...riders], [drivers, riders]);
+
+  const keyExtractor = useCallback((item) => item._uid, []);
+  const smoothPositions = useSmoothPositions(allItems, keyExtractor);
 
   const handleLocate = useCallback(
     (item) => {
-      const pos = smoothPositions[item.id];
+      const pos = smoothPositions[item._uid];
       if (!pos || !mapRef.current) return;
       mapRef.current.panTo(pos);
       mapRef.current.setZoom(16);
@@ -681,12 +775,14 @@ const BirdsEyeView = () => {
             }}
           >
             {icons &&
-              activeItems.map((item) => {
-                const pos = smoothPositions[item.id];
+              allItems.map((item) => {
+                const pos = smoothPositions[item._uid];
                 if (!pos) return null;
 
+                const isVisible = activeTab === item._type;
+
                 let iconToUse;
-                if (activeTab === "drivers") {
+                if (item._type === "drivers") {
                   iconToUse = item.vehicleType?.toLowerCase() === "luxury" ? icons.luxury : icons.economy;
                 } else {
                   iconToUse = icons.rider;
@@ -694,16 +790,18 @@ const BirdsEyeView = () => {
 
                 return (
                   <Marker
-                    key={item.id}
+                    key={item._uid}
                     position={pos}
+                    visible={isVisible}
                     icon={iconToUse}
                     title={
                       [item.firstName, item.lastName]
                         .filter(Boolean)
-                        .join(" ") || (activeTab === "drivers" ? "Driver" : "Rider")
+                        .join(" ") || (item._type === "drivers" ? "Driver" : "Rider")
                     }
                     zIndex={selectedId === item.id ? 100 : 1}
                     onClick={() => {
+                      if (!isVisible) return;
                       setSelectedId(item.id);
                       setDetailItem(item);
                     }}
@@ -772,6 +870,7 @@ const BirdsEyeView = () => {
               onClick={() => {
                 setActiveTab("drivers");
                 setSelectedId(null);
+                setDetailItem(null);
                 handleRecenter();
               }}
             >
@@ -786,6 +885,7 @@ const BirdsEyeView = () => {
               onClick={() => {
                 setActiveTab("riders");
                 setSelectedId(null);
+                setDetailItem(null);
                 handleRecenter();
               }}
             >
@@ -909,10 +1009,10 @@ const BirdsEyeView = () => {
               )}
             </div>
           ) : (
-            filteredItems.map((item) =>
-              activeTab === "drivers" ? (
+            filteredItems.map((item) => {
+              return activeTab === "drivers" ? (
                 <DriverCard
-                  key={item.id}
+                  key={item._uid}
                   driver={item}
                   isSelected={selectedId === item.id}
                   onLocate={handleLocate}
@@ -923,7 +1023,7 @@ const BirdsEyeView = () => {
                 />
               ) : (
                 <RiderCard
-                  key={item.id}
+                  key={item._uid}
                   rider={item}
                   isSelected={selectedId === item.id}
                   onLocate={handleLocate}
@@ -932,8 +1032,8 @@ const BirdsEyeView = () => {
                     setSelectedId(r.id);
                   }}
                 />
-              )
-            )
+              );
+            })
           )}
         </div>
       </div>
