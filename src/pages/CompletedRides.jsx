@@ -67,7 +67,8 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
           <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} km` : null} />
           <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
-          <Row label="Pickup" value={ride.pickupPoint} />
+          <Row label="Pickup" value={ride.pickupPoint?.placeName} />
+          <Row label="Dropoff" value={ride.dropOffPoint?.placeName} />
         </Section>
 
         <Section title="Rider">
@@ -130,7 +131,17 @@ const CompletedRides = () => {
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-          <span className="truncate text-sm text-gray-700 dark:text-gray-300">{val || "—"}</span>
+          <span className="truncate text-sm text-gray-700 dark:text-gray-300">{val?.placeName || "—"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "dropOffPoint",
+      label: "Dropoff Location",
+      render: (val) => (
+        <div className="flex items-center gap-2 max-w-[200px]">
+          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <span className="truncate text-sm text-gray-700 dark:text-gray-300">{val?.placeName || "—"}</span>
         </div>
       ),
     },
