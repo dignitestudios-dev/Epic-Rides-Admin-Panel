@@ -42,41 +42,130 @@ const MAP_OPTIONS = {
   ],
 };
 
-// ── SVG car icons ─────────────────────────────────────────────────────────────
-const ECONOMY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 46" width="56" height="46">
+// ── SVG icons ─────────────────────────────────────────────────────────────
+const ECONOMY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="60" height="30">
   <defs>
-    <filter id="es" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.35)"/>
+    <linearGradient id="econBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#78909c"/>
+      <stop offset="30%" stop-color="#b0bec5"/>
+      <stop offset="50%" stop-color="#eceff1"/>
+      <stop offset="70%" stop-color="#b0bec5"/>
+      <stop offset="100%" stop-color="#78909c"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#000" flood-opacity="0.4"/>
     </filter>
   </defs>
-  <g filter="url(#es)">
-    <rect x="3" y="15" width="50" height="20" rx="5" fill="#22c55e"/>
-    <path d="M11 15 L17 5 L39 5 L45 15Z" fill="#16a34a"/>
-    <rect x="12" y="6" width="11" height="9" rx="2" fill="#bbf7d0" opacity="0.92"/>
-    <rect x="26" y="6" width="13" height="9" rx="2" fill="#bbf7d0" opacity="0.92"/>
-    <circle cx="15" cy="35" r="5.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <circle cx="41" cy="35" r="5.5" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <rect x="3" y="24" width="9" height="5" rx="2" fill="#fef08a" opacity="0.85"/>
-    <rect x="44" y="24" width="9" height="5" rx="2" fill="#fca5a5" opacity="0.85"/>
+  <g transform="translate(200, 0) rotate(90)">
+    <g filter="url(#shadow)">
+      <!-- Tires -->
+      <rect x="12" y="30" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="80" y="30" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="12" y="140" width="8" height="24" rx="3" fill="#111"/>
+      <rect x="80" y="140" width="8" height="24" rx="3" fill="#111"/>
+      
+      <!-- Main Body -->
+      <path d="M 25 20 C 35 5, 65 5, 75 20 L 85 70 L 85 160 C 85 185, 65 195, 50 195 C 35 195, 15 185, 15 160 L 15 70 Z" fill="url(#econBody)"/>
+      
+      <!-- Windshield -->
+      <path d="M 22 75 C 35 60, 65 60, 78 75 L 72 90 C 60 85, 40 85, 28 90 Z" fill="url(#glass)"/>
+      
+      <!-- Rear Window -->
+      <path d="M 28 135 C 40 140, 60 140, 72 135 L 78 145 C 65 155, 35 155, 22 145 Z" fill="url(#glass)"/>
+      
+      <!-- Roof -->
+      <path d="M 28 90 C 40 85, 60 85, 72 90 L 72 135 C 60 140, 40 140, 28 135 Z" fill="#cfd8dc"/>
+
+      <!-- Side Windows -->
+      <path d="M 20 80 L 26 95 L 26 130 L 20 140 Z" fill="url(#glass)"/>
+      <path d="M 80 80 L 74 95 L 74 130 L 80 140 Z" fill="url(#glass)"/>
+      
+      <!-- Mirrors -->
+      <path d="M 15 78 C 10 78, 10 85, 18 85 Z" fill="#78909c"/>
+      <path d="M 85 78 C 90 78, 90 85, 82 85 Z" fill="#78909c"/>
+      
+      <!-- Headlights -->
+      <path d="M 25 22 C 30 18, 35 18, 38 20 L 35 28 C 30 28, 25 26, 22 25 Z" fill="#fef08a"/>
+      <path d="M 75 22 C 70 18, 65 18, 62 20 L 65 28 C 70 28, 75 26, 78 25 Z" fill="#fef08a"/>
+      
+      <!-- Taillights -->
+      <path d="M 22 180 C 28 185, 35 185, 38 182 L 35 175 L 20 175 Z" fill="#ef4444"/>
+      <path d="M 78 180 C 72 185, 65 185, 62 182 L 65 175 L 80 175 Z" fill="#ef4444"/>
+    </g>
   </g>
 </svg>`;
 
-const LUXURY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 68 48" width="68" height="48">
+const LUXURY_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 100" width="68" height="32">
   <defs>
-    <filter id="ls" x="-25%" y="-25%" width="150%" height="150%">
-      <feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.35)"/>
+    <linearGradient id="luxBody" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="20%" stop-color="#1f2937"/>
+      <stop offset="50%" stop-color="#374151"/>
+      <stop offset="80%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="luxGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#030712"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <filter id="luxShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.5"/>
     </filter>
   </defs>
-  <g filter="url(#ls)">
-    <rect x="3" y="17" width="62" height="20" rx="6" fill="#f59e0b"/>
-    <path d="M12 17 L18 5 L50 5 L56 17Z" fill="#d97706"/>
-    <rect x="13" y="6" width="14" height="10" rx="2" fill="#fef3c7" opacity="0.92"/>
-    <rect x="30" y="6" width="18" height="10" rx="2" fill="#fef3c7" opacity="0.92"/>
-    <circle cx="17" cy="37" r="6" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <circle cx="51" cy="37" r="6" fill="#1f2937" stroke="#e5e7eb" stroke-width="1.5"/>
-    <rect x="3" y="25" width="10" height="5" rx="2" fill="#fef08a" opacity="0.9"/>
-    <rect x="55" y="25" width="10" height="5" rx="2" fill="#fca5a5" opacity="0.9"/>
-    <path d="M30 2 L32 6 L34 2 L36 6 L38 2" stroke="#f59e0b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <g transform="translate(210, 0) rotate(90)">
+    <g filter="url(#luxShadow)">
+      <!-- Tires -->
+      <rect x="10" y="30" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="80" y="30" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="10" y="145" width="10" height="28" rx="3" fill="#000"/>
+      <rect x="80" y="145" width="10" height="28" rx="3" fill="#000"/>
+      
+      <!-- Main Body -->
+      <path d="M 22 15 C 35 0, 65 0, 78 15 L 88 60 L 88 175 C 88 200, 65 205, 50 205 C 35 205, 12 200, 12 175 L 12 60 Z" fill="url(#luxBody)"/>
+      
+      <!-- Windshield -->
+      <path d="M 20 70 C 35 55, 65 55, 80 70 L 75 85 C 60 80, 40 80, 25 85 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Panoramic Roof & Rear Window -->
+      <path d="M 25 85 C 40 80, 60 80, 75 85 L 75 155 C 60 160, 40 160, 25 155 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Side Windows -->
+      <path d="M 18 75 L 23 88 L 23 150 L 18 160 Z" fill="url(#luxGlass)"/>
+      <path d="M 82 75 L 77 88 L 77 150 L 82 160 Z" fill="url(#luxGlass)"/>
+      
+      <!-- Mirrors -->
+      <path d="M 12 73 C 6 73, 6 82, 16 82 Z" fill="#1f2937"/>
+      <path d="M 88 73 C 94 73, 94 82, 84 82 Z" fill="#1f2937"/>
+      
+      <!-- Headlights -->
+      <path d="M 22 18 C 28 14, 38 15, 40 18 L 35 25 C 30 25, 24 22, 20 22 Z" fill="#ffffff"/>
+      <path d="M 78 18 C 72 14, 62 15, 60 18 L 65 25 C 70 25, 76 22, 80 22 Z" fill="#ffffff"/>
+      
+      <!-- Taillights -->
+      <path d="M 18 190 C 25 195, 38 195, 45 190 L 45 185 L 15 185 Z" fill="#ef4444"/>
+      <path d="M 82 190 C 75 195, 62 195, 55 190 L 55 185 L 85 185 Z" fill="#ef4444"/>
+      
+      <!-- Chrome Trim -->
+      <path d="M 40 15 L 60 15" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 45 195 L 55 195" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>`;
+
+const RIDER_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+  <defs>
+    <filter id="rs" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.3)"/>
+    </filter>
+  </defs>
+  <g filter="url(#rs)">
+    <circle cx="20" cy="20" r="16" fill="#3b82f6" stroke="#ffffff" stroke-width="3"/>
+    <circle cx="20" cy="14" r="5" fill="#ffffff"/>
+    <path d="M11 26 Q20 18 29 26 Q29 29 20 29 Q11 29 11 26 Z" fill="#ffffff"/>
   </g>
 </svg>`;
 
@@ -87,10 +176,10 @@ const svgToDataUrl = (svg) =>
 const easeInOutCubic = (t) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-function useSmoothPositions(drivers) {
+function useSmoothPositions(items, keyExtractor) {
   const [positions, setPositions] = useState({});
-  const rafRef = useRef({}); // per-driver rAF id
-  const currentPos = useRef({}); // per-driver latest interpolated position
+  const rafRef = useRef({}); // per-item rAF id
+  const currentPos = useRef({}); // per-item latest interpolated position
 
   // Only cancel all animations on unmount
   useEffect(() => {
@@ -100,20 +189,21 @@ function useSmoothPositions(drivers) {
   }, []);
 
   useEffect(() => {
-    if (!drivers.length) return;
+    if (!items || !items.length) return;
 
-    drivers.forEach((driver) => {
-      const newLat = driver.location?.coordinates?.[1];
-      const newLng = driver.location?.coordinates?.[0];
+    items.forEach((item) => {
+      const uid = keyExtractor(item);
+      const newLat = item.location?.coordinates?.[1];
+      const newLng = item.location?.coordinates?.[0];
       if (newLat == null || newLng == null) return;
 
-      const prev = currentPos.current[driver.id];
+      const prev = currentPos.current[uid];
 
-      // First time seeing this driver — snap immediately
+      // First time seeing this item — snap immediately
       if (!prev) {
         const pos = { lat: newLat, lng: newLng };
-        currentPos.current[driver.id] = pos;
-        setPositions((p) => ({ ...p, [driver.id]: pos }));
+        currentPos.current[uid] = pos;
+        setPositions((p) => ({ ...p, [uid]: pos }));
         return;
       }
 
@@ -124,9 +214,9 @@ function useSmoothPositions(drivers) {
       )
         return;
 
-      // Cancel any in-progress animation for this driver
-      if (rafRef.current[driver.id]) {
-        cancelAnimationFrame(rafRef.current[driver.id]);
+      // Cancel any in-progress animation for this item
+      if (rafRef.current[uid]) {
+        cancelAnimationFrame(rafRef.current[uid]);
       }
 
       const startLat = prev.lat;
@@ -140,17 +230,17 @@ function useSmoothPositions(drivers) {
         const lng = startLng + (newLng - startLng) * e;
         const pos = { lat, lng };
 
-        currentPos.current[driver.id] = pos;
-        setPositions((p) => ({ ...p, [driver.id]: pos }));
+        currentPos.current[uid] = pos;
+        setPositions((p) => ({ ...p, [uid]: pos }));
 
         if (t < 1) {
-          rafRef.current[driver.id] = requestAnimationFrame(step);
+          rafRef.current[uid] = requestAnimationFrame(step);
         }
       };
 
-      rafRef.current[driver.id] = requestAnimationFrame(step);
+      rafRef.current[uid] = requestAnimationFrame(step);
     });
-  }, [drivers]);
+  }, [items, keyExtractor]);
 
   return positions;
 }
@@ -245,6 +335,89 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
   );
 });
 DriverCard.displayName = "DriverCard";
+
+// ── Rider sidebar card ────────────────────────────────────────────────────────
+const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
+  const name =
+    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "Unknown";
+  const isOnTrip = rider.rideStatus === "accepted";
+
+  return (
+    <div
+      className={`p-3 rounded-xl border transition-all ${
+        isSelected
+          ? "border-primary-400 bg-primary-50 shadow-sm"
+          : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+      }`}
+    >
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+            {rider.profilePicture ? (
+              <img
+                src={rider.profilePicture}
+                alt={name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
+              />
+            ) : (
+              <User className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
+          {/* Status dot */}
+          <span
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+              isOnTrip ? "bg-blue-500" : "bg-amber-500"
+            }`}
+          />
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+            <Phone className="w-3 h-3" />
+            {rider.phone || "—"}
+          </p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <Badge
+              variant={isOnTrip ? "primary" : "warning"}
+              className="text-[10px] px-1.5 py-0.5"
+            >
+              {isOnTrip ? "Accepted" : "Requested"}
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 mt-2.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 text-xs"
+          icon={<Navigation className="w-3.5 h-3.5" />}
+          onClick={() => onLocate(rider)}
+        >
+          Locate
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 text-xs"
+          icon={<Eye className="w-3.5 h-3.5" />}
+          onClick={() => onView(rider)}
+        >
+          Details
+        </Button>
+      </div>
+    </div>
+  );
+});
+RiderCard.displayName = "RiderCard";
 
 // ── Driver detail modal ───────────────────────────────────────────────────────
 const DriverDetailModal = ({ driver, isOpen, onClose }) => {
@@ -353,13 +526,94 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
   );
 };
 
+// ── Rider detail modal ────────────────────────────────────────────────────────
+const RiderDetailModal = ({ rider, isOpen, onClose }) => {
+  const navigate = useNavigate();
+  if (!rider) return null;
+
+  const name =
+    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "—";
+  const isOnTrip = rider.rideStatus === "accepted";
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Rider Details" size="sm">
+      <div className="space-y-4">
+        {/* Profile row */}
+        <div className="flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
+            {rider.profilePicture ? (
+              <img
+                src={rider.profilePicture}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-8 h-8 text-gray-400" />
+            )}
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-gray-900">{name}</h3>
+            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+              <Phone className="w-3.5 h-3.5" />
+              {rider.phone || "—"}
+            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge variant={isOnTrip ? "primary" : "warning"}>
+                {isOnTrip ? "Accepted" : "Requested"}
+              </Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* Pickup Info */}
+        <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
+            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <MapPin className="w-4 h-4" /> Pickup Details
+            </p>
+            <div className="text-gray-600 text-sm">
+              <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
+            </div>
+        </div>
+
+        {/* Location */}
+        <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
+          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5" /> Current Location
+          </p>
+          <p className="text-gray-700 font-mono text-xs">
+            {rider.location?.coordinates?.[1]?.toFixed(6)},{" "}
+            {rider.location?.coordinates?.[0]?.toFixed(6)}
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+          <Button variant="ghost" onClick={onClose}>
+            Close
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onClose();
+              navigate(`/user-management/rider/${rider.id}`);
+            }}
+          >
+            Full Profile
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 const BirdsEyeView = () => {
-  const [drivers, setDrivers] = useState([]);
+  const [data, setData] = useState({ drivers: [], riders: [], totalDrivers: 0, totalRiders: 0 });
+  const [activeTab, setActiveTab] = useState("drivers");
   const [loading, setLoading] = useState(true);
   const [liveTime, setLiveTime] = useState(new Date());
   const [selectedId, setSelectedId] = useState(null);
-  const [detailDriver, setDetailDriver] = useState(null);
+  const [detailItem, setDetailItem] = useState(null);
   const [search, setSearch] = useState("");
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
 
@@ -377,22 +631,38 @@ const BirdsEyeView = () => {
     return {
       economy: {
         url: svgToDataUrl(ECONOMY_SVG),
-        scaledSize: new window.google.maps.Size(56, 46),
-        anchor: new window.google.maps.Point(28, 46),
+        scaledSize: new window.google.maps.Size(60, 30),
+        anchor: new window.google.maps.Point(30, 15),
       },
       luxury: {
         url: svgToDataUrl(LUXURY_SVG),
-        scaledSize: new window.google.maps.Size(68, 48),
-        anchor: new window.google.maps.Point(34, 48),
+        scaledSize: new window.google.maps.Size(68, 32),
+        anchor: new window.google.maps.Point(34, 16),
+      },
+      rider: {
+        url: svgToDataUrl(RIDER_SVG),
+        scaledSize: new window.google.maps.Size(40, 40),
+        anchor: new window.google.maps.Point(20, 20),
       },
     };
   }, [isLoaded]);
 
-  // Fetch drivers
-  const fetchDrivers = useCallback(async () => {
+  // Fetch data
+  const fetchData = useCallback(async () => {
     try {
       const res = await api.getBirdsEyeView();
-      setDrivers(res?.data || []);
+      if (res?.data) {
+        if (res.data.drivers !== undefined || res.data.riders !== undefined) {
+          setData({
+            drivers: res.data.drivers || [],
+            riders: res.data.riders || [],
+            totalDrivers: res.data.totalDrivers || 0,
+            totalRiders: res.data.totalRiders || 0
+          });
+        } else {
+          setData({ drivers: Array.isArray(res.data) ? res.data : [], riders: [], totalDrivers: 0, totalRiders: 0 });
+        }
+      }
     } catch (_e) {
       // Keep existing data on poll failure; silent fail
     } finally {
@@ -402,10 +672,10 @@ const BirdsEyeView = () => {
 
   // Initial fetch + polling
   useEffect(() => {
-    fetchDrivers();
-    pollRef.current = setInterval(fetchDrivers, POLL_INTERVAL);
+    fetchData();
+    pollRef.current = setInterval(fetchData, POLL_INTERVAL);
     return () => clearInterval(pollRef.current);
-  }, [fetchDrivers]);
+  }, [fetchData]);
 
   // Live clock — ticks every second independently of polling
   useEffect(() => {
@@ -413,16 +683,33 @@ const BirdsEyeView = () => {
     return () => clearInterval(clockRef);
   }, []);
 
-  // Smooth animated positions
-  const smoothPositions = useSmoothPositions(drivers);
+  const { drivers, riders } = useMemo(() => {
+    const d = (data.drivers || []).map((item, i) => ({
+      ...item,
+      _type: "drivers",
+      _uid: `drivers-${item.id}-${item.activeRideId || i}`,
+    }));
+    const r = (data.riders || []).map((item, i) => ({
+      ...item,
+      _type: "riders",
+      _uid: `riders-${item.id}-${item.activeRideId || i}`,
+    }));
+    return { drivers: d, riders: r };
+  }, [data]);
+
+  const activeItems = activeTab === "drivers" ? drivers : riders;
+  const allItems = useMemo(() => [...drivers, ...riders], [drivers, riders]);
+
+  const keyExtractor = useCallback((item) => item._uid, []);
+  const smoothPositions = useSmoothPositions(allItems, keyExtractor);
 
   const handleLocate = useCallback(
-    (driver) => {
-      const pos = smoothPositions[driver.id];
+    (item) => {
+      const pos = smoothPositions[item._uid];
       if (!pos || !mapRef.current) return;
       mapRef.current.panTo(pos);
       mapRef.current.setZoom(16);
-      setSelectedId(driver.id);
+      setSelectedId(item.id);
     },
     [smoothPositions]
   );
@@ -432,20 +719,23 @@ const BirdsEyeView = () => {
     mapRef.current?.setZoom(13);
   }, []);
 
-  const filteredDrivers = useMemo(
+  const filteredItems = useMemo(
     () =>
-      drivers.filter((d) => {
+      activeItems.filter((item) => {
         if (!search) return true;
-        const name = [d.firstName, d.lastName].join(" ").toLowerCase();
-        return name.includes(search.toLowerCase()) || (d.phone || "").includes(search);
+        const name = [item.firstName, item.lastName].join(" ").toLowerCase();
+        return name.includes(search.toLowerCase()) || (item.phone || "").includes(search);
       }),
-    [drivers, search]
+    [activeItems, search]
   );
 
-  const economyCount = drivers.filter(
+  const economyCount = data.drivers.filter(
     (d) => d.vehicleType?.toLowerCase() !== "luxury"
   ).length;
-  const luxuryCount = drivers.length - economyCount;
+  const luxuryCount = data.drivers.length - economyCount;
+
+  const requestedCount = data.riders.filter((r) => r.rideStatus === "requested").length;
+  const acceptedCount = data.riders.filter((r) => r.rideStatus === "accepted").length;
 
   if (loadError) {
     return (
@@ -463,7 +753,6 @@ const BirdsEyeView = () => {
   }
 
   return (
-    // Break out of Layout's p-6 padding and max-w constraint
     <div
       className="-m-6 flex overflow-hidden"
       style={{ height: "calc(100vh - 80px)" }}
@@ -486,24 +775,35 @@ const BirdsEyeView = () => {
             }}
           >
             {icons &&
-              drivers.map((driver) => {
-                const pos = smoothPositions[driver.id];
+              allItems.map((item) => {
+                const pos = smoothPositions[item._uid];
                 if (!pos) return null;
-                const isLuxury = driver.vehicleType?.toLowerCase() === "luxury";
+
+                const isVisible = activeTab === item._type;
+
+                let iconToUse;
+                if (item._type === "drivers") {
+                  iconToUse = item.vehicleType?.toLowerCase() === "luxury" ? icons.luxury : icons.economy;
+                } else {
+                  iconToUse = icons.rider;
+                }
+
                 return (
                   <Marker
-                    key={driver.id}
+                    key={item._uid}
                     position={pos}
-                    icon={isLuxury ? icons.luxury : icons.economy}
+                    visible={isVisible}
+                    icon={iconToUse}
                     title={
-                      [driver.firstName, driver.lastName]
+                      [item.firstName, item.lastName]
                         .filter(Boolean)
-                        .join(" ") || "Driver"
+                        .join(" ") || (item._type === "drivers" ? "Driver" : "Rider")
                     }
-                    zIndex={selectedId === driver.id ? 100 : 1}
+                    zIndex={selectedId === item.id ? 100 : 1}
                     onClick={() => {
-                      setSelectedId(driver.id);
-                      setDetailDriver(driver);
+                      if (!isVisible) return;
+                      setSelectedId(item.id);
+                      setDetailItem(item);
                     }}
                   />
                 );
@@ -511,7 +811,7 @@ const BirdsEyeView = () => {
           </GoogleMap>
         )}
 
-        {/* Top-left overlay pills — single row, no overlap */}
+        {/* Top-left overlay pills */}
         <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none select-none">
           {/* Live + clock */}
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700">
@@ -525,7 +825,7 @@ const BirdsEyeView = () => {
           {/* Online count */}
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-1.5 text-xs font-medium text-gray-700">
             <Users className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
-            {drivers.length} online
+            {activeItems.length} online
           </div>
         </div>
 
@@ -533,7 +833,7 @@ const BirdsEyeView = () => {
         <button
           className="absolute left-3 bottom-28 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
           onClick={handleRecenter}
-          title="Center on my location"
+          title="Center on default location"
         >
           <MapPin className="w-4.5 h-4.5 text-primary-600" />
         </button>
@@ -541,7 +841,7 @@ const BirdsEyeView = () => {
         {/* Manual refresh */}
         <button
           className="absolute left-3 bottom-16 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
-          onClick={fetchDrivers}
+          onClick={fetchData}
           title="Refresh now"
         >
           <RefreshCw className="w-4 h-4 text-gray-600" />
@@ -552,28 +852,79 @@ const BirdsEyeView = () => {
       <div className="w-72 bg-white border-l border-gray-200 flex flex-col flex-shrink-0">
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-gray-900">Active Drivers</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-bold text-gray-900">Birds Eye View</h2>
             <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
               Auto-refresh 10s
             </span>
           </div>
 
-          {/* Quick stats */}
-          <div className="flex gap-2 mt-2.5">
-            <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
-              <p className="text-xs text-green-600 font-medium">Economy</p>
-              <p className="text-lg font-bold text-green-700">{economyCount}</p>
-            </div>
-            <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
-              <p className="text-xs text-amber-600 font-medium">Luxury</p>
-              <p className="text-lg font-bold text-amber-700">{luxuryCount}</p>
-            </div>
-            <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
-              <p className="text-xs text-blue-600 font-medium">Total</p>
-              <p className="text-lg font-bold text-blue-700">{drivers.length}</p>
-            </div>
+          {/* Tabs */}
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "drivers"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => {
+                setActiveTab("drivers");
+                setSelectedId(null);
+                setDetailItem(null);
+                handleRecenter();
+              }}
+            >
+              Drivers ({data.totalDrivers || data.drivers.length})
+            </button>
+            <button
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                activeTab === "riders"
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+              onClick={() => {
+                setActiveTab("riders");
+                setSelectedId(null);
+                setDetailItem(null);
+                handleRecenter();
+              }}
+            >
+              Riders ({data.totalRiders || data.riders.length})
+            </button>
           </div>
+
+          {/* Quick stats */}
+          {activeTab === "drivers" ? (
+            <div className="flex gap-2 mt-2.5">
+              <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
+                <p className="text-xs text-green-600 font-medium">Economy</p>
+                <p className="text-lg font-bold text-green-700">{economyCount}</p>
+              </div>
+              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
+                <p className="text-xs text-amber-600 font-medium">Luxury</p>
+                <p className="text-lg font-bold text-amber-700">{luxuryCount}</p>
+              </div>
+              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
+                <p className="text-xs text-blue-600 font-medium">Total</p>
+                <p className="text-lg font-bold text-blue-700">{data.drivers.length}</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2 mt-2.5">
+              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
+                <p className="text-xs text-amber-600 font-medium">Requested</p>
+                <p className="text-lg font-bold text-amber-700">{requestedCount}</p>
+              </div>
+              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
+                <p className="text-xs text-blue-600 font-medium">Accepted</p>
+                <p className="text-lg font-bold text-blue-700">{acceptedCount}</p>
+              </div>
+              <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
+                <p className="text-xs text-gray-600 font-medium">Total</p>
+                <p className="text-lg font-bold text-gray-700">{data.riders.length}</p>
+              </div>
+            </div>
+          )}
 
           {/* Search */}
           <input
@@ -587,27 +938,40 @@ const BirdsEyeView = () => {
 
         {/* Legend */}
         <div className="px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-green-700">
-              <span className="w-2 h-2 rounded-sm bg-green-500 flex-shrink-0" />
-              Economy
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
-              <span className="w-2 h-2 rounded-sm bg-amber-500 flex-shrink-0" />
-              Luxury
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
-              <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
-              On Trip
-            </span>
-            <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
-              <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
-              Available
-            </span>
-          </div>
+          {activeTab === "drivers" ? (
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-green-700">
+                <span className="w-2 h-2 rounded-sm bg-green-500 flex-shrink-0" />
+                Economy
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                <span className="w-2 h-2 rounded-sm bg-amber-500 flex-shrink-0" />
+                Luxury
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                On Trip
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                Available
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
+                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                Requested
+              </span>
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
+                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                Accepted
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Driver list */}
+        {/* List */}
         <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
           {loading ? (
             // Skeleton
@@ -629,11 +993,11 @@ const BirdsEyeView = () => {
                 </div>
               </div>
             ))
-          ) : filteredDrivers.length === 0 ? (
+          ) : filteredItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-400 text-center">
               <Car className="w-12 h-12 mb-3 opacity-30" />
               <p className="text-sm font-medium text-gray-500">
-                {search ? "No drivers match your search" : "No active drivers"}
+                {search ? "No matches found" : `No active ${activeTab}`}
               </p>
               {search && (
                 <button
@@ -645,28 +1009,49 @@ const BirdsEyeView = () => {
               )}
             </div>
           ) : (
-            filteredDrivers.map((driver) => (
-              <DriverCard
-                key={driver.id}
-                driver={driver}
-                isSelected={selectedId === driver.id}
-                onLocate={handleLocate}
-                onView={(d) => {
-                  setDetailDriver(d);
-                  setSelectedId(d.id);
-                }}
-              />
-            ))
+            filteredItems.map((item) => {
+              return activeTab === "drivers" ? (
+                <DriverCard
+                  key={item._uid}
+                  driver={item}
+                  isSelected={selectedId === item.id}
+                  onLocate={handleLocate}
+                  onView={(d) => {
+                    setDetailItem(d);
+                    setSelectedId(d.id);
+                  }}
+                />
+              ) : (
+                <RiderCard
+                  key={item._uid}
+                  rider={item}
+                  isSelected={selectedId === item.id}
+                  onLocate={handleLocate}
+                  onView={(r) => {
+                    setDetailItem(r);
+                    setSelectedId(r.id);
+                  }}
+                />
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* Driver detail modal */}
-      <DriverDetailModal
-        driver={detailDriver}
-        isOpen={!!detailDriver}
-        onClose={() => setDetailDriver(null)}
-      />
+      {/* Detail Modals */}
+      {activeTab === "drivers" ? (
+        <DriverDetailModal
+          driver={detailItem}
+          isOpen={!!detailItem}
+          onClose={() => setDetailItem(null)}
+        />
+      ) : (
+        <RiderDetailModal
+          rider={detailItem}
+          isOpen={!!detailItem}
+          onClose={() => setDetailItem(null)}
+        />
+      )}
     </div>
   );
 };

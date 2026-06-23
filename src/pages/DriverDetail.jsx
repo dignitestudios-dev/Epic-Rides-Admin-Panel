@@ -376,6 +376,29 @@ console.log(details)
                     columns={[
                       { key: "createdAt", label: "Date", render: (val, row) => formatDate(val || row.date) },
                       { key: "description", label: "Description" },
+//                      {
+//   key: "status",
+//   label: "Status",
+//   render: (status , row) => {
+//     const styles = {
+//       success: "bg-green-100 text-green-700",
+//       failed: "bg-red-100 text-red-700",
+//       initiated: "bg-yellow-100 text-yellow-700",
+//       processing: "bg-blue-100 text-blue-700",
+//     };
+// console.log(status)
+//     return (
+//       <span
+//         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+//           styles[status?.status.toLowerCase()] ||
+//           "bg-gray-100 text-gray-700"
+//         }`}
+//       >
+//         {status}
+//       </span>
+//     );
+//   },
+// },
                       { 
                         key: "amount", 
                         label: "Amount", 

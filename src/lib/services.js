@@ -385,10 +385,11 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
-const getRides = (page = 1, limit = 10, search = "") =>
+const getRides = (page = 1, limit = 10, search = "", rideStatus = "") =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
+    if (rideStatus) url += `&rideStatus=${rideStatus}`;
     return API.get(url);
   });
 
@@ -409,6 +410,23 @@ const updatePromoCode = (id, payload) =>
 
 const deletePromoCode = (id) =>
   apiHandler(() => API.delete(`/promo-code/${id}`));
+
+// Ride Rates & Peak Windows API
+const getRideRates = () => apiHandler(() => API.get("/ride-rates"));
+
+const updateRideRate = (rideType, payload) =>
+  apiHandler(() => API.put(`/ride-rates/${rideType}`, payload));
+
+const getPeakWindows = () => apiHandler(() => API.get("/peak-windows"));
+
+const createPeakWindow = (payload) =>
+  apiHandler(() => API.post("/peak-windows", payload));
+
+const updatePeakWindow = (id, payload) =>
+  apiHandler(() => API.put(`/peak-windows/${id}`, payload));
+
+const deletePeakWindow = (id) =>
+  apiHandler(() => API.delete(`/peak-windows/${id}`));
 
 export const api = {
   getUsers,
@@ -467,4 +485,10 @@ export const api = {
   createPromoCode,
   updatePromoCode,
   deletePromoCode,
+  getRideRates,
+  updateRideRate,
+  getPeakWindows,
+  createPeakWindow,
+  updatePeakWindow,
+  deletePeakWindow,
 };

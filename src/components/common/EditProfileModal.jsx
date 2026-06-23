@@ -8,7 +8,7 @@ import { handleError, handleSuccess } from "../../utils/helpers";
 
 const SUBSCRIPTION_OPTIONS = [
   { label: "Active", value: "active" },
-  { label: "Canceled", value: "canceled" },
+  { label: "Inactive", value: "canceled" },
 ];
 
 const LIMITS = {
@@ -18,6 +18,7 @@ const LIMITS = {
   balance: 999999,
 };
 
+const statuses = ["success", "failed", "initiated", "processing"]
 const validateEmail = (email) =>
   /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email);
 
@@ -41,11 +42,12 @@ const EditProfileModal = ({
 
   useEffect(() => {
     if (isOpen && initialData) {
+      console.log("Initializing form with data:", initialData);
       setForm({
         firstName: initialData.firstName || "",
         lastName: initialData.lastName || "",
         email: initialData.email || "",
-        subscriptionStatus: initialData.subscriptionStatus || "",
+        subscriptionStatus: initialData.subscriptionStatus == "Expired" ? "canceled" : "active" || "",
         balance:
           initialData.balance !== undefined && initialData.balance !== null
             ? String(initialData.balance)
