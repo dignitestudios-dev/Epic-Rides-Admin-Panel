@@ -222,14 +222,14 @@ const CompletedRides = () => {
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Rides</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalRides ?? "—"}</p>
           </Card>
-          <Card className="p-4">
+          {/* <Card className="p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cancelled</p>
             <p className="text-2xl font-bold text-red-500">{stats.totalCancelledRides ?? "—"}</p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Completed</p>
             <p className="text-2xl font-bold text-green-500">{stats.totalCompletedRides ?? "—"}</p>
-          </Card>
+          </Card> */}
           <Card className="p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Revenue</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
