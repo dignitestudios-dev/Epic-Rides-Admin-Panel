@@ -7,7 +7,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
 
-import { formatDate, formatDateTime } from "../utils/helpers";
+import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 import useGetRides from "../hooks/rides/useGetRides";
 import useDebounce from "../hooks/global/useDebounce";
 
@@ -27,15 +27,17 @@ const statusBadge = (status) => {
 };
 
 const paymentBadge = (status) => {
-  switch (status) {
+  if (!status) return <Badge variant="default">—</Badge>;
+  const formatted = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+  switch (status.toLowerCase()) {
     case "paid":
-      return <Badge variant="success">Paid</Badge>;
+      return <Badge variant="success">{formatted}</Badge>;
     case "pending":
-      return <Badge variant="warning">Pending</Badge>;
+      return <Badge variant="warning">{formatted}</Badge>;
     case "failed":
-      return <Badge variant="danger">Failed</Badge>;
+      return <Badge variant="danger">{formatted}</Badge>;
     default:
-      return <Badge variant="default">{status || "—"}</Badge>;
+      return <Badge variant="default">{formatted}</Badge>;
   }
 };
 
@@ -65,7 +67,7 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Ride ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
           <Row label="Status" value={statusBadge(ride.rideStatus)} />
           <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
-          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} km` : null} />
+          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} mi.` : null} />
           <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
           <Row label="Pickup" value={ride.pickupPoint?.placeName} />
           <Row label="Dropoff" value={ride.dropOffPoint?.placeName} />
@@ -74,13 +76,13 @@ const RideDetailDialog = ({ ride, onClose }) => {
         <Section title="Rider">
           <Row label="Name" value={fullName(ride.user)} />
           <Row label="Email" value={ride.user?.email} />
-          <Row label="Phone" value={ride.user?.phone} />
+          <Row label="Phone" value={ride.user?.phone ? formatPhoneNumber(ride.user.phone) : null} />
         </Section>
 
         <Section title="Driver">
           <Row label="Name" value={fullName(ride.driver)} />
           <Row label="Email" value={ride.driver?.email} />
-          <Row label="Phone" value={ride.driver?.phone} />
+          <Row label="Phone" value={ride.driver?.phone ? formatPhoneNumber(ride.driver.phone) : null} />
         </Section>
 
         <Section title="Payment">
@@ -155,7 +157,7 @@ const CompletedRides = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">{fullName(val)}</p>
-            <p className="text-xs text-gray-400">{val?.phone || ""}</p>
+            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
           </div>
         </div>
       ),
@@ -170,7 +172,7 @@ const CompletedRides = () => {
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">{fullName(val)}</p>
-            <p className="text-xs text-gray-400">{val?.phone || ""}</p>
+            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
           </div>
         </div>
       ),

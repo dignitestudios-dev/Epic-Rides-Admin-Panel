@@ -42,6 +42,25 @@ export const truncate = (str, length = 50) => {
   return str.length > length ? `${str.substring(0, length)}...` : str;
 };
 
+export const formatPhoneNumber = (phoneNumberString) => {
+  if (!phoneNumberString) return "";
+  const cleaned = ("" + phoneNumberString).replace(/\D/g, "");
+  
+  if (cleaned.length >= 10) {
+    const countryCode = cleaned.slice(0, cleaned.length - 10);
+    const rest = cleaned.slice(cleaned.length - 10);
+    const match = rest.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      if (countryCode) {
+        return `+${countryCode} (${match[1]}) ${match[2]}-${match[3]}`;
+      }
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+  }
+  
+  return phoneNumberString;
+};
+
 // Number utilities
 export const formatCurrency = (amount, currency = "USD") => {
   return new Intl.NumberFormat("en-US", {

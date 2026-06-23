@@ -22,6 +22,7 @@ import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { api } from "../lib/services";
+import { formatPhoneNumber } from "../utils/helpers";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 10_000; // ms
@@ -290,7 +291,7 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
           <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
           <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
-            {driver.phone || "—"}
+            {driver.phone ? formatPhoneNumber(driver.phone) : "—"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <Badge
@@ -370,7 +371,7 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           {/* Status dot */}
           <span
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-              isOnTrip ? "bg-blue-500" : "bg-amber-500"
+              rider.rideStatus === "accepted" ? "bg-blue-500" : rider.rideStatus === "requested" ? "bg-amber-500" : "bg-gray-400"
             }`}
           />
         </div>
@@ -380,15 +381,16 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
           <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
-            {rider.phone || "—"}
+            {rider.phone ? formatPhoneNumber(rider.phone) : "—"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
-            <Badge
-              variant={isOnTrip ? "primary" : "warning"}
-              className="text-[10px] px-1.5 py-0.5"
-            >
-              {isOnTrip ? "Accepted" : "Requested"}
-            </Badge>
+            {rider.rideStatus === "accepted" ? (
+              <Badge variant="primary" className="text-[10px] px-1.5 py-0.5">Accepted</Badge>
+            ) : rider.rideStatus === "requested" ? (
+              <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">Requested</Badge>
+            ) : (
+              <Badge variant="default" className="text-[10px] px-1.5 py-0.5">Idle</Badge>
+            )}
           </div>
         </div>
       </div>
@@ -450,7 +452,7 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             <h3 className="text-base font-bold text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
-              {driver.phone || "—"}
+              {driver.phone ? formatPhoneNumber(driver.phone) : "—"}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
               <Badge variant={isLuxury ? "warning" : "success"}>
@@ -555,12 +557,16 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             <h3 className="text-base font-bold text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
-              {rider.phone || "—"}
+              {rider.phone ? formatPhoneNumber(rider.phone) : "—"}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
-              <Badge variant={isOnTrip ? "primary" : "warning"}>
-                {isOnTrip ? "Accepted" : "Requested"}
-              </Badge>
+              {rider.rideStatus === "accepted" ? (
+                <Badge variant="primary">Accepted</Badge>
+              ) : rider.rideStatus === "requested" ? (
+                <Badge variant="warning">Requested</Badge>
+              ) : (
+                <Badge variant="default">Idle</Badge>
+              )}
             </div>
           </div>
         </div>
@@ -736,6 +742,7 @@ const BirdsEyeView = () => {
 
   const requestedCount = data.riders.filter((r) => r.rideStatus === "requested").length;
   const acceptedCount = data.riders.filter((r) => r.rideStatus === "accepted").length;
+  const idleCount = data.riders.filter((r) => !r.rideStatus).length;
 
   if (loadError) {
     return (
@@ -911,12 +918,16 @@ const BirdsEyeView = () => {
             </div>
           ) : (
             <div className="flex gap-2 mt-2.5">
+              <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
+                <p className="text-xs text-gray-600 font-medium">Idle</p>
+                <p className="text-lg font-bold text-gray-700">{idleCount}</p>
+              </div>
               <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
-                <p className="text-xs text-amber-600 font-medium">Requested</p>
+                <p className="text-xs text-amber-600 font-medium">Req.</p>
                 <p className="text-lg font-bold text-amber-700">{requestedCount}</p>
               </div>
               <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
-                <p className="text-xs text-blue-600 font-medium">Accepted</p>
+                <p className="text-xs text-blue-600 font-medium">Acc.</p>
                 <p className="text-lg font-bold text-blue-700">{acceptedCount}</p>
               </div>
               <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
@@ -959,6 +970,10 @@ const BirdsEyeView = () => {
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
+                <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                Idle
+              </span>
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
                 <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
                 Requested
