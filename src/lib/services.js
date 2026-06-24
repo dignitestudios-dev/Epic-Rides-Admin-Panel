@@ -4,7 +4,7 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 // Create an Axios instance
 
 // const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+const STAGING_BASE_URL = "https://api.dev.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -398,6 +398,10 @@ const resolveReport = (id, adminNotes = "") =>
 
 const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
+const exportRides = (status) => {
+  return API.get(`/rides/export?status=${status}`, { responseType: "blob" });
+};
+
 // Promo Codes API
 const getPromoCodes = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
   apiHandler(() => API.get(`/promo-code?page=${page}&limit=${limit}`));
@@ -481,6 +485,7 @@ export const api = {
   sendNotification,
   getAdminNotifications,
   getRides,
+  exportRides,
   getPromoCodes,
   createPromoCode,
   updatePromoCode,
