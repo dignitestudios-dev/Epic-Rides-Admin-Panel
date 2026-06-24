@@ -398,6 +398,10 @@ const resolveReport = (id, adminNotes = "") =>
 
 const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
+const exportRides = (status) => {
+  return API.get(`/rides/export?status=${status}`, { responseType: "blob" });
+};
+
 // Promo Codes API
 const getPromoCodes = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
   apiHandler(() => API.get(`/promo-code?page=${page}&limit=${limit}`));
@@ -481,6 +485,7 @@ export const api = {
   sendNotification,
   getAdminNotifications,
   getRides,
+  exportRides,
   getPromoCodes,
   createPromoCode,
   updatePromoCode,

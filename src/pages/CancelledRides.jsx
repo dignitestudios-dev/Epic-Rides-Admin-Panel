@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, MapPin, User, Car } from "lucide-react";
+import { Eye, MapPin, User, Car, Download } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
@@ -10,6 +10,8 @@ import Modal from "../components/ui/Modal";
 import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 import useGetRides from "../hooks/rides/useGetRides";
 import useDebounce from "../hooks/global/useDebounce";
+import { api } from "../lib/services";
+import toast from "react-hot-toast";
 
 /* ─── helpers ──────────────────────────────────────────────────── */
 const fullName = (obj) =>
@@ -114,6 +116,7 @@ const CancelledRides = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [selectedRide, setSelectedRide] = useState(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -126,6 +129,29 @@ const CancelledRides = () => {
   const handleSearchChange = (val) => {
     setSearch(val);
     setPage(1);
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await api.exportRides("cancelled");
+      const blob = response.data instanceof Blob
+        ? response.data
+        : new Blob([response.data], { type: "text/csv" });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Cancelled_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Export downloaded successfully");
+    } catch (error) {
+      console.error(error);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const columns = [
@@ -225,13 +251,23 @@ const CancelledRides = () => {
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Cancelled Rides
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          View and manage all cancelled ride records
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Cancelled Rides
+          </h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            View and manage all cancelled ride records
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          icon={<Download className="w-4 h-4" />}
+          onClick={handleExport}
+          disabled={isExporting}
+        >
+          {isExporting ? "Exporting..." : "Export CSV"}
+        </Button>
       </div>
 
       {/* Stats Cards */}
