@@ -60,11 +60,11 @@ const UserPicker = ({ type, selectedId, onChange }) => {
   const listRef = useRef(null);
   const PAGE_SIZE = 20;
 
-  const fetchUsers = useCallback(async (pageNum, reset = false) => {
+  const fetchUsers = useCallback(async (pageNum, reset = false, searchTerm = "") => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
     try {
-      const res = await api.getUsers(type, pageNum, PAGE_SIZE, "", "", "");
+      const res = await api.getUsers(type, pageNum, PAGE_SIZE, searchTerm, "", "");
       const fetched = res.data || [];
       setUsers((prev) => reset ? fetched : [...prev, ...fetched]);
       const totalPages = res.pagination?.totalPages || 1;
@@ -77,12 +77,16 @@ const UserPicker = ({ type, selectedId, onChange }) => {
   }, [type]);
 
   useEffect(() => {
-    setUsers([]);
-    setPickerPage(1);
-    setHasMore(true);
     setSearch("");
-    fetchUsers(1, true);
   }, [type]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      setPickerPage(1);
+      fetchUsers(1, true, search);
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, type, fetchUsers]);
 
   const handleScroll = () => {
     const el = listRef.current;
@@ -90,15 +94,11 @@ const UserPicker = ({ type, selectedId, onChange }) => {
     if (el.scrollTop + el.clientHeight >= el.scrollHeight - 10) {
       const next = pickerPage + 1;
       setPickerPage(next);
-      fetchUsers(next);
+      fetchUsers(next, false, search);
     }
   };
 
-  const filtered = users.filter((u) =>
-    !search ||
-    [u.firstName, u.lastName].filter(Boolean).join(" ").toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users;
 
   return (
     <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
