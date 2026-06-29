@@ -12,6 +12,37 @@ import Input from "../ui/Input";
 import Select from "../ui/Select";
 import { PAGINATION_CONFIG } from "../../config/constants";
 
+const getPageNumbers = (currentPage, totalPages) => {
+  const delta = 1;
+  const range = [];
+  const rangeWithDots = [];
+  let l;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - delta && i <= currentPage + delta)
+    ) {
+      range.push(i);
+    }
+  }
+
+  for (const i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
+};
+
 const DataTable = ({
   data = [],
   columns = [],
@@ -227,16 +258,22 @@ const DataTable = ({
             >
               <ChevronLeft size={20} />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "primary" : "outline"}
-                disabled={loading}
-                size="sm"
-                onClick={() => onPageChange && onPageChange(page)}
-              >
-                {page}
-              </Button>
+            {getPageNumbers(currentPage, totalPages).map((page, index) => (
+              page === "..." ? (
+                <span key={`dots-${index}`} className="px-2 py-1 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "primary" : "outline"}
+                  disabled={loading}
+                  size="sm"
+                  onClick={() => onPageChange && onPageChange(page)}
+                >
+                  {page}
+                </Button>
+              )
             ))}
             <Button
               variant="outline"
