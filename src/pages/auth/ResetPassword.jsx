@@ -139,9 +139,14 @@ const ResetPassword = () => {
               autoComplete="new-password"
               {...register("password", {
                 required: "Password is required",
+                maxLength: {
+                  value: 64,
+                  message: "Password cannot exceed 64 characters",
+                },
                 validate: validatePassword,
               })}
               error={errors.password?.message}
+              maxLength={64}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
               rightIcon={
                 <button
@@ -165,10 +170,15 @@ const ResetPassword = () => {
               autoComplete="new-password"
               {...register("confirmPassword", {
                 required: "Please confirm your password",
+                maxLength: {
+                  value: 64,
+                  message: "Password cannot exceed 64 characters",
+                },
                 validate: (value) =>
                   value === watchPassword || "Passwords do not match",
               })}
               error={errors.confirmPassword?.message}
+              maxLength={64}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
               rightIcon={
                 <button

@@ -5,6 +5,7 @@ import {
   RefreshCcw,
   ChevronRight,
   ChevronLeft,
+  X,
 } from "lucide-react";
 import Table from "../ui/Table";
 import Button from "../ui/Button";
@@ -207,6 +208,17 @@ const DataTable = ({
               value={searchTerm}
               onChange={(e) => handleSearch(e)}
               leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+              rightIcon={
+                searchTerm ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSearch({ target: { value: "" } })}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                ) : null
+              }
               className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700"
             />
           </div>

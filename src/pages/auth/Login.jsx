@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Input from "../../components/ui/Input";
 import { Navigate, useLocation, Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
@@ -22,6 +22,15 @@ const Login = () => {
     const from = location.state?.from?.pathname || "/";
     return <Navigate to={from} replace />;
   }
+
+  useEffect(() => {
+    if (!isLockedOut) {
+      setError((prev) => {
+        if (prev && prev.includes("locked")) return "";
+        return prev;
+      });
+    }
+  }, [isLockedOut]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

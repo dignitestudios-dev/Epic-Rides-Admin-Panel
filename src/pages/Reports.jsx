@@ -9,6 +9,7 @@ import Button from "../components/ui/Button";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import { formatDate } from "../utils/helpers";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -97,7 +98,7 @@ const Reports = () => {
       label: "Date",
       render: (value) => (
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {new Date(value).toLocaleDateString()}
+          {formatDate(value)}
         </span>
       ),
     },

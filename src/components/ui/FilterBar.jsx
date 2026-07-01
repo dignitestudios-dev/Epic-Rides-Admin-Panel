@@ -26,6 +26,17 @@ const FilterBar = ({
             value={searchValue}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+            rightIcon={
+              searchValue ? (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange && onSearchChange("")}
+                  className="text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
+              ) : null
+            }
             className="bg-white dark:bg-gray-800"
           />
         </div>

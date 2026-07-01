@@ -12,8 +12,8 @@ const SUBSCRIPTION_OPTIONS = [
 ];
 
 const LIMITS = {
-  firstName: 50,
-  lastName: 50,
+  firstName: 15,
+  lastName: 15,
   email: 100,
   balance: 999999,
 };
@@ -50,7 +50,7 @@ const EditProfileModal = ({
         subscriptionStatus: initialData.subscriptionStatus == "Expired" ? "canceled" : "active" || "",
         balance:
           initialData.balance !== undefined && initialData.balance !== null
-            ? String(initialData.balance)
+            ? String(Math.round(Number(initialData.balance) * 100) / 100)
             : "",
       });
       setErrors({});
@@ -64,6 +64,9 @@ const EditProfileModal = ({
     if (name === "firstName" && value.length > LIMITS.firstName) return;
     if (name === "lastName" && value.length > LIMITS.lastName) return;
     if (name === "email" && value.length > LIMITS.email) return;
+    
+    // Restrict balance to 2 decimal places max
+    if (name === "balance" && value && !/^\d*\.?\d{0,2}$/.test(value)) return;
 
     setForm((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
@@ -186,14 +189,16 @@ const EditProfileModal = ({
         </div>
 
         {/* Subscription Status */}
-        <Select
-          label="Subscription Status"
-          name="subscriptionStatus"
-          value={form.subscriptionStatus}
-          onChange={handleChange}
-          options={SUBSCRIPTION_OPTIONS}
-          placeholder="Select status..."
-        />
+        {type === "driver" && (
+          <Select
+            label="Subscription Status"
+            name="subscriptionStatus"
+            value={form.subscriptionStatus}
+            onChange={handleChange}
+            options={SUBSCRIPTION_OPTIONS}
+            placeholder="Select status..."
+          />
+        )}
 
         {/* Balance */}
         <Input

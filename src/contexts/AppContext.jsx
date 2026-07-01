@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { MENU_ITEMS } from "../config/constants";
+import { MENU_ITEMS, PERMISSIONS, USER_ROLES } from "../config/constants";
+import { useAuth } from "./AuthContext";
 
 const AppContext = createContext();
 
@@ -18,9 +19,40 @@ export const AppProvider = ({ children }) => {
   const [appConfigs, setAppConfigs] = useState(null);
   const [dashboardAnalytics, setDashboardAnalytics] = useState(null);
 
+  const { user } = useAuth();
+
   // Filter menu items based on feature flags and configurations
   const getFilteredMenuItems = () => {
-    return MENU_ITEMS;
+    if (!user || !user.role) return MENU_ITEMS;
+    
+    const userRole = user.role.toLowerCase();
+    // Default to general if unknown role
+    const permissions = PERMISSIONS[userRole] || PERMISSIONS[USER_ROLES.GENERAL];
+
+    return MENU_ITEMS.filter((item) => {
+      switch (item.id) {
+        case "admin-management":
+          return userRole === USER_ROLES.SUPER_ADMIN;
+        case "driver-management":
+          return permissions.viewDriverRequests;
+        case "vehicle-category":
+          return permissions.vehicleCategory;
+        case "notifications":
+          return permissions.sendNotifications;
+        case "revenue":
+        case "ride-rates":
+        case "peak-windows":
+          return permissions.financials;
+        case "promo-codes":
+          return permissions.promos;
+        case "cancelled-rides":
+          return permissions.cancelledRides;
+        case "birds-eye-view":
+          return permissions.birdsEye;
+        default:
+          return true; // Dashboard, User Management, Reports, Completed Rides allowed for all
+      }
+    });
   };
 
   const toggleSidebar = () => {

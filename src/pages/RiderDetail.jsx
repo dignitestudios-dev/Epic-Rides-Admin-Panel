@@ -25,10 +25,12 @@ import Table from "../components/ui/Table";
 import StatsCard from "../components/common/StatsCard";
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
+import { useAuth } from "../contexts/AuthContext";
 
 const RiderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const { details, loading, refresh } = useGetUserDetails(id, "rider");
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -194,24 +196,28 @@ const RiderDetail = () => {
               >
                 {personalInfo.status}
               </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={() => setEditModalOpen(true)}
-                icon={<Pencil className="w-3.5 h-3.5" />}
-              >
-                Edit Profile
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                className="mt-2"
-                onClick={() => setDeleteModalOpen(true)}
-                icon={<Trash2 className="w-3.5 h-3.5" />}
-              >
-                Delete Rider
-              </Button>
+              {hasPermission('manageUsers') && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3"
+                    onClick={() => setEditModalOpen(true)}
+                    icon={<Pencil className="w-3.5 h-3.5" />}
+                  >
+                    Edit Profile
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => setDeleteModalOpen(true)}
+                    icon={<Trash2 className="w-3.5 h-3.5" />}
+                  >
+                    Delete Rider
+                  </Button>
+                </>
+              )}
             </div>
 
             <div className="space-y-4 pt-6 border-t border-gray-100 text-sm font-medium text-gray-700">
@@ -261,7 +267,16 @@ const RiderDetail = () => {
         {/* Right Column: Stats & History */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mb-4">
+            <StatsCard
+              title="Wallet Balance"
+              value={`$${walletBalance.toFixed(2) || 0}`}
+              icon={<Wallet />}
+              colored
+              index={3}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatsCard
               title="Total Rides"
               value={rideStats?.totalCompleted || 0}
@@ -275,13 +290,6 @@ const RiderDetail = () => {
               icon={<XCircle />}
               colored
               index={5}
-            />
-            <StatsCard
-              title="Wallet Balance"
-              value={`$${walletBalance.toFixed(2) || 0}`}
-              icon={<Wallet />}
-              colored
-              index={3}
             />
             <StatsCard
               title="Average Rating"

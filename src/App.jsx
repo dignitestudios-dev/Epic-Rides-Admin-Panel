@@ -59,6 +59,8 @@ import CompletedRides from "./pages/CompletedRides";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
+import AdminUsers from "./pages/AdminUsers";
+import { USER_ROLES } from "./config/constants";
 
 const SessionTimeoutModal = () => {
   const { showTimeoutModal, setShowTimeoutModal } = useAuth();
@@ -135,6 +137,14 @@ function App() {
                         />
 
                         <Route path="/dashboard" element={<Dashboard />} />
+                        <Route
+                          path="/admin-users"
+                          element={
+                            <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                              <AdminUsers />
+                            </ProtectedRoute>
+                          }
+                        />
                         <Route
                           path="/change-password"
                           element={<ChangePassword />}

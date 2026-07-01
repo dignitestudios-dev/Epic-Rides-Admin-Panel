@@ -55,9 +55,8 @@ const StatsCard = ({
             {title}
           </p>
           <p
-            className={`text-2xl line-clamp-1 font-bold ${
-              colored ? colorObj.text : "text-gray-900 dark:text-white"
-            } mt-1`}
+            className={`text-2xl line-clamp-1 font-bold ${colored ? colorObj.text : "text-gray-900 dark:text-white"
+              } mt-1`}
           >
             {value}
           </p>
@@ -74,11 +73,10 @@ const StatsCard = ({
                 ""
               )}
               <span
-                className={`text-sm font-medium ${
-                  changeType === "positive"
+                className={`text-sm font-medium ${changeType === "positive"
                     ? "text-green-600 dark:text-green-400"
                     : "text-red-600 dark:text-red-400"
-                }`}
+                  }`}
               >
                 {change}
               </span>

@@ -64,6 +64,7 @@ const VerifyOTP = () => {
 
   const handleChange = (index, value) => {
     if (value.length > 1) return; // Prevent multiple characters
+    if (value && !/^\d+$/.test(value)) return; // Only allow digits
 
     const newOtp = [...otp];
     newOtp[index] = value;
