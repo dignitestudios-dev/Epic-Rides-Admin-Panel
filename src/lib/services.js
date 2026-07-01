@@ -250,6 +250,18 @@ const getAllVehicleTypes = (
     return API.get(url);
   });
 
+// Admin Users API
+const createAdminUser = (data) => apiHandler(() => API.post(`/admin-users`, data));
+const getAdminUsers = (page = 1, limit = 10, role = "", search = "", sort = "desc") => 
+  apiHandler(() => {
+    let url = `/admin-users?page=${page}&limit=${limit}&sort=${sort}`;
+    if (role) url += `&role=${role}`;
+    if (search) url += `&search=${search}`;
+    return API.get(url);
+  });
+const updateAdminUser = (id, data) => apiHandler(() => API.patch(`/admin-users/${id}`, data));
+const deleteAdminUser = (id) => apiHandler(() => API.delete(`/admin-users/${id}`));
+
 const createVehicleType = (payload) =>
   apiHandler(() => API.post("/vehicle-types", payload));
 
@@ -385,11 +397,13 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
-const getRides = (page = 1, limit = 10, search = "", rideStatus = "") =>
+const getRides = (page = 1, limit = 10, search = "", rideStatus = "", startDate = "", endDate = "") =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (rideStatus) url += `&rideStatus=${rideStatus}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -398,8 +412,11 @@ const resolveReport = (id, adminNotes = "") =>
 
 const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
-const exportRides = (status) => {
-  return API.get(`/rides/export?status=${status}`, { responseType: "blob" });
+const exportRides = (status, startDate = "", endDate = "") => {
+  let url = `/rides/export?status=${status}`;
+  if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+  if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+  return API.get(url, { responseType: "blob" });
 };
 
 // Promo Codes API
@@ -480,6 +497,10 @@ export const api = {
   deleteVehicleType,
   getReports,
   resolveReport,
+  createAdminUser,
+  getAdminUsers,
+  updateAdminUser,
+  deleteAdminUser,
   getReportById,
   getNotifications,
   sendNotification,

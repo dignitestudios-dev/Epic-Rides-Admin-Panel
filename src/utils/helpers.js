@@ -171,9 +171,13 @@ export const deepClone = (obj) => {
 
 export const handleError = (error) => {
   console.log(error);
-  toast.error(
-    error?.message || error?.response?.data?.message || "Something went wrong",
-  );
+  let msg = error?.response?.data?.message || error?.message || "Something went wrong";
+  
+  if (msg.includes("mapping for model") && msg.includes("already exists")) {
+    msg = "This vehicle model already exists. Please use a unique model name.";
+  }
+  
+  toast.error(msg);
 };
 
 export const handleSuccess = (message, customMessage) => {

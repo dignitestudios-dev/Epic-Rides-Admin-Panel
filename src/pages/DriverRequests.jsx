@@ -15,6 +15,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { downloadCSV, formatDate } from "../utils/helpers";
+import { useAuth } from "../contexts/AuthContext";
 
 const statuses = [
   { value: "pending", label: "Pending" },
@@ -23,6 +24,7 @@ const statuses = [
 
 const DriverRequests = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -164,13 +166,15 @@ const DriverRequests = () => {
             Review and manage driver registration requests and document verification.
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleExport}
-        >
-          Export CSV
-        </Button>
+        {hasPermission('downloadExcel') && (
+          <Button
+            variant="primary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+          >
+            Export CSV
+          </Button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">

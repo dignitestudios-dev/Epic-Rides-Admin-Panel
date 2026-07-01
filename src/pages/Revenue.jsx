@@ -210,9 +210,9 @@ const Revenue = () => {
     { key: "email", label: "Email" },
     {
       key: "subscriptionStatus",
-      label: "subscription Status",
+      label: "Subscription Status",
       render: (v) => (
-        <Badge className="ml-10" variant={v === "active" ? "success" : "danger"}>
+        <Badge className="ml-10 capitalize" variant={v === "active" ? "success" : "danger"}>
           {v}
         </Badge>
       ),

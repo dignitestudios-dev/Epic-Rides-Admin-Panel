@@ -22,20 +22,19 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import StatsCard from "../components/common/StatsCard";
-import { formatDate, handleError, handleSuccess } from "../utils/helpers";
-import Table from "../components/ui/Table";
+import { formatDate, handleError, handleSuccess, formatPhoneNumber } from "../utils/helpers";
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
-
+import { useAuth } from "../contexts/AuthContext";
 const DriverDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const { details, loading, refresh } = useGetUserDetails(id, "driver");
   const [showAllDocsModal, setShowAllDocsModal] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-
   const [subscriptionHistory, setSubscriptionHistory] = useState([]);
   const [subHistoryLoading, setSubHistoryLoading] = useState(false);
   const [subPage, setSubPage] = useState(1);
@@ -151,7 +150,7 @@ console.log(details)
       key: "rideStatus", 
       label: "Status", 
       render: (val) => (
-        <Badge variant={val?.toLowerCase() === "completed" ? "success" : "danger"}>
+        <Badge variant={val?.toLowerCase() === "completed" ? "success" : "danger"} className="capitalize">
           {val}
         </Badge>
       ) 
@@ -198,24 +197,28 @@ console.log(details)
                 <Badge variant={personalInfo.status === "Active" ? "success" : "danger"} className="mt-2">
                   {personalInfo.status}
                 </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={() => setEditModalOpen(true)}
-                  icon={<Pencil className="w-3.5 h-3.5" />}
-                >
-                  Edit Profile
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setDeleteModalOpen(true)}
-                  icon={<Trash2 className="w-3.5 h-3.5" />}
-                >
-                  Delete Driver
-                </Button>
+                {hasPermission('manageUsers') && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => setEditModalOpen(true)}
+                      icon={<Pencil className="w-3.5 h-3.5" />}
+                    >
+                      Edit Profile
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => setDeleteModalOpen(true)}
+                      icon={<Trash2 className="w-3.5 h-3.5" />}
+                    >
+                      Delete Driver
+                    </Button>
+                  </>
+                )}
               </div>
 
               <div className="space-y-4 pt-6 border-t border-gray-100 text-sm">
@@ -225,7 +228,7 @@ console.log(details)
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Phone className="w-4 h-4" />
-                  <span>{personalInfo.phone || personalInfo.phoneNumber}</span>
+                  <span>{formatPhoneNumber(personalInfo.phone || personalInfo.phoneNumber)}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Calendar className="w-4 h-4" />
@@ -295,8 +298,8 @@ console.log(details)
                 {Object.entries(approvedDocuments || {}).slice(0, 3).map(([key, doc], idx) => (
                   <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
                     <div>
-                      <p className="text-sm font-medium text-gray-900 capitalize">{key}</p>
-                      <p className="text-xs text-gray-500">Status: {doc.status}</p>
+                      <p className="text-sm font-medium text-gray-900 capitalize">{key.replace(/_/g, " ")}</p>
+                      <p className="text-xs text-gray-500">Status: <span className="capitalize">{doc.status}</span></p>
                     </div>
                     {doc.status === "approved" ? (
                       <CheckCircle className="w-5 h-5 text-green-500" />
@@ -320,7 +323,16 @@ console.log(details)
         {/* Right Column: Stats & History */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mb-4">
+            <StatsCard
+              title="Wallet Balance"
+              value={`$${details?.walletBalance.toFixed(2) || 0}`}
+              // icon={<Wallet />}
+              colored
+              index={3}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatsCard
               title="Total Rides"
               value={rideStats?.totalCompleted}
@@ -334,13 +346,6 @@ console.log(details)
               // icon={<XCircle />}
               colored
               index={5}
-            />
-            <StatsCard
-              title="Wallet Balance"
-              value={`$${details?.walletBalance.toFixed(2) || 0}`}
-              // icon={<Wallet />}
-              colored
-              index={3}
             />
             <StatsCard
               title="Admin Commission (3%)"
@@ -539,7 +544,7 @@ console.log(details)
                           key: "status",
                           label: "Status",
                           render: (val) => (
-                            <Badge variant={val?.toLowerCase() === "success" ? "success" : "danger"}>
+                            <Badge variant={val?.toLowerCase() === "success" ? "success" : "danger"} className="capitalize">
                               {val}
                             </Badge>
                           ),
