@@ -107,13 +107,13 @@ export const MENU_ITEMS = [
     path: "/driver-requests",
     children: [],
   },
-  {
-    id: "admin-management",
-    label: "Admin Management",
-    icon: "ShieldAlert",
-    path: "/admin-users",
-    children: [],
-  },
+  // {
+  //   id: "admin-management",
+  //   label: "Admin Management",
+  //   icon: "ShieldAlert",
+  //   path: "/admin-users",
+  //   children: [],
+  // },
   {
     id: "vehicle-category",
     label: "Vehicle Category",
