@@ -254,7 +254,7 @@ const CompletedRides = () => {
             View and manage all completed ride records
           </p>
         </div>
-        {hasPermission('downloadExcel') && (
+        {/* {hasPermission('downloadExcel') && ( */}
           <Button
             variant="primary"
             icon={<Download className="w-4 h-4" />}
@@ -263,7 +263,7 @@ const CompletedRides = () => {
           >
             {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-        )}
+        {/* )} */}
       </div>
 
       {stats && (
