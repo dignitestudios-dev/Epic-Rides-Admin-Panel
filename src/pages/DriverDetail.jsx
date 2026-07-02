@@ -26,6 +26,7 @@ import { formatDate, handleError, handleSuccess, formatPhoneNumber } from "../ut
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
 import { useAuth } from "../contexts/AuthContext";
+import Table from "../components/ui/Table";
 const DriverDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
