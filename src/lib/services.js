@@ -3,8 +3,8 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -252,7 +252,7 @@ const getAllVehicleTypes = (
 
 // Admin Users API
 const createAdminUser = (data) => apiHandler(() => API.post(`/admin-users`, data));
-const getAdminUsers = (page = 1, limit = 10, role = "", search = "", sort = "desc") => 
+const getAdminUsers = (page = 1, limit = 10, role = "", search = "", sort = "desc") =>
   apiHandler(() => {
     let url = `/admin-users?page=${page}&limit=${limit}&sort=${sort}`;
     if (role) url += `&role=${role}`;

@@ -82,7 +82,7 @@ const ReportDetail = () => {
       const newStatus = isDeactivated ? "active" : "deactivated";
       const response = await api.updateUserStatus(userId, userType, newStatus);
       if (response.success) {
-        toast.success(`${type} account ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} account ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
         fetchReportDetail();
       }
     } catch (error) {
