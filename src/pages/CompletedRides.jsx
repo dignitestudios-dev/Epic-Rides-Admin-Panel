@@ -263,7 +263,7 @@ const CompletedRides = () => {
           >
             {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-         )} 
+       )}
       </div>
 
       {stats && (
