@@ -273,16 +273,16 @@ const CancelledRides = () => {
             View and manage all cancelled ride records
           </p>
         </div>
-        {/* {hasPermission('downloadExcel') && ( */}
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleExport}
-          disabled={isExporting}
-        >
-          {isExporting ? "Exporting..." : "Export CSV"}
-        </Button>
-        {/* )} */}
+        {hasPermission('downloadExcel') && (
+          <Button
+            variant="primary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+        )}
       </div>
 
       {/* Stats Cards */}
