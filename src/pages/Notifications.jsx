@@ -288,8 +288,8 @@ const Notifications = () => {
         recipientType: previewData.audienceType === "both"
           ? "both"
           : previewData.audienceType === "riders" || previewData.audienceType === "rider_only"
-          ? "rider"
-          : "driver",
+          ? "riders"
+          : "drivers",
       };
       if (specific && previewData.recipientId) {
         payload.recipientId = previewData.recipientId;
