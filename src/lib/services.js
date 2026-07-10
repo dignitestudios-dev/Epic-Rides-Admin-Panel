@@ -397,6 +397,15 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
+const getNotificationById = (id) =>
+  apiHandler(() => API.get(`/notifications/${id}`));
+
+const updateNotification = (id, payload) =>
+  apiHandler(() => API.patch(`/notifications/${id}`, payload));
+
+const deleteNotification = (id) =>
+  apiHandler(() => API.delete(`/notifications/${id}`));
+
 const getRides = (page = 1, limit = 10, search = "", rideStatus = "", startDate = "", endDate = "") =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
@@ -505,6 +514,9 @@ export const api = {
   getNotifications,
   sendNotification,
   getAdminNotifications,
+  getNotificationById,
+  updateNotification,
+  deleteNotification,
   getRides,
   exportRides,
   getPromoCodes,

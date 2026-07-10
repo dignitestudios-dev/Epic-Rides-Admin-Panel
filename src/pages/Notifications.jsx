@@ -12,6 +12,8 @@ import {
   Loader2,
   Search,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -204,6 +206,10 @@ const Notifications = () => {
   const [previewData, setPreviewData] = useState(null);
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [fetchingDetail, setFetchingDetail] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingNotification, setEditingNotification] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   const {
     register,
@@ -227,6 +233,24 @@ const Notifications = () => {
   const watchDeliveryType = watch("deliveryType");
 
   const isSpecific = watchAudienceType === "rider_only" || watchAudienceType === "driver_only";
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    reset: resetEdit,
+    watch: watchEdit,
+    formState: { errors: errorsEdit },
+  } = useForm({
+    defaultValues: {
+      title: "",
+      message: "",
+      recipientType: "both",
+      scheduledFor: "",
+    },
+  });
+
+  const watchEditTitle = watchEdit("title") || "";
+  const watchEditMessage = watchEdit("message") || "";
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
@@ -263,9 +287,73 @@ const Notifications = () => {
     downloadCSV(rows, "notifications_export");
   };
 
-  const handleView = (n) => {
+  const handleView = async (n) => {
     setSelectedNotification(n);
     setShowDetailModal(true);
+    try {
+      setFetchingDetail(true);
+      const res = await api.getNotificationById(n.id || n._id);
+      if (res.data) {
+        setSelectedNotification(res.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingDetail(false);
+    }
+  };
+
+  const handleEdit = (n) => {
+    setEditingNotification(n);
+    const dateStr = n.scheduledFor || n.dateAndTime;
+    let localDatetime = "";
+    if (dateStr) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        const tzOffset = d.getTimezoneOffset() * 60000;
+        localDatetime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+      }
+    }
+
+    resetEdit({
+      title: n.title,
+      message: n.message || n.messagePreview || "",
+      recipientType: n.recipientType?.toLowerCase() || "both",
+      scheduledFor: localDatetime,
+    });
+    setShowEditModal(true);
+  };
+
+  const onEditSubmit = async (data) => {
+    if (!editingNotification) return;
+    setUpdating(true);
+    try {
+      const payload = {
+        title: data.title,
+        message: data.message,
+        recipientType: data.recipientType,
+        scheduledFor: new Date(data.scheduledFor).toISOString(),
+      };
+      await api.updateNotification(editingNotification.id || editingNotification._id, payload);
+      toast.success("Notification updated successfully!");
+      setShowEditModal(false);
+      fetchNotifications();
+    } catch (err) {
+      toast.error(err.message || "Failed to update notification");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this scheduled notification?")) return;
+    try {
+      await api.deleteNotification(id);
+      toast.success("Notification deleted successfully");
+      fetchNotifications();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete notification");
+    }
   };
 
   const handlePreview = (formValues) => {
@@ -366,9 +454,17 @@ const Notifications = () => {
       key: "actions",
       label: "Actions",
       render: (_, row) => (
-        <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => handleView(row)}>
-          View
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => handleView(row)}>
+            View
+          </Button>
+          {row.status?.toLowerCase() === "scheduled" && (
+            <>
+              <Button variant="ghost" size="sm" icon={<Edit className="w-4 h-4 text-blue-600" />} onClick={() => handleEdit(row)} />
+              <Button variant="ghost" size="sm" icon={<Trash2 className="w-4 h-4 text-red-600" />} onClick={() => handleDelete(row.id || row._id)} />
+            </>
+          )}
+        </div>
       ),
     },
   ];
@@ -615,7 +711,12 @@ const Notifications = () => {
         title="Notification Details"
         size="md"
       >
-        {selectedNotification && (
+        {fetchingDetail ? (
+          <div className="flex items-center justify-center py-10 gap-2 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Loading details...</span>
+          </div>
+        ) : selectedNotification ? (
           <div className="space-y-5">
             <div className="bg-gray-50 rounded-xl p-5 space-y-3">
               <div className="flex items-start justify-between gap-3">
@@ -624,7 +725,7 @@ const Notifications = () => {
                   {selectedNotification.status}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{selectedNotification.messagePreview}</p>
+              <p className="text-sm text-gray-600 leading-relaxed">{selectedNotification.message || selectedNotification.messagePreview}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -638,7 +739,7 @@ const Notifications = () => {
               <div className="bg-white rounded-xl border border-gray-100 p-3">
                 <p className="text-xs text-gray-400 mb-1 font-medium">Date &amp; Time</p>
                 <p className="font-semibold text-gray-800">
-                  {selectedNotification.dateAndTime ? formatDateTime(selectedNotification.dateAndTime) : "—"}
+                  {selectedNotification.dateAndTime || selectedNotification.scheduledFor ? formatDateTime(selectedNotification.dateAndTime || selectedNotification.scheduledFor) : "—"}
                 </p>
               </div>
             </div>
@@ -647,7 +748,67 @@ const Notifications = () => {
               <Button variant="ghost" onClick={() => setShowDetailModal(false)}>Close</Button>
             </div>
           </div>
-        )}
+        ) : null}
+      </Modal>
+
+      {/* ── Edit Scheduled Notification Modal ─────────────────────────────────── */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Scheduled Notification"
+        size="md"
+      >
+        <form onSubmit={handleSubmitEdit(onEditSubmit)} className="space-y-5">
+          <Select
+            label="Recipient Type"
+            options={[
+              { value: "both", label: "Both (Riders & Drivers)" },
+              { value: "drivers", label: "Drivers Only" },
+              { value: "riders", label: "Riders Only" },
+            ]}
+            value={watchEdit("recipientType")}
+            {...registerEdit("recipientType", { required: "Recipient type is required" })}
+            error={errorsEdit.recipientType?.message}
+          />
+          <div>
+            <Input
+              label="Notification Title"
+              {...registerEdit("title", {
+                required: "Title is required",
+                maxLength: { value: 60, message: "Max 60 characters" },
+              })}
+              error={errorsEdit.title?.message}
+            />
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditTitle.length}/60</p>
+          </div>
+          <div>
+            <TextArea
+              label="Message"
+              {...registerEdit("message", {
+                required: "Message is required",
+                maxLength: { value: 200, message: "Max 200 characters" },
+              })}
+              rows={4}
+              error={errorsEdit.message?.message}
+            />
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditMessage.length}/200</p>
+          </div>
+          <Input
+            min={new Date().toISOString().slice(0, 16)}
+            label="Scheduled Date & Time"
+            type="datetime-local"
+            {...registerEdit("scheduledFor", { required: "Schedule date/time is required" })}
+            error={errorsEdit.scheduledFor?.message}
+          />
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={updating} disabled={updating}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );
