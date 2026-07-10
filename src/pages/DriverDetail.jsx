@@ -26,6 +26,8 @@ import { formatDate, handleError, handleSuccess, formatPhoneNumber } from "../ut
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
 import { useAuth } from "../contexts/AuthContext";
+import Table from "../components/ui/Table";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 const DriverDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -37,7 +39,7 @@ const DriverDetail = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [subscriptionHistory, setSubscriptionHistory] = useState([]);
   const [subHistoryLoading, setSubHistoryLoading] = useState(false);
-  const [subPage, setSubPage] = useState(1);
+  const [subPage, setSubPage] = usePersistentState(`driver_${id}_subPage`, 1);
   const [subTotalPages, setSubTotalPages] = useState(1);
   const [subTotal, setSubTotal] = useState(0);
   const SUB_LIMIT = 10;

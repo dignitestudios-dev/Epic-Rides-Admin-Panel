@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import Select from "../components/ui/Select";
 import {
   Eye,
@@ -124,7 +124,13 @@ const Orders = () => {
     pageSize
   );
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setCurrentPage(1);
     setApiFilters(filters);
   }, [filters]);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Users as UsersIcon, UserCheck, Eye, Loader2, Download } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -161,7 +161,13 @@ const Users = () => {
     setCurrentPage(1);
   };
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setCurrentPage(1);
   }, [debouncedSearch, startDate, endDate]);
 
