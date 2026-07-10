@@ -305,11 +305,21 @@ const Notifications = () => {
 
   const handleEdit = (n) => {
     setEditingNotification(n);
+    const dateStr = n.scheduledFor || n.dateAndTime;
+    let localDatetime = "";
+    if (dateStr) {
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        const tzOffset = d.getTimezoneOffset() * 60000;
+        localDatetime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+      }
+    }
+
     resetEdit({
       title: n.title,
       message: n.message || n.messagePreview || "",
       recipientType: n.recipientType?.toLowerCase() || "both",
-      scheduledFor: n.scheduledFor ? new Date(n.scheduledFor).toISOString().slice(0, 16) : n.dateAndTime ? new Date(n.dateAndTime).toISOString().slice(0, 16) : "",
+      scheduledFor: localDatetime,
     });
     setShowEditModal(true);
   };
