@@ -232,12 +232,11 @@ const ChangePassword = () => {
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div
-                    className={`flex items-center text-sm ${
-                      watchNewPassword.length >=
-                      SECURITY_CONFIG.passwordMinLength
+                    className={`flex items-center text-sm ${watchNewPassword.length >=
+                        SECURITY_CONFIG.passwordMinLength
                         ? "text-green-600"
                         : "text-gray-400"
-                    }`}
+                      }`}
                   >
                     <CheckCircle className="w-3 h-3 mr-2" />
                     At least {SECURITY_CONFIG.passwordMinLength} characters
@@ -245,11 +244,10 @@ const ChangePassword = () => {
 
                   {SECURITY_CONFIG.passwordRequireUppercase && (
                     <div
-                      className={`flex items-center text-sm ${
-                        /[A-Z]/.test(watchNewPassword)
+                      className={`flex items-center text-sm ${/[A-Z]/.test(watchNewPassword)
                           ? "text-green-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-2" />
                       One uppercase letter
@@ -258,11 +256,10 @@ const ChangePassword = () => {
 
                   {SECURITY_CONFIG.passwordRequireLowercase && (
                     <div
-                      className={`flex items-center text-sm ${
-                        /[a-z]/.test(watchNewPassword)
+                      className={`flex items-center text-sm ${/[a-z]/.test(watchNewPassword)
                           ? "text-green-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-2" />
                       One lowercase letter
@@ -271,11 +268,10 @@ const ChangePassword = () => {
 
                   {SECURITY_CONFIG.passwordRequireNumbers && (
                     <div
-                      className={`flex items-center text-sm ${
-                        /\d/.test(watchNewPassword)
+                      className={`flex items-center text-sm ${/\d/.test(watchNewPassword)
                           ? "text-green-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-2" />
                       One number
@@ -284,11 +280,10 @@ const ChangePassword = () => {
 
                   {SECURITY_CONFIG.passwordRequireSpecialChars && (
                     <div
-                      className={`flex items-center text-sm ${
-                        /[!@#$%^&*(),.?":{}|<>]/.test(watchNewPassword)
+                      className={`flex items-center text-sm ${/[!@#$%^&*(),.?":{}|<>]/.test(watchNewPassword)
                           ? "text-green-600"
                           : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       <CheckCircle className="w-3 h-3 mr-2" />
                       One special character

@@ -246,6 +246,41 @@ function useSmoothPositions(items, keyExtractor) {
   return positions;
 }
 
+// ── Custom FlyTo Animation ──────────────────────────────────────────────────
+const flyToMap = (map, targetPos, targetZoom = 16, duration = 1500) => {
+  if (!map || !targetPos) return;
+  const startCenter = map.getCenter();
+  if (!startCenter) {
+    map.panTo(targetPos);
+    map.setZoom(targetZoom);
+    return;
+  }
+  
+  const startZoom = map.getZoom();
+  const startLat = startCenter.lat();
+  const startLng = startCenter.lng();
+  const targetLat = targetPos.lat;
+  const targetLng = targetPos.lng;
+
+  const startTime = performance.now();
+
+  const animate = (now) => {
+    const t = Math.min((now - startTime) / duration, 1);
+    const e = easeInOutCubic(t);
+
+    map.setCenter({
+      lat: startLat + (targetLat - startLat) * e,
+      lng: startLng + (targetLng - startLng) * e,
+    });
+    map.setZoom(startZoom + (targetZoom - startZoom) * e);
+
+    if (t < 1) {
+      requestAnimationFrame(animate);
+    }
+  };
+  requestAnimationFrame(animate);
+};
+
 // ── Driver sidebar card ───────────────────────────────────────────────────────
 const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
   const name =
@@ -713,16 +748,17 @@ const BirdsEyeView = () => {
     (item) => {
       const pos = smoothPositions[item._uid];
       if (!pos || !mapRef.current) return;
-      mapRef.current.panTo(pos);
-      mapRef.current.setZoom(16);
+      
+      flyToMap(mapRef.current, pos, 16, 1500);
+      
       setSelectedId(item.id);
     },
     [smoothPositions]
   );
 
   const handleRecenter = useCallback(() => {
-    mapRef.current?.panTo(DEFAULT_CENTER);
-    mapRef.current?.setZoom(13);
+    if (!mapRef.current) return;
+    flyToMap(mapRef.current, DEFAULT_CENTER, 13, 1500);
   }, []);
 
   const filteredItems = useMemo(

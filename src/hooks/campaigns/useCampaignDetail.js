@@ -1,0 +1,73 @@
+import { useState, useCallback } from "react";
+import { api } from "../../lib/services";
+import toast from "react-hot-toast";
+
+const useCampaignDetail = (campaignId) => {
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [stats, setStats] = useState(null);
+
+  const [loadingRedemptions, setLoadingRedemptions] = useState(false);
+  const [redemptions, setRedemptions] = useState([]);
+  const [redemptionsTotal, setRedemptionsTotal] = useState(0);
+
+  const [loadingCodes, setLoadingCodes] = useState(false);
+  const [codes, setCodes] = useState([]);
+  const [codesTotal, setCodesTotal] = useState(0);
+
+  const fetchStats = useCallback(async () => {
+    if (!campaignId) return;
+    setLoadingStats(true);
+    try {
+      const res = await api.getCampaignStats(campaignId);
+      setStats(res.data);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch campaign stats.");
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [campaignId]);
+
+  const fetchRedemptions = useCallback(async (page = 1, limit = 10, search = "") => {
+    if (!campaignId) return;
+    setLoadingRedemptions(true);
+    try {
+      const res = await api.getCampaignRedemptions(campaignId, page, limit, search);
+      setRedemptions(res.data?.redemptions || []);
+      setRedemptionsTotal(res.data?.pagination?.total || 0);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch redemptions.");
+    } finally {
+      setLoadingRedemptions(false);
+    }
+  }, [campaignId]);
+
+  const fetchCodes = useCallback(async (page = 1, limit = 10) => {
+    if (!campaignId) return;
+    setLoadingCodes(true);
+    try {
+      const res = await api.getGeneratedCodes(campaignId, page, limit);
+      setCodes(res.data?.codes || []);
+      setCodesTotal(res.data?.pagination?.total || 0);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch generated codes.");
+    } finally {
+      setLoadingCodes(false);
+    }
+  }, [campaignId]);
+
+  return {
+    loadingStats,
+    stats,
+    fetchStats,
+    loadingRedemptions,
+    redemptions,
+    redemptionsTotal,
+    fetchRedemptions,
+    loadingCodes,
+    codes,
+    codesTotal,
+    fetchCodes,
+  };
+};
+
+export default useCampaignDetail;

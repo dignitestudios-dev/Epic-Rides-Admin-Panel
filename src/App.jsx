@@ -53,7 +53,8 @@ import RiderDetail from "./pages/RiderDetail";
 import DriverDetail from "./pages/DriverDetail";
 
 import Revenue from "./pages/Revenue";
-import PromoCodes from "./pages/PromoCodes";
+import Campaigns from "./pages/Campaigns";
+import CampaignDetail from "./pages/CampaignDetail";
 import CancelledRides from "./pages/CancelledRides";
 import CompletedRides from "./pages/CompletedRides";
 import BirdsEyeView from "./pages/BirdsEyeView";
@@ -147,7 +148,11 @@ function App() {
                         />
                         <Route
                           path="/change-password"
-                          element={<ChangePassword />}
+                          element={
+                            <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                              <ChangePassword />
+                            </ProtectedRoute>
+                          }
                         />
 
                         {/* <Route path="/products">
@@ -207,10 +212,18 @@ function App() {
                           }
                         />
                         <Route
-                          path="/promo-codes"
+                          path="/campaigns"
                           element={
                             <ProtectedRoute requiredPermission="promos">
-                              <PromoCodes />
+                              <Campaigns />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/campaigns/:id"
+                          element={
+                            <ProtectedRoute requiredPermission="promos">
+                              <CampaignDetail />
                             </ProtectedRoute>
                           }
                         />
@@ -263,7 +276,11 @@ function App() {
                           />
                           <Route
                             path="change-password"
-                            element={<ChangePassword />}
+                            element={
+                              <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                                <ChangePassword />
+                              </ProtectedRoute>
+                            }
                           />
                           <Route path="configs" element={<Configurations />} />
                         </Route>

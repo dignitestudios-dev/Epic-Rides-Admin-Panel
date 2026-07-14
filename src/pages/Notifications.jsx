@@ -733,8 +733,8 @@ const Notifications = () => {
           <div className="space-y-5">
             <div className="bg-gray-50 rounded-xl p-5 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-bold text-gray-900">{selectedNotification.title}</h3>
-                <Badge variant={statusVariant(selectedNotification.status)}>
+                <h3 className="text-base  font-bold text-gray-900">{selectedNotification.title}</h3>
+                <Badge className="capitalize" variant={statusVariant(selectedNotification.status)}>
                   {selectedNotification.status}
                 </Badge>
               </div>

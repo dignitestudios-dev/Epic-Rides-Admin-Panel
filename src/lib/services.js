@@ -428,18 +428,42 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
-// Promo Codes API
-const getPromoCodes = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
-  apiHandler(() => API.get(`/promo-code?page=${page}&limit=${limit}`));
+// Campaigns API
+const getCampaigns = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, status = "") => {
+  let url = `/campaigns?page=${page}&limit=${limit}`;
+  if (status) url += `&status=${status}`;
+  return apiHandler(() => API.get(url));
+};
 
-const createPromoCode = (payload) =>
-  apiHandler(() => API.post("/promo-code", payload));
+const getCampaignById = (id) =>
+  apiHandler(() => API.get(`/campaigns/${id}`));
 
-const updatePromoCode = (id, payload) =>
-  apiHandler(() => API.patch(`/promo-code/${id}`, payload));
+const createCampaign = (payload) =>
+  apiHandler(() => API.post("/campaigns", payload));
 
-const deletePromoCode = (id) =>
-  apiHandler(() => API.delete(`/promo-code/${id}`));
+const updateCampaign = (id, payload) =>
+  apiHandler(() => API.patch(`/campaigns/${id}`, payload));
+
+const updateCampaignStatus = (id, status) =>
+  apiHandler(() => API.patch(`/campaigns/${id}/status`, { status }));
+
+const deleteCampaign = (id) =>
+  apiHandler(() => API.delete(`/campaigns/${id}`));
+
+const getCampaignStats = (id) =>
+  apiHandler(() => API.get(`/campaigns/${id}/stats`));
+
+const getCampaignRedemptions = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "") => {
+  let url = `/campaigns/${id}/redemptions?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${search}`;
+  return apiHandler(() => API.get(url));
+};
+
+const getGeneratedCodes = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
+  apiHandler(() => API.get(`/campaigns/${id}/codes?page=${page}&limit=${limit}`));
+
+const getUserRedemptionHistory = (campaignId, userId) =>
+  apiHandler(() => API.get(`/campaigns/${campaignId}/redemptions/${userId}`));
 
 // Ride Rates & Peak Windows API
 const getRideRates = () => apiHandler(() => API.get("/ride-rates"));
@@ -519,10 +543,16 @@ export const api = {
   deleteNotification,
   getRides,
   exportRides,
-  getPromoCodes,
-  createPromoCode,
-  updatePromoCode,
-  deletePromoCode,
+  getCampaigns,
+  getCampaignById,
+  createCampaign,
+  updateCampaign,
+  updateCampaignStatus,
+  deleteCampaign,
+  getCampaignStats,
+  getCampaignRedemptions,
+  getGeneratedCodes,
+  getUserRedemptionHistory,
   getRideRates,
   updateRideRate,
   getPeakWindows,
