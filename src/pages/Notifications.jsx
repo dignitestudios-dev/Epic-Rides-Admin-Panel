@@ -29,6 +29,8 @@ import { formatDateTime, downloadCSV } from "../utils/helpers";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import { useAuth } from "../contexts/AuthContext";
+import { USER_ROLES } from "../config/constants";
 
 // ── Status Badge Helper ───────────────────────────────────────────────────────
 
@@ -189,6 +191,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const Notifications = () => {
+  const { hasRole, hasPermission } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = usePersistentState("notifications_page", 1);
@@ -303,25 +306,31 @@ const Notifications = () => {
     }
   };
 
-  const handleEdit = (n) => {
-    setEditingNotification(n);
-    const dateStr = n.scheduledFor || n.dateAndTime;
-    let localDatetime = "";
-    if (dateStr) {
-      const d = new Date(dateStr);
-      if (!isNaN(d.getTime())) {
-        const tzOffset = d.getTimezoneOffset() * 60000;
-        localDatetime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+  const handleEdit = async (n) => {
+    try {
+      const res = await api.getNotificationById(n.id || n._id);
+      const fullData = res.data || n;
+      setEditingNotification(fullData);
+      const dateStr = fullData.scheduledFor || fullData.dateAndTime;
+      let localDatetime = "";
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          const tzOffset = d.getTimezoneOffset() * 60000;
+          localDatetime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+        }
       }
-    }
 
-    resetEdit({
-      title: n.title,
-      message: n.message || n.messagePreview || "",
-      recipientType: n.recipientType?.toLowerCase() || "both",
-      scheduledFor: localDatetime,
-    });
-    setShowEditModal(true);
+      resetEdit({
+        title: fullData.title,
+        message: fullData.message || fullData.messagePreview || "",
+        recipientType: fullData.recipientType?.toLowerCase() || "both",
+        scheduledFor: localDatetime,
+      });
+      setShowEditModal(true);
+    } catch (err) {
+      toast.error("Failed to fetch notification details.");
+    }
   };
 
   const onEditSubmit = async (data) => {
@@ -482,16 +491,20 @@ const Notifications = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
-            Export CSV
-          </Button>
-          <Button
-            variant="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
-          >
-            Send Notification
-          </Button>
+          {hasPermission('downloadExcel') && (
+            <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+              Export CSV
+            </Button>
+          )}
+          {hasPermission('sendNotifications') && (
+            <Button
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
+            >
+              Send Notification
+            </Button>
+          )}
         </div>
       </div>
 
@@ -725,7 +738,7 @@ const Notifications = () => {
                   {selectedNotification.status}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{selectedNotification.message || selectedNotification.messagePreview}</p>
+              <p className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap">{selectedNotification.message || selectedNotification.messagePreview}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">

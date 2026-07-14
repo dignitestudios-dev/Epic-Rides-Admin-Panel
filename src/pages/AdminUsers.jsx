@@ -141,28 +141,32 @@ const AdminUsers = () => {
     {
       label: "Actions",
       key: "actions",
-      render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEditAdmin(row)}
-            className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => confirmDelete(row)}
-            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      ),
+      render: (_, row) => {
+        if (row.role === 'super_admin') return null;
+        
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEditAdmin(row)}
+              className="text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => confirmDelete(row)}
+              className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 

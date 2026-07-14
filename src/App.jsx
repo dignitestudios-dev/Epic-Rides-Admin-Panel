@@ -166,16 +166,28 @@ function App() {
                         />
                         <Route
                           path="/vehicle-category"
-                          element={<VehicleCategoryManagement />}
+                          element={
+                            <ProtectedRoute requiredPermission="vehicleCategory">
+                              <VehicleCategoryManagement />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route path="/orders" element={<Orders />} />
                         <Route
                           path="/driver-requests"
-                          element={<DriverRequests />}
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <DriverRequests />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route
                           path="/driver/:id"
-                          element={<DriverDetails />}
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <DriverDetails />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route
                           path="/content-management"
@@ -186,10 +198,38 @@ function App() {
                           path="/reports-management"
                           element={<SupportTickets />}
                         />
-                        <Route path="/revenue" element={<Revenue />} />
-                        <Route path="/promo-codes" element={<PromoCodes />} />
-                        <Route path="/ride-rates" element={<RideRates />} />
-                        <Route path="/peak-windows" element={<PeakWindows />} />
+                        <Route
+                          path="/revenue"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <Revenue />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/promo-codes"
+                          element={
+                            <ProtectedRoute requiredPermission="promos">
+                              <PromoCodes />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/ride-rates"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <RideRates />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/peak-windows"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <PeakWindows />
+                            </ProtectedRoute>
+                          }
+                        />
                         <Route path="/cancelled-rides" element={<CancelledRides />} />
                         <Route path="/completed-rides" element={<CompletedRides />} />
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
@@ -199,7 +239,11 @@ function App() {
                         />
                         <Route
                           path="/notifications"
-                          element={<Notifications />}
+                          element={
+                            <ProtectedRoute requiredPermission="sendNotifications">
+                              <Notifications />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route path="/history" element={<Emergencies />} />
                         <Route

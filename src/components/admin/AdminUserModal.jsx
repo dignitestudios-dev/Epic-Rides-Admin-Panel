@@ -10,6 +10,7 @@ import { SECURITY_CONFIG, USER_ROLES } from "../../config/constants";
 const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
   const isEditing = !!editingAdmin;
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -23,10 +24,13 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
       role: "",
       isActive: true,
     },
   });
+
+  const watchPassword = watch("password");
 
   useEffect(() => {
     if (isOpen) {
@@ -43,11 +47,13 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
           name: "",
           email: "",
           password: "",
+          confirmPassword: "",
           role: "",
           isActive: true,
         });
       }
       setShowPassword(false);
+      setShowConfirmPassword(false);
     }
   }, [isOpen, isEditing, editingAdmin, reset]);
 
@@ -82,6 +88,7 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
 
   const handleFormSubmit = async (data) => {
     const payload = { ...data };
+    delete payload.confirmPassword;
     if (isEditing && !payload.password) {
       delete payload.password; // Don't send empty password on update
     }
@@ -90,7 +97,6 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
 
   const roleOptions = [
     { value: "", label: "Select Role", disabled: true },
-    { value: USER_ROLES.SUPER_ADMIN, label: "Super Admin" },
     { value: USER_ROLES.ADMIN, label: "Admin" },
     { value: USER_ROLES.GENERAL, label: "General" },
   ];
@@ -166,6 +172,39 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
               </button>
             }
             error={errors.password?.message}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Confirm Password
+          </label>
+          <Input
+            {...register("confirmPassword", {
+              validate: (value) => {
+                if (isEditing && !watchPassword && !value) return true;
+                if (!isEditing && !value) return "Please confirm your password";
+                return value === watchPassword || "Passwords do not match";
+              },
+            })}
+            type={showConfirmPassword ? "text" : "password"}
+            placeholder="Confirm password"
+            autoComplete="new-password"
+            leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+            rightIcon={
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            }
+            error={errors.confirmPassword?.message}
           />
         </div>
 

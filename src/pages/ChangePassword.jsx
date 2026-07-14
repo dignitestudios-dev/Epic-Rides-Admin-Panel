@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, CheckCircle, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Eye, EyeOff, Lock, CheckCircle, Shield, ArrowLeft } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
@@ -9,6 +10,7 @@ import { SECURITY_CONFIG } from "../config/constants";
 import { useAuth } from "../contexts/AuthContext";
 
 const ChangePassword = () => {
+  const navigate = useNavigate();
   const { updatePassword } = useAuth();
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -84,9 +86,20 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 relative">
+      {/* Back Button */}
+      <div className="absolute top-0 left-0">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 mr-1" />
+          Back
+        </button>
+      </div>
+
       {/* Header */}
-      <div className="text-center">
+      <div className="text-center pt-8">
         <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary-500/30 dark:bg-primary-900/10 mb-4">
           <Shield className="h-6 w-6 text-primary-600 dark:text-primary-400" />
         </div>
@@ -127,7 +140,9 @@ const ChangePassword = () => {
               autoComplete="current-password"
               {...register("currentPassword", {
                 required: "Current password is required",
+                maxLength: { value: 64, message: "Password cannot exceed 64 characters" },
               })}
+              maxLength={64}
               error={errors.currentPassword?.message}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
               rightIcon={
@@ -153,6 +168,7 @@ const ChangePassword = () => {
               autoComplete="new-password"
               {...register("newPassword", {
                 required: "New password is required",
+                maxLength: { value: 64, message: "Password cannot exceed 64 characters" },
                 validate: {
                   complexity: validatePassword,
                   notSameAsCurrent: (value) =>
@@ -160,6 +176,7 @@ const ChangePassword = () => {
                     "New password cannot be the same as the current password",
                 },
               })}
+              maxLength={64}
               error={errors.newPassword?.message}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
               rightIcon={
@@ -185,9 +202,11 @@ const ChangePassword = () => {
               autoComplete="new-password"
               {...register("confirmPassword", {
                 required: "Please confirm your new password",
+                maxLength: { value: 64, message: "Password cannot exceed 64 characters" },
                 validate: (value) =>
                   value === watchNewPassword || "Passwords do not match",
               })}
+              maxLength={64}
               error={errors.confirmPassword?.message}
               leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
               rightIcon={

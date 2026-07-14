@@ -138,6 +138,7 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
+                  maxLength={64}
                   leftIcon={<Lock className="h-5 w-5 text-gray-400" />}
                   rightIcon={
                     <button

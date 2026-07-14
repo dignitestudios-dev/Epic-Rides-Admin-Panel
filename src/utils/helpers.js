@@ -42,6 +42,22 @@ export const truncate = (str, length = 50) => {
   return str.length > length ? `${str.substring(0, length)}...` : str;
 };
 
+export const maskEmail = (email) => {
+  if (!email || typeof email !== 'string') return "";
+  const parts = email.split('@');
+  if (parts.length !== 2) return email;
+  const name = parts[0];
+  if (name.length <= 2) return `**@${parts[1]}`;
+  return `${name[0]}***${name[name.length - 1]}@${parts[1]}`;
+};
+
+export const maskPhone = (phone) => {
+  if (!phone || typeof phone !== 'string') return "";
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length < 4) return "****";
+  return `***-***-${cleaned.slice(-4)}`;
+};
+
 export const formatPhoneNumber = (phoneNumberString) => {
   if (!phoneNumberString) return "";
   const cleaned = ("" + phoneNumberString).replace(/\D/g, "");

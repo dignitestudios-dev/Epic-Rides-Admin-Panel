@@ -22,7 +22,7 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import StatsCard from "../components/common/StatsCard";
-import { formatDate, handleError, handleSuccess, formatPhoneNumber } from "../utils/helpers";
+import { formatDate, handleError, handleSuccess, formatPhoneNumber, maskEmail, maskPhone } from "../utils/helpers";
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
 import { useAuth } from "../contexts/AuthContext";
@@ -226,11 +226,11 @@ console.log(details)
               <div className="space-y-4 pt-6 border-t border-gray-100 text-sm">
                 <div className="flex items-center gap-3 text-gray-600">
                   <Mail className="w-4 h-4" />
-                  <span>{personalInfo.email}</span>
+                  <span>{hasPermission('seeSensitiveData') ? personalInfo.email : maskEmail(personalInfo.email)}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Phone className="w-4 h-4" />
-                  <span>{formatPhoneNumber(personalInfo.phone || personalInfo.phoneNumber)}</span>
+                  <span>{hasPermission('seeSensitiveData') ? formatPhoneNumber(personalInfo.phone || personalInfo.phoneNumber) : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
                 </div>
                 <div className="flex items-center gap-3 text-gray-600">
                   <Calendar className="w-4 h-4" />
