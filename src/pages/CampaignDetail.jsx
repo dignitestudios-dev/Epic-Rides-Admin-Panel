@@ -82,23 +82,66 @@ const CampaignDetail = () => {
 
       <div className="mt-4">
         {activeTab === "stats" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-6">
             {loadingStats ? (
               <p>Loading stats...</p>
             ) : stats ? (
               <>
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Redemptions</h3>
-                  <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalRedemptions || 0}</p>
+                <Card className="p-6">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Campaign Info</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                      <p className="text-sm text-gray-500">Name</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{stats.campaignName || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      <p className="font-medium text-gray-900 dark:text-white capitalize">{stats.status || "—"}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Discount</p>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {stats.discountType === "percentage" ? `${stats.discountValue}%` : `$${stats.discountValue}`}
+                        {stats.maxDiscountCap ? ` (Up to $${stats.maxDiscountCap})` : ""}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Duration</p>
+                      <p className="font-medium text-gray-900 dark:text-white text-sm">
+                        {stats.startDate ? formatDate(stats.startDate) : ""} - {stats.expiresAt ? formatDate(stats.expiresAt) : ""}
+                      </p>
+                    </div>
+                  </div>
                 </Card>
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Generated Codes</h3>
-                  <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalGeneratedCodes || 0}</p>
-                </Card>
-                <Card className="p-4">
-                  <h3 className="text-sm font-medium text-gray-500">Unique Users Redeemed</h3>
-                  <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.uniqueUsers || 0}</p>
-                </Card>
+
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Metrics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Total Redemptions</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalRedemptions || 0}</p>
+                    <p className="text-xs text-gray-500 mt-1">Limit: {stats.totalRedemptionLimit || "Unlimited"}</p>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Unique Users Redeemed</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.uniqueUsersCount || 0}</p>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Total Discount Given</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.totalDiscountGiven || 0}</p>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Average Discount / Ride</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.averageDiscountPerRide?.toFixed(2) || 0}</p>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Redemption Rate</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.redemptionRate || 0}%</p>
+                  </Card>
+                  <Card className="p-4">
+                    <h3 className="text-sm font-medium text-gray-500">Budget Remaining</h3>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.budgetRemaining !== null ? `$${stats.budgetRemaining}` : "Unlimited"}</p>
+                  </Card>
+                </div>
               </>
             ) : (
               <p>No stats available.</p>

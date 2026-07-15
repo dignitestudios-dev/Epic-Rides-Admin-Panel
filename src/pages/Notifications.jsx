@@ -599,13 +599,13 @@ const Notifications = () => {
               label="Message"
               {...register("message", {
                 required: "Message is required",
-                maxLength: { value: 200, message: "Max 200 characters" },
+                maxLength: { value: 500, message: "Max 500 characters" },
               })}
               rows={4}
               placeholder="Enter the notification message..."
               error={errors.message?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/200</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/500</p>
           </div>
 
           {/* Delivery — hidden for single user */}
@@ -799,12 +799,12 @@ const Notifications = () => {
               label="Message"
               {...registerEdit("message", {
                 required: "Message is required",
-                maxLength: { value: 200, message: "Max 200 characters" },
+                maxLength: { value: 500, message: "Max 500 characters" },
               })}
               rows={4}
               error={errorsEdit.message?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditMessage.length}/200</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditMessage.length}/500</p>
           </div>
           <Input
             min={new Date().toISOString().slice(0, 16)}

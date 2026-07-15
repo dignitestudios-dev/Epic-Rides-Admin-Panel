@@ -47,7 +47,7 @@ const useCampaignDetail = (campaignId) => {
     try {
       const res = await api.getGeneratedCodes(campaignId, page, limit);
       setCodes(res.data?.codes || []);
-      setCodesTotal(res.data?.pagination?.total || 0);
+      setCodesTotal(res.data?.totalCount || 0);
     } catch (err) {
       toast.error(err.message || "Failed to fetch generated codes.");
     } finally {

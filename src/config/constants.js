@@ -170,13 +170,13 @@ export const MENU_ITEMS = [
     path: "/completed-rides",
     children: [],
   },
-  // {
-  //   id: "campaigns",
-  //   label: "Campaigns",
-  //   icon: "Tag",
-  //   path: "/campaigns",
-  //   children: [],
-  // },
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: "Tag",
+    path: "/campaigns",
+    children: [],
+  },
   {
     id: "ride-rates",
     label: "Ride Rates",
