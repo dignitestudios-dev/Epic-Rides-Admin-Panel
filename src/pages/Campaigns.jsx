@@ -24,37 +24,27 @@ import useCampaigns from "../hooks/campaigns/useCampaigns";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 
-const US_CITIES = [
-  { value: "New York", label: "New York, NY" },
-  { value: "Los Angeles", label: "Los Angeles, CA" },
-  { value: "Chicago", label: "Chicago, IL" },
-  { value: "Houston", label: "Houston, TX" },
-  { value: "Phoenix", label: "Phoenix, AZ" },
-  { value: "Philadelphia", label: "Philadelphia, PA" },
-  { value: "San Antonio", label: "San Antonio, TX" },
-  { value: "San Diego", label: "San Diego, CA" },
-  { value: "Dallas", label: "Dallas, TX" },
-  { value: "San Jose", label: "San Jose, CA" },
-  { value: "Austin", label: "Austin, TX" },
+const FLORIDA_CITIES = [
   { value: "Jacksonville", label: "Jacksonville, FL" },
-  { value: "San Francisco", label: "San Francisco, CA" },
-  { value: "Columbus", label: "Columbus, OH" },
-  { value: "Charlotte", label: "Charlotte, NC" },
-  { value: "Indianapolis", label: "Indianapolis, IN" },
-  { value: "Seattle", label: "Seattle, WA" },
-  { value: "Denver", label: "Denver, CO" },
-  { value: "Washington", label: "Washington, DC" },
-  { value: "Boston", label: "Boston, MA" },
-  { value: "El Paso", label: "El Paso, TX" },
-  { value: "Nashville", label: "Nashville, TN" },
-  { value: "Detroit", label: "Detroit, MI" },
-  { value: "Oklahoma City", label: "Oklahoma City, OK" },
-  { value: "Portland", label: "Portland, OR" },
-  { value: "Las Vegas", label: "Las Vegas, NV" },
-  { value: "Memphis", label: "Memphis, TN" },
-  { value: "Louisville", label: "Louisville, KY" },
-  { value: "Baltimore", label: "Baltimore, MD" },
-  { value: "Milwaukee", label: "Milwaukee, WI" },
+  { value: "Miami", label: "Miami, FL" },
+  { value: "Tampa", label: "Tampa, FL" },
+  { value: "Orlando", label: "Orlando, FL" },
+  { value: "St. Petersburg", label: "St. Petersburg, FL" },
+  { value: "Hialeah", label: "Hialeah, FL" },
+  { value: "Tallahassee", label: "Tallahassee, FL" },
+  { value: "Fort Lauderdale", label: "Fort Lauderdale, FL" },
+  { value: "Port St. Lucie", label: "Port St. Lucie, FL" },
+  { value: "Cape Coral", label: "Cape Coral, FL" },
+  { value: "Pembroke Pines", label: "Pembroke Pines, FL" },
+  { value: "Hollywood", label: "Hollywood, FL" },
+  { value: "Miramar", label: "Miramar, FL" },
+  { value: "Gainesville", label: "Gainesville, FL" },
+  { value: "Coral Springs", label: "Coral Springs, FL" },
+  { value: "Clearwater", label: "Clearwater, FL" },
+  { value: "Palm Bay", label: "Palm Bay, FL" },
+  { value: "Pompano Beach", label: "Pompano Beach, FL" },
+  { value: "West Palm Beach", label: "West Palm Beach, FL" },
+  { value: "Lakeland", label: "Lakeland, FL" },
 ];
 
 const EMPTY_FORM = {
@@ -71,9 +61,12 @@ const EMPTY_FORM = {
   code: "",
   prefix: "",
   quantity: "",
+  minRideAmount: "",
   eligibility: {
     rideTypes: "private,carpool",
     cities: [],
+    minAge: "",
+    userType: "all",
   },
 };
 
@@ -122,9 +115,12 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
           quantity: "",
           startDate: initial.startDate ? toDatetimeLocal(initial.startDate) : "",
           expiresAt: initial.expiresAt ? toDatetimeLocal(initial.expiresAt) : "",
+          minRideAmount: initial.minRideAmount || "",
           eligibility: {
             rideTypes: initial.eligibility?.rideTypes?.join(",") || "",
             cities: initial.eligibility?.cities || [],
+            minAge: initial.eligibility?.minAge || "",
+            userType: initial.eligibility?.userType || "all",
           },
         });
       } else {
@@ -153,7 +149,11 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = "Name is required.";
     else if (form.name.length > 50) newErrors.name = "Name cannot exceed 50 characters.";
-    if (!form.discountValue) newErrors.discountValue = "Discount value is required.";
+    if (!form.discountValue) {
+      newErrors.discountValue = "Discount value is required.";
+    } else if (form.discountType === "percentage" && Number(form.discountValue) > 100) {
+      newErrors.discountValue = "Percentage discount cannot exceed 100.";
+    }
     
     const now = new Date();
     now.setMinutes(now.getMinutes() - 5); // 5 min grace period
@@ -193,7 +193,16 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
     if (form.codeMode === "unique") {
       if (!form.prefix.trim()) newErrors.prefix = "Prefix is required for unique mode.";
       else if (form.prefix.length > 10) newErrors.prefix = "Prefix cannot exceed 10 characters.";
-      if (!isEdit && (!form.quantity || Number(form.quantity) < 1)) newErrors.quantity = "Quantity must be at least 1.";
+      if (!isEdit) {
+        if (!form.quantity || Number(form.quantity) < 1) newErrors.quantity = "Quantity must be at least 1.";
+        else if (Number(form.quantity) > 500) newErrors.quantity = "Maximum quantity cannot exceed 500.";
+      }
+    }
+
+    if (!form.totalRedemptionLimit) {
+      newErrors.totalRedemptionLimit = "Total redemption limit is required.";
+    } else if (Number(form.totalRedemptionLimit) < 1) {
+      newErrors.totalRedemptionLimit = "Total redemption limit must be at least 1.";
     }
 
     return newErrors;
@@ -213,6 +222,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       discountType: form.discountType,
       discountValue: Number(form.discountValue),
       maxDiscountCap: form.maxDiscountCap ? Number(form.maxDiscountCap) : null,
+      minRideAmount: form.minRideAmount ? Number(form.minRideAmount) : null,
       startDate: new Date(form.startDate).toISOString(),
       expiresAt: new Date(form.expiresAt).toISOString(),
       maxUsesPerUser: Number(form.maxUsesPerUser) || 1,
@@ -221,6 +231,8 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       eligibility: {
         rideTypes: form.eligibility.rideTypes ? form.eligibility.rideTypes.split(",").map(s => s.trim()) : [],
         cities: form.eligibility.cities || [],
+        minAge: form.eligibility.minAge ? Number(form.eligibility.minAge) : null,
+        userType: form.eligibility.userType || "all",
       }
     };
 
@@ -252,12 +264,13 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Campaign Name" name="name" value={form.name} onChange={handleChange} error={errors.name} maxLength={50} />
+          <Input label="Campaign Name" name="name" placeholder="Enter campaign name" value={form.name} onChange={handleChange} error={errors.name} maxLength={50} />
           <Select
             label="Code Mode"
             name="codeMode"
             value={form.codeMode}
             onChange={handleChange}
+            disabled={isEdit}
             options={[
               { label: "Public (Single Code)", value: "public" },
               { label: "Unique (Multiple Codes)", value: "unique" },
@@ -266,13 +279,13 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
         </div>
 
         {form.codeMode === "public" ? (
-          <Input label="Public Code" name="code" value={form.code} onChange={handleChange} error={errors.code} placeholder="e.g. SUMMER10" maxLength={20} />
+          <Input label="Public Code" name="code" value={form.code} onChange={handleChange} error={errors.code} placeholder="e.g. SUMMER10" maxLength={20} disabled={isEdit} />
         ) : (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-4">
-              <Input label="Code Prefix" name="prefix" value={form.prefix} onChange={handleChange} error={errors.prefix} placeholder="e.g. SUM" maxLength={10} />
+              <Input label="Code Prefix" name="prefix" value={form.prefix} onChange={handleChange} error={errors.prefix} placeholder="e.g. SUM" maxLength={15} disabled={isEdit} />
               {!isEdit && (
-                <Input label="Quantity" name="quantity" type="number" min="1" value={form.quantity} onChange={handleChange} error={errors.quantity} placeholder="e.g. 50" />
+                <Input label="Quantity" name="quantity" type="number" min="1" max="500" value={form.quantity} onChange={handleChange} error={errors.quantity} placeholder="e.g. 50" />
               )}
             </div>
             {isEdit && initial?.codeMode === "unique" && (
@@ -302,24 +315,28 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
             name="description"
             value={form.description}
             onChange={handleChange}
+            maxLength={250}
+            placeholder="Enter description"
             rows={2}
             className="block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <Select
             label="Discount Type"
             name="discountType"
             value={form.discountType}
             onChange={handleChange}
+            disabled={isEdit}
             options={[
               { label: "Percentage", value: "percentage" },
               { label: "Fixed Amount", value: "fixed" },
             ]}
           />
-          <Input label="Discount Value" name="discountValue" type="number" min="1" value={form.discountValue} onChange={handleChange} error={errors.discountValue} />
+          <Input label="Discount Value" name="discountValue" type="number" min="1" max={form.discountType === "percentage" ? "100" : undefined} value={form.discountValue} onChange={handleChange} error={errors.discountValue} disabled={isEdit} />
           <Input label="Max Cap (Optional)" name="maxDiscountCap" type="number" min="0" value={form.maxDiscountCap} onChange={handleChange} placeholder="e.g. 50" />
+          <Input label="Min Ride Amount" name="minRideAmount" type="number" min="0" value={form.minRideAmount} onChange={handleChange} placeholder="e.g. 10" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -331,7 +348,8 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
               min={minStartDate}
               value={form.startDate}
               onChange={handleChange}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 sm:text-sm ${errors.startDate ? "border-red-300" : "border-gray-300 dark:border-gray-600"}`}
+              disabled={isEdit}
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 sm:text-sm ${errors.startDate ? "border-red-300" : "border-gray-300 dark:border-gray-600"} ${isEdit ? "opacity-60 bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}`}
             />
             {errors.startDate && <p className="text-sm text-red-600">{errors.startDate}</p>}
           </div>
@@ -350,8 +368,31 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} />
-          <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" value={form.totalRedemptionLimit} onChange={handleChange} placeholder="Unlimited if blank" />
+          <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} disabled={isEdit} />
+          <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" disabled={isEdit} />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <Input 
+            label="Min Age (Optional)" 
+            name="eligibility.minAge" 
+            type="number" 
+            min="0" 
+            value={form.eligibility.minAge} 
+            onChange={handleChange} 
+            placeholder="e.g. 18"
+          />
+          <Select
+            label="User Type"
+            name="eligibility.userType"
+            value={form.eligibility.userType}
+            onChange={handleChange}
+            options={[
+              { label: "All Users", value: "all" },
+              { label: "New Users", value: "new" },
+              { label: "Existing Users", value: "existing" },
+            ]}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -408,7 +449,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
             name="eligibility.cities"
             value={form.eligibility.cities}
             onChange={handleChange}
-            options={US_CITIES}
+            options={FLORIDA_CITIES}
             searchable={true}
             placeholder="Select Cities..."
           />
