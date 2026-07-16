@@ -3,6 +3,9 @@ import { api } from "../../lib/services";
 import toast from "react-hot-toast";
 
 const useCampaignDetail = (campaignId) => {
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [details, setDetails] = useState(null);
+
   const [loadingStats, setLoadingStats] = useState(false);
   const [stats, setStats] = useState(null);
 
@@ -13,6 +16,19 @@ const useCampaignDetail = (campaignId) => {
   const [loadingCodes, setLoadingCodes] = useState(false);
   const [codes, setCodes] = useState([]);
   const [codesTotal, setCodesTotal] = useState(0);
+
+  const fetchDetails = useCallback(async () => {
+    if (!campaignId) return;
+    setLoadingDetails(true);
+    try {
+      const res = await api.getCampaignById(campaignId);
+      setDetails(res.data?.campaign || res.data);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch campaign details.");
+    } finally {
+      setLoadingDetails(false);
+    }
+  }, [campaignId]);
 
   const fetchStats = useCallback(async () => {
     if (!campaignId) return;
@@ -56,6 +72,9 @@ const useCampaignDetail = (campaignId) => {
   }, [campaignId]);
 
   return {
+    loadingDetails,
+    details,
+    fetchDetails,
     loadingStats,
     stats,
     fetchStats,

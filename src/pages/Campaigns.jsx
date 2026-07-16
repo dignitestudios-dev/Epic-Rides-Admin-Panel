@@ -205,6 +205,13 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       newErrors.totalRedemptionLimit = "Total redemption limit must be at least 1.";
     }
 
+    if (form.eligibility.minAge) {
+      const age = Number(form.eligibility.minAge);
+      if (age < 15 || age > 100) {
+        newErrors.minAge = "Min age must be between 15 and 100.";
+      }
+    }
+
     return newErrors;
   };
 
@@ -263,31 +270,32 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
-        <div className="grid grid-cols-2 gap-4">
+        <div className={`grid ${isEdit ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
           <Input label="Campaign Name" name="name" placeholder="Enter campaign name" value={form.name} onChange={handleChange} error={errors.name} maxLength={50} />
-          <Select
-            label="Code Mode"
-            name="codeMode"
-            value={form.codeMode}
-            onChange={handleChange}
-            disabled={isEdit}
-            options={[
-              { label: "Public (Single Code)", value: "public" },
-              { label: "Unique (Multiple Codes)", value: "unique" },
-            ]}
-          />
+          {!isEdit && (
+            <Select
+              label="Code Mode"
+              name="codeMode"
+              value={form.codeMode}
+              onChange={handleChange}
+              options={[
+                { label: "Public (Single Code)", value: "public" },
+                { label: "Unique (Multiple Codes)", value: "unique" },
+              ]}
+            />
+          )}
         </div>
 
         {form.codeMode === "public" ? (
-          <Input label="Public Code" name="code" value={form.code} onChange={handleChange} error={errors.code} placeholder="e.g. SUMMER10" maxLength={20} disabled={isEdit} />
+          !isEdit && <Input label="Public Code" name="code" value={form.code} onChange={handleChange} error={errors.code} placeholder="e.g. SUMMER10" maxLength={20} />
         ) : (
           <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-4">
-              <Input label="Code Prefix" name="prefix" value={form.prefix} onChange={handleChange} error={errors.prefix} placeholder="e.g. SUM" maxLength={15} disabled={isEdit} />
-              {!isEdit && (
+            {!isEdit && (
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="Code Prefix" name="prefix" value={form.prefix} onChange={handleChange} error={errors.prefix} placeholder="e.g. SUM" maxLength={15} />
                 <Input label="Quantity" name="quantity" type="number" min="1" max="500" value={form.quantity} onChange={handleChange} error={errors.quantity} placeholder="e.g. 50" />
-              )}
-            </div>
+              </div>
+            )}
             {isEdit && initial?.codeMode === "unique" && (
               <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Generated Codes</p>
@@ -322,37 +330,41 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
           />
         </div>
 
-        <div className="grid grid-cols-4 gap-4">
-          <Select
-            label="Discount Type"
-            name="discountType"
-            value={form.discountType}
-            onChange={handleChange}
-            disabled={isEdit}
-            options={[
-              { label: "Percentage", value: "percentage" },
-              { label: "Fixed Amount", value: "fixed" },
-            ]}
-          />
-          <Input label="Discount Value" name="discountValue" type="number" min="1" max={form.discountType === "percentage" ? "100" : undefined} value={form.discountValue} onChange={handleChange} error={errors.discountValue} disabled={isEdit} />
-          <Input label="Max Cap (Optional)" name="maxDiscountCap" type="number" min="0" value={form.maxDiscountCap} onChange={handleChange} placeholder="e.g. 50" />
+        <div className={`grid ${isEdit ? "grid-cols-2" : "grid-cols-4"} gap-4`}>
+          {!isEdit && (
+            <>
+              <Select
+                label="Discount Type"
+                name="discountType"
+                value={form.discountType}
+                onChange={handleChange}
+                options={[
+                  { label: "Percentage", value: "percentage" },
+                  { label: "Fixed Amount", value: "fixed" },
+                ]}
+              />
+              <Input label="Discount Value" name="discountValue" type="number" min="1" max={form.discountType === "percentage" ? "100" : undefined} value={form.discountValue} onChange={handleChange} error={errors.discountValue} />
+            </>
+          )}
           <Input label="Min Ride Amount" name="minRideAmount" type="number" min="0" value={form.minRideAmount} onChange={handleChange} placeholder="e.g. 10" />
+          <Input label="Max Cap (Optional)" name="maxDiscountCap" type="number" min="0" value={form.maxDiscountCap} onChange={handleChange} placeholder="e.g. 50" />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Start Date</label>
-            <input
-              type="datetime-local"
-              name="startDate"
-              min={minStartDate}
-              value={form.startDate}
-              onChange={handleChange}
-              disabled={isEdit}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 sm:text-sm ${errors.startDate ? "border-red-300" : "border-gray-300 dark:border-gray-600"} ${isEdit ? "opacity-60 bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}`}
-            />
-            {errors.startDate && <p className="text-sm text-red-600">{errors.startDate}</p>}
-          </div>
+        <div className={`grid ${isEdit ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
+          {!isEdit && (
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Start Date</label>
+              <input
+                type="datetime-local"
+                name="startDate"
+                min={minStartDate}
+                value={form.startDate}
+                onChange={handleChange}
+                className={`block w-full px-3 py-2 border rounded-md shadow-sm text-black dark:text-gray-200 bg-white dark:bg-gray-800 sm:text-sm ${errors.startDate ? "border-red-300" : "border-gray-300 dark:border-gray-600"}`}
+              />
+              {errors.startDate && <p className="text-sm text-red-600">{errors.startDate}</p>}
+            </div>
+          )}
           <div className="space-y-1">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">Expiry Date</label>
             <input
@@ -367,20 +379,24 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} disabled={isEdit} />
-          <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" disabled={isEdit} />
-        </div>
+        {!isEdit && (
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} />
+            <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <Input 
             label="Min Age (Optional)" 
             name="eligibility.minAge" 
             type="number" 
-            min="0" 
+            min="15"
+            max="100"
             value={form.eligibility.minAge} 
             onChange={handleChange} 
             placeholder="e.g. 18"
+            error={errors.minAge}
           />
           <Select
             label="User Type"
