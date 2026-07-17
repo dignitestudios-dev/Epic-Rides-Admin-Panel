@@ -138,7 +138,7 @@ const CampaignDetail = () => {
                       <div className="col-span-2 md:col-span-4">
                         <p className="text-sm text-gray-500 mb-1">Eligibility</p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded dark:bg-blue-900/50 dark:text-blue-300">User Type: {details.eligibility?.userType || "All"}</span>
+                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded capitalize dark:bg-blue-900/50 dark:text-blue-300">User Type: {details.eligibility?.userType || "All"}</span>
                           {details.eligibility?.minAge && <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded dark:bg-purple-900/50 dark:text-purple-300">Min Age: {details.eligibility.minAge}</span>}
                           {details.eligibility?.rideTypes?.map(rt => <span key={rt} className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded capitalize dark:bg-green-900/50 dark:text-green-300">{rt} Ride</span>)}
                           {details.eligibility?.cities?.map(city => <span key={city} className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded dark:bg-yellow-900/50 dark:text-yellow-300">{city}</span>)}

@@ -43,8 +43,15 @@ const FLORIDA_CITIES = [
   { value: "Clearwater", label: "Clearwater, FL" },
   { value: "Palm Bay", label: "Palm Bay, FL" },
   { value: "Pompano Beach", label: "Pompano Beach, FL" },
-  { value: "West Palm Beach", label: "West Palm Beach, FL" },
   { value: "Lakeland", label: "Lakeland, FL" },
+  { value: "West Palm Beach", label: "West Palm Beach, FL" },
+  { value: "Miami Gardens", label: "Miami Gardens, FL" },
+  { value: "Sarasota", label: "Sarasota, FL" },
+  { value: "Fort Myers", label: "Fort Myers, FL" },
+  { value: "Naples", label: "Naples, FL" },
+  { value: "Pensacola", label: "Pensacola, FL" },
+  { value: "Daytona Beach", label: "Daytona Beach, FL" },
+  { value: "Ocala", label: "Ocala, FL" },
 ];
 
 const EMPTY_FORM = {
@@ -353,11 +360,11 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
                   { label: "Fixed Amount", value: "fixed" },
                 ]}
               />
-              <Input label="Discount Value" name="discountValue" type="number" min="1" max={form.discountType === "percentage" ? "100" : undefined} value={form.discountValue} onChange={handleChange} error={errors.discountValue} />
+              <Input label="Discount Value" name="discountValue" type="number" min="1" max={form.discountType === "percentage" ? "100" : undefined} value={form.discountValue} onChange={handleChange} error={errors.discountValue} placeholder="e.g. 20" />
             </>
           )}
-          <Input label="Min Ride Amount" name="minRideAmount" type="number" min="0" value={form.minRideAmount} onChange={handleChange} placeholder="e.g. 10" />
-          <Input label="Max Cap (Optional)" name="maxDiscountCap" type="number" min="0" value={form.maxDiscountCap} onChange={handleChange} placeholder="e.g. 50" />
+          <Input label="Min Ride Amount" name="minRideAmount" type="number" min="0" value={form.minRideAmount} onChange={handleChange} placeholder="e.g. 10" onInput={(e) => { if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5); }} />
+          <Input label="Max Cap (Optional)" name="maxDiscountCap" type="number" min="0" value={form.maxDiscountCap} onChange={handleChange} placeholder="e.g. 50" onInput={(e) => { if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5); }} />
         </div>
 
         <div className={`grid ${isEdit ? "grid-cols-1" : "grid-cols-2"} gap-4`}>
@@ -391,7 +398,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
 
         {!isEdit && (
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} />
+            <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} placeholder="e.g. 1" onInput={(e) => { if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5); }} />
             <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" max="100000" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" />
           </div>
         )}
