@@ -73,7 +73,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
       setUsers((prev) => reset ? fetched : [...prev, ...fetched]);
       const totalPages = res.pagination?.totalPages || 1;
       setHasMore(pageNum < totalPages);
-    } catch {}
+    } catch { }
     finally {
       setLoading(false);
       setLoadingMore(false);
@@ -144,16 +144,14 @@ const UserPicker = ({ type, selectedId, onChange }) => {
                 <div
                   key={id}
                   onClick={() => onChange(isSelected ? null : id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${
-                    isSelected
+                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${isSelected
                       ? "bg-primary-50 dark:bg-primary-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}
+                    }`}
                 >
                   {/* Radio indicator */}
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
-                  }`}>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
+                    }`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
                   <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
@@ -385,8 +383,8 @@ const Notifications = () => {
         recipientType: previewData.audienceType === "both"
           ? "both"
           : previewData.audienceType === "riders" || previewData.audienceType === "rider_only"
-          ? "riders"
-          : "drivers",
+            ? "riders"
+            : "drivers",
       };
       if (specific && previewData.recipientId) {
         payload.recipientId = previewData.recipientId;
@@ -555,7 +553,8 @@ const Notifications = () => {
               { value: "rider_only", label: "Rider Only (Single)" },
               { value: "driver_only", label: "Driver Only (Single)" },
             ]}
-            {...register("audienceType", { required: "Recipient type is required",
+            {...register("audienceType", {
+              required: "Recipient type is required",
               onChange: () => setSelectedUserId(null),
             })}
             error={errors.audienceType?.message}
@@ -681,8 +680,8 @@ const Notifications = () => {
                   {previewData.audienceType === "rider_only"
                     ? "1 Rider"
                     : previewData.audienceType === "driver_only"
-                    ? "1 Driver"
-                    : previewData.audienceType}
+                      ? "1 Driver"
+                      : previewData.audienceType}
                 </span>
               </div>
               <div className="flex justify-between">

@@ -255,7 +255,7 @@ const flyToMap = (map, targetPos, targetZoom = 16, duration = 1500) => {
     map.setZoom(targetZoom);
     return;
   }
-  
+
   const startZoom = map.getZoom();
   const startLat = startCenter.lat();
   const startLng = startCenter.lng();
@@ -290,11 +290,10 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
 
   return (
     <div
-      className={`p-3 rounded-xl border transition-all ${
-        isSelected
+      className={`p-3 rounded-xl border transition-all ${isSelected
           ? "border-primary-400 bg-primary-50 shadow-sm"
           : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
-      }`}
+        }`}
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}
@@ -315,9 +314,8 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
           </div>
           {/* Status dot */}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-              isOnTrip ? "bg-blue-500" : "bg-green-500"
-            }`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnTrip ? "bg-blue-500" : "bg-green-500"
+              }`}
           />
         </div>
 
@@ -336,9 +334,8 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
               {isLuxury ? "✦ Luxury" : "Economy"}
             </Badge>
             <span
-              className={`text-[10px] font-medium ${
-                isOnTrip ? "text-blue-600" : "text-green-600"
-              }`}
+              className={`text-[10px] font-medium ${isOnTrip ? "text-blue-600" : "text-green-600"
+                }`}
             >
               {isOnTrip ? "On Trip" : "Available"}
             </span>
@@ -380,11 +377,10 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
 
   return (
     <div
-      className={`p-3 rounded-xl border transition-all ${
-        isSelected
+      className={`p-3 rounded-xl border transition-all ${isSelected
           ? "border-primary-400 bg-primary-50 shadow-sm"
           : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
-      }`}
+        }`}
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}
@@ -405,9 +401,8 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           </div>
           {/* Status dot */}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-              rider.rideStatus === "accepted" ? "bg-blue-500" : rider.rideStatus === "requested" ? "bg-amber-500" : "bg-gray-400"
-            }`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${rider.rideStatus === "accepted" ? "bg-blue-500" : rider.rideStatus === "requested" ? "bg-amber-500" : "bg-gray-400"
+              }`}
           />
         </div>
 
@@ -608,12 +603,12 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
 
         {/* Pickup Info */}
         <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
-              <MapPin className="w-4 h-4" /> Pickup Details
-            </p>
-            <div className="text-gray-600 text-sm">
-              <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
-            </div>
+          <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+            <MapPin className="w-4 h-4" /> Pickup Details
+          </p>
+          <div className="text-gray-600 text-sm">
+            <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
+          </div>
         </div>
 
         {/* Location */}
@@ -748,9 +743,9 @@ const BirdsEyeView = () => {
     (item) => {
       const pos = smoothPositions[item._uid];
       if (!pos || !mapRef.current) return;
-      
+
       flyToMap(mapRef.current, pos, 16, 1500);
-      
+
       setSelectedId(item.id);
     },
     [smoothPositions]
@@ -905,11 +900,10 @@ const BirdsEyeView = () => {
           {/* Tabs */}
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "drivers"
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "drivers"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
               onClick={() => {
                 setActiveTab("drivers");
                 setSelectedId(null);
@@ -920,11 +914,10 @@ const BirdsEyeView = () => {
               Drivers ({data.totalDrivers || data.drivers.length})
             </button>
             <button
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                activeTab === "riders"
+              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "riders"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
               onClick={() => {
                 setActiveTab("riders");
                 setSelectedId(null);

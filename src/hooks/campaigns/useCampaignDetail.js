@@ -49,7 +49,7 @@ const useCampaignDetail = (campaignId) => {
     try {
       const res = await api.getCampaignRedemptions(campaignId, page, limit, search);
       setRedemptions(res.data?.redemptions || []);
-      setRedemptionsTotal(res.data?.pagination?.total || 0);
+      setRedemptionsTotal(res.data?.totalCount || res.data?.pagination?.total || 0);
     } catch (err) {
       toast.error(err.message || "Failed to fetch redemptions.");
     } finally {

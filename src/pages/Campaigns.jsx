@@ -149,21 +149,24 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = "Name is required.";
     else if (form.name.length > 50) newErrors.name = "Name cannot exceed 50 characters.";
-    if (!form.discountValue) {
-      newErrors.discountValue = "Discount value is required.";
-    } else if (form.discountType === "percentage" && Number(form.discountValue) > 100) {
-      newErrors.discountValue = "Percentage discount cannot exceed 100.";
+    
+    if (!isEdit) {
+      if (!form.discountValue) {
+        newErrors.discountValue = "Discount value is required.";
+      } else if (form.discountType === "percentage" && Number(form.discountValue) > 100) {
+        newErrors.discountValue = "Percentage discount cannot exceed 100.";
+      }
     }
     
     const now = new Date();
     now.setMinutes(now.getMinutes() - 5); // 5 min grace period
 
-    if (!form.startDate) {
-      newErrors.startDate = "Start date is required.";
-    } else {
-      const d = new Date(form.startDate);
-      if (d < now) {
-        if (!isEdit || (isEdit && new Date(initial.startDate).getTime() !== d.getTime())) {
+    if (!isEdit) {
+      if (!form.startDate) {
+        newErrors.startDate = "Start date is required.";
+      } else {
+        const d = new Date(form.startDate);
+        if (d < now) {
           newErrors.startDate = "Start date cannot be in the past.";
         }
       }
@@ -176,8 +179,13 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       if (form.startDate && d <= new Date(form.startDate)) {
         newErrors.expiresAt = "Expiry date of campaign should be future of start date.";
       } else if (d < now) {
-        if (!isEdit || (isEdit && new Date(initial.expiresAt).getTime() !== d.getTime())) {
+        if (!isEdit) {
           newErrors.expiresAt = "Expiry date cannot be in the past.";
+        } else {
+          const originalD = new Date(toDatetimeLocal(initial.expiresAt));
+          if (d.getTime() !== originalD.getTime()) {
+            newErrors.expiresAt = "Expiry date cannot be in the past.";
+          }
         }
       }
     }
@@ -186,23 +194,25 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
       newErrors.rideTypes = "At least one ride type must be selected.";
     }
     
-    if (form.codeMode === "public") {
-      if (!form.code.trim()) newErrors.code = "Code is required for public mode.";
-      else if (form.code.length > 20) newErrors.code = "Code cannot exceed 20 characters.";
-    }
-    if (form.codeMode === "unique") {
-      if (!form.prefix.trim()) newErrors.prefix = "Prefix is required for unique mode.";
-      else if (form.prefix.length > 10) newErrors.prefix = "Prefix cannot exceed 10 characters.";
-      if (!isEdit) {
+    if (!isEdit) {
+      if (form.codeMode === "public") {
+        if (!form.code.trim()) newErrors.code = "Code is required for public mode.";
+        else if (form.code.length > 20) newErrors.code = "Code cannot exceed 20 characters.";
+      }
+      if (form.codeMode === "unique") {
+        if (!form.prefix.trim()) newErrors.prefix = "Prefix is required for unique mode.";
+        else if (form.prefix.length > 10) newErrors.prefix = "Prefix cannot exceed 10 characters.";
         if (!form.quantity || Number(form.quantity) < 1) newErrors.quantity = "Quantity must be at least 1.";
         else if (Number(form.quantity) > 500) newErrors.quantity = "Maximum quantity cannot exceed 500.";
       }
-    }
 
-    if (!form.totalRedemptionLimit) {
-      newErrors.totalRedemptionLimit = "Total redemption limit is required.";
-    } else if (Number(form.totalRedemptionLimit) < 1) {
-      newErrors.totalRedemptionLimit = "Total redemption limit must be at least 1.";
+      if (!form.totalRedemptionLimit) {
+        newErrors.totalRedemptionLimit = "Total redemption limit is required.";
+      } else if (Number(form.totalRedemptionLimit) < 1) {
+        newErrors.totalRedemptionLimit = "Total redemption limit must be at least 1.";
+      } else if (Number(form.totalRedemptionLimit) > 100000) {
+        newErrors.totalRedemptionLimit = "Total redemption limit cannot exceed 100,000.";
+      }
     }
 
     if (form.eligibility.minAge) {
@@ -382,7 +392,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
         {!isEdit && (
           <div className="grid grid-cols-2 gap-4">
             <Input label="Max Uses Per User" name="maxUsesPerUser" type="number" min="1" value={form.maxUsesPerUser} onChange={handleChange} />
-            <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" />
+            <Input label="Total Redemption Limit" name="totalRedemptionLimit" type="number" min="1" max="100000" value={form.totalRedemptionLimit} onChange={handleChange} error={errors.totalRedemptionLimit} placeholder="e.g. 100" />
           </div>
         )}
 

@@ -16,8 +16,8 @@ const useCampaigns = (page = 1, limit = 10, status = "") => {
       const data = res.data || {};
       setCampaigns(data.campaigns || []);
       const pagination = data.pagination || {};
-      setTotalPages(pagination.totalPages || 1);
-      setTotalData(pagination.total || 0);
+      setTotalPages(data.totalPages || pagination.totalPages || 1);
+      setTotalData(data.totalCount || pagination.total || 0);
     } catch (err) {
       toast.error(err.message || "Failed to fetch campaigns.");
       setCampaigns([]);

@@ -219,9 +219,9 @@ const CampaignDetail = () => {
               title="Redemptions"
               data={redemptions}
               columns={[
-                { key: "user", label: "User", render: (_, r) => r.userId?.email || r.userId || "—" },
-                { key: "code", label: "Code Used", render: (_, r) => <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">{r.code}</span> },
-                { key: "date", label: "Redeemed At", render: (_, r) => formatDate(r.createdAt) },
+                { key: "user", label: "User", render: (_, r) => r.user?.email || r.user?.name || r.userId?.email || r.userId || "—" },
+                { key: "code", label: "Code Used", render: (_, r) => <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">{r.promoCode?.code || r.code || "—"}</span> },
+                { key: "date", label: "Redeemed At", render: (_, r) => formatDate(r.redeemedAt || r.createdAt) },
               ]}
               loading={loadingRedemptions}
               totalData={redemptionsTotal}

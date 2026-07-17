@@ -308,11 +308,10 @@ const ChatSupport = () => {
               <div
                 key={chat.id}
                 onClick={() => setSelectedChat(chat)}
-                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                  selectedChat?.id === chat.id
+                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedChat?.id === chat.id
                     ? "bg-primary-500 dark:bg-primary-500/80"
                     : ""
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-3">
                   <div className="relative">
@@ -412,22 +411,19 @@ const ChatSupport = () => {
                 {selectedChat.messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${
-                      msg.isAdmin ? "justify-end" : "justify-start"
-                    }`}
+                    className={`flex ${msg.isAdmin ? "justify-end" : "justify-start"
+                      }`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                        msg.isAdmin
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.isAdmin
                           ? "bg-primary-600 text-white"
                           : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
-                      }`}
+                        }`}
                     >
                       <p className="text-sm">{msg.message}</p>
                       <p
-                        className={`text-xs mt-1 ${
-                          msg.isAdmin ? "text-primary-100" : "text-gray-500"
-                        }`}
+                        className={`text-xs mt-1 ${msg.isAdmin ? "text-primary-100" : "text-gray-500"
+                          }`}
                       >
                         {new Date(msg.timestamp).toLocaleTimeString([], {
                           hour: "2-digit",

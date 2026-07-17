@@ -6,12 +6,12 @@ import useGetDrivers from "../hooks/drivers/useGetDrivers";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import FilterBar from "../components/ui/FilterBar";
-import { 
-  CheckCircle, 
-  Clock, 
-  FileText, 
-  Download, 
-  Eye, 
+import {
+  CheckCircle,
+  Clock,
+  FileText,
+  Download,
+  Eye,
   AlertCircle
 } from "lucide-react";
 import { downloadCSV, formatDate } from "../utils/helpers";
@@ -48,7 +48,7 @@ const DriverRequests = () => {
 
   const handleExport = () => {
     if (!drivers || drivers.length === 0) return;
-    
+
     const dataToExport = drivers.map(driver => ({
       ID: driver._id,
       Name: [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "—",
@@ -132,12 +132,13 @@ const DriverRequests = () => {
       key: "requiresApproval",
       label: "Current Status",
       render: (val) => {
-      console.log(val)  
-        return(
-        <div className="flex items-center gap-3">
-          {getStatusBadge(val)}
-        </div>
-      )},
+        console.log(val)
+        return (
+          <div className="flex items-center gap-3">
+            {getStatusBadge(val)}
+          </div>
+        )
+      },
     },
     {
       key: "action",
@@ -208,10 +209,10 @@ const DriverRequests = () => {
       </div>
 
       <Card className="overflow-hidden">
-        <DataTable 
+        <DataTable
           title="Verification Requests"
-          data={drivers} 
-          columns={columns} 
+          data={drivers}
+          columns={columns}
           loading={loading}
           totalPages={totalPages}
           totalData={totalData}
