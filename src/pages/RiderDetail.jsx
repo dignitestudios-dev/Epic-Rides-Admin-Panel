@@ -229,6 +229,12 @@ const RiderDetail = () => {
                 <Phone className="w-4 h-4 text-gray-400" />
                 <span>{hasPermission('seeSensitiveData') ? (personalInfo.phone || personalInfo.phoneNumber) : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
               </div>
+              {(personalInfo?.address || details?.fullDetails?.address) && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" />
+                  <span>{personalInfo?.address || details?.fullDetails?.address}</span>
+                </div>
+              )}
               <div className="flex items-center gap-3">
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span>

@@ -232,6 +232,12 @@ console.log(details)
                   <Phone className="w-4 h-4" />
                   <span>{hasPermission('seeSensitiveData') ? formatPhoneNumber(personalInfo.phone || personalInfo.phoneNumber) : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
                 </div>
+                {(personalInfo?.address || details?.fullDetails?.address) && (
+                  <div className="flex items-start gap-3 text-gray-600">
+                    <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+                    <span>{personalInfo?.address || details?.fullDetails?.address}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 text-gray-600">
                   <Calendar className="w-4 h-4" />
                   <span>Account Created: {formatDate(details?.activityLogs?.accountCreationDate)}</span>
