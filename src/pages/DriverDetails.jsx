@@ -34,6 +34,7 @@ import {
   ChevronDown,
   CreditCard,
   Pencil,
+  MapPin,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import { useAuth } from "../contexts/AuthContext";
@@ -1084,6 +1085,12 @@ const DriverDetails = () => {
                   ? `Joined ${formatDate(userDetails?.fullDetails.createdAt)}`
                   : "Onboarding"}
               </div>
+              {(pInfo?.address || userDetails?.fullDetails?.address) && (
+                <div className="flex items-start gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />{" "}
+                  <span className="line-clamp-2">{pInfo?.address || userDetails?.fullDetails?.address}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
