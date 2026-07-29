@@ -344,6 +344,18 @@ const RiderDetail = () => {
                       },
                       { key: "description", label: "Description" },
                       {
+                        key: "status",
+                        label: "Status",
+                        render: (val) => (
+                          <Badge
+                            className="capitalize"
+                            variant={val?.toLowerCase() === "success" ? "success" : val?.toLowerCase() === "failed" ? "danger" : "warning"}
+                          >
+                            {val || "N/A"}
+                          </Badge>
+                        ),
+                      },
+                      {
                         key: "amount",
                         label: "Amount",
                         render: (val, row) => (
