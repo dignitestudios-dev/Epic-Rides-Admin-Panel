@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { SECURITY_CONFIG } from "../config/constants";
+import { SECURITY_CONFIG, PERMISSIONS } from "../config/constants";
 import { handleError, handleSuccess } from "../utils/helpers";
 import { api } from "../lib/services";
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -349,13 +349,18 @@ export const AuthProvider = ({ children }) => {
   }, [lockedUntil]);
 
   const hasPermission = (permission) => {
-    if (!user) return false;
-    // Admin has all permissions
-    if (user.role === "admin") return true;
-    return user.permissions?.includes(permission) || false;
+    if (!user || !user.role) return false;
+    const userRole = user.role.toLowerCase();
+    const rolePermissions = PERMISSIONS[userRole];
+    if (!rolePermissions) return false;
+    return rolePermissions[permission] === true;
   };
-  const hasRole = (role) => {
-    return user?.role === role;
+  const hasRole = (roles) => {
+    if (!user || !user.role) return false;
+    if (Array.isArray(roles)) {
+      return roles.includes(user.role.toLowerCase());
+    }
+    return user.role.toLowerCase() === roles.toLowerCase();
   };
 
   const value = {

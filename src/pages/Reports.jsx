@@ -9,6 +9,7 @@ import Button from "../components/ui/Button";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import { formatDate } from "../utils/helpers";
 
 const Reports = () => {
   const navigate = useNavigate();
@@ -58,10 +59,10 @@ const Reports = () => {
     {
       key: "reporterName",
       label: "Reporter Name",
-      render: (value, row) => (
+      render: (_, row) => (
         <div className="flex flex-col text-sm">
           <span className="font-medium text-gray-900 dark:text-white">
-            {value}
+            {`${row?.reporterFirstName || ""} ${row?.reporterLastName || ""}`.trim() || "N/A"}
           </span>
           <span className="text-gray-500 dark:text-gray-400 text-xs">
             {row?.reporterType}
@@ -72,10 +73,10 @@ const Reports = () => {
     {
       key: "reportedPersonName",
       label: "Reported Person",
-      render: (value, row) => (
+      render: (_, row) => (
         <div className="flex flex-col text-sm">
           <span className="font-medium text-gray-900 dark:text-white">
-            {value}
+            {`${row?.reportedPersonFirstName || ""} ${row?.reportedPersonLastName || ""}`.trim() || "N/A"}
           </span>
           <span className="text-gray-500 dark:text-gray-400 text-xs">
             {row?.reportedPersonType}
@@ -97,7 +98,7 @@ const Reports = () => {
       label: "Date",
       render: (value) => (
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {new Date(value).toLocaleDateString()}
+          {formatDate(value)}
         </span>
       ),
     },
@@ -163,7 +164,7 @@ const Reports = () => {
         />
         <StatsCard
           title="Most Reported"
-          value={mostReported ? mostReported.name : "N/A"}
+          value={mostReported ? `${mostReported.firstName || ""} ${mostReported.lastName || ""}`.trim() || "N/A" : "N/A"}
           description={
             mostReported
               ? `${mostReported.reportCount} reports (${mostReported.type})`

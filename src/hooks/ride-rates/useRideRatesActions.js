@@ -25,7 +25,7 @@ const useRideRatesActions = () => {
     setLoading(true);
     try {
       const response = await api.updateRideRate(rideType, payload);
-      handleSuccess(`${rideType} ride rate updated successfully`);
+      handleSuccess(`${rideType.charAt(0).toUpperCase() + rideType.slice(1)} ride rate updated successfully`);
       await getRideRates();
       return response.data?.data || response.data;
     } catch (error) {

@@ -108,6 +108,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "admin-management",
+    label: "Admin Management",
+    icon: "ShieldAlert",
+    path: "/admin-users",
+    children: [],
+  },
+  {
     id: "vehicle-category",
     label: "Vehicle Category",
     icon: "Car",
@@ -136,7 +143,7 @@ export const MENU_ITEMS = [
   //   children: [],
   // },
   {
-    id: "reports",
+    id: "notifications",
     label: "Notifications",
     icon: "Bell",
     path: "/notifications",
@@ -164,10 +171,10 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
-    id: "promo-codes",
-    label: "Promo Codes",
+    id: "campaigns",
+    label: "Campaigns",
     icon: "Tag",
-    path: "/promo-codes",
+    path: "/campaigns",
     children: [],
   },
   {
@@ -237,10 +244,58 @@ export const MENU_ITEMS = [
 
 // User Roles
 export const USER_ROLES = {
+  SUPER_ADMIN: "super_admin",
   ADMIN: "admin",
-  MANAGER: "manager",
-  USER: "user",
-  MODERATOR: "moderator",
+  GENERAL: "general",
+};
+
+// RBAC Permissions
+export const PERMISSIONS = {
+  [USER_ROLES.SUPER_ADMIN]: {
+    downloadExcel: true,
+    approveDriversVehicles: true,
+    seeSensitiveData: true,
+    sendNotifications: true,
+    birdsEye: true,
+    cancelledRides: true,
+    vehicleCategory: true,
+    financials: true,
+    promos: true,
+    balancePoints: true,
+    manageUsers: true,
+    viewUsersOnly: false,
+    viewDriverRequests: true,
+  },
+  [USER_ROLES.ADMIN]: {
+    downloadExcel: false,
+    approveDriversVehicles: true,
+    seeSensitiveData: true,
+    sendNotifications: true,
+    birdsEye: true,
+    cancelledRides: true,
+    vehicleCategory: true,
+    financials: false,
+    promos: false,
+    balancePoints: false,
+    manageUsers: true,
+    viewUsersOnly: false,
+    viewDriverRequests: true,
+  },
+  [USER_ROLES.GENERAL]: {
+    downloadExcel: false,
+    approveDriversVehicles: false,
+    seeSensitiveData: false,
+    sendNotifications: false,
+    birdsEye: true,
+    cancelledRides: true,
+    vehicleCategory: false,
+    financials: false,
+    promos: false,
+    balancePoints: false,
+    manageUsers: false,
+    viewUsersOnly: true,
+    viewDriverRequests: false,
+  },
 };
 
 // User Status Options
@@ -377,7 +432,7 @@ export const SECURITY_CONFIG = {
   passwordRequireSpecialChars: true,
   maxLoginAttempts: 5,
   lockoutDuration: 2 * 60 * 1000, // 2 minutes
-  otpLength: 6, 
+  otpLength: 6,
   otpExpiry: 10 * 60 * 1000, // 10 minutes
   sessionTimeout: 5 * 60 * 1000, // 5 minutes
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Input from "../../components/ui/Input";
 import { Navigate, useLocation, Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
@@ -23,6 +23,15 @@ const Login = () => {
     return <Navigate to={from} replace />;
   }
 
+  useEffect(() => {
+    if (!isLockedOut) {
+      setError((prev) => {
+        if (prev && prev.includes("locked")) return "";
+        return prev;
+      });
+    }
+  }, [isLockedOut]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -35,6 +44,11 @@ const Login = () => {
 
     if (!formData.email || !formData.password) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
       return;
     }
 
@@ -124,6 +138,7 @@ const Login = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
+                  maxLength={64}
                   leftIcon={<Lock className="h-5 w-5 text-gray-400" />}
                   rightIcon={
                     <button

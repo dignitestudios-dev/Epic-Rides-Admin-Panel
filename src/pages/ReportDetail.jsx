@@ -22,6 +22,7 @@ import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
+import { formatDate, formatDateTime } from "../utils/helpers";
 
 const ReportDetail = () => {
   const { id } = useParams();
@@ -81,7 +82,7 @@ const ReportDetail = () => {
       const newStatus = isDeactivated ? "active" : "deactivated";
       const response = await api.updateUserStatus(userId, userType, newStatus);
       if (response.success) {
-        toast.success(`${type} account ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
+        toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} account ${newStatus === "active" ? "activated" : "deactivated"} successfully`);
         fetchReportDetail();
       }
     } catch (error) {
@@ -123,8 +124,12 @@ const ReportDetail = () => {
     </Card>
   );
 
- const UserInfoCard = ({ label, info, iconColor }) => {
+  const UserInfoCard = ({ label, info, iconColor }) => {
   if (!info) return null;
+
+  const displayName = info.firstName || info.lastName 
+    ? `${info.firstName || ''} ${info.lastName || ''}`.trim() 
+    : info.name || "Unknown";
 
   return (
     <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
@@ -132,16 +137,24 @@ const ReportDetail = () => {
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`p-2 rounded-full ${iconColor} bg-opacity-10 shrink-0`}>
-            <User className={`w-5 h-5 ${iconColor}`} />
-          </div>
+          {info.profilePicture ? (
+            <img 
+              src={info.profilePicture} 
+              alt={displayName} 
+              className="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200"
+            />
+          ) : (
+            <div className={`p-2 rounded-full ${iconColor} bg-opacity-10 shrink-0`}>
+              <User className={`w-5 h-5 ${iconColor}`} />
+            </div>
+          )}
 
           <div className="min-w-0">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
               {label}
             </p>
             <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
-              {info.name}
+              {displayName}
             </h4>
           </div>
         </div>
@@ -246,12 +259,12 @@ const ReportDetail = () => {
              <div className="flex flex-wrap gap-6 pt-2">
                 <div className="flex items-center text-sm text-gray-500 font-medium">
                   <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                  Created: {new Date(report.createdAt).toLocaleString()}
+                  Created: {formatDateTime(report.createdAt)}
                 </div>
                 {report.resolvedAt && (
                    <div className="flex items-center text-sm text-green-600 font-medium">
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      Resolved: {new Date(report.resolvedAt).toLocaleString()}
+                      Resolved: {formatDateTime(report.resolvedAt)}
                    </div>
                 )}
              </div>
@@ -363,7 +376,7 @@ const ReportDetail = () => {
                 </div>
 
                 <div className="flex justify-center pt-4">
-                  <span className="text-[10px] font-medium text-gray-400 italic">Created on {new Date(report.relatedDetails.createdAt).toLocaleDateString()}</span>
+                  <span className="text-[10px] font-medium text-gray-400 italic">Created on {formatDate(report.relatedDetails.createdAt)}</span>
                 </div>
               </div>
             ) : (

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
-import { formatDate, handleError } from "../utils/helpers";
+import { formatDate, handleError, maskEmail, maskPhone } from "../utils/helpers";
 import toast from "react-hot-toast";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
@@ -34,8 +34,10 @@ import {
   ChevronDown,
   CreditCard,
   Pencil,
+  MapPin,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
+import { useAuth } from "../contexts/AuthContext";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -290,6 +292,7 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
 // ── Doc Card ──────────────────────────────────────────────────────────────────
 
 const DocCard = ({ doc, onRespond, isOld }) => {
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(doc.status);
   const [showRejectBox, setShowRejectBox] = useState(false);
@@ -516,7 +519,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
             </p>
 
             {/* Actions — for driverLicense: pending shows both, rejected shows approve only, approved shows static label; for others: pending only */}
-            {!isOld && (isLicense ? localStatus !== "approved" : localStatus === "pending") && (
+            {!isOld && (isLicense ? localStatus !== "approved" : localStatus === "pending") && hasPermission('approveDriversVehicles') && (
               <div className="space-y-2 pt-1 border-t border-gray-50">
                 {!showRejectBox ? (
                   <div className="flex gap-2">
@@ -591,6 +594,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
 // ── Vehicle Card ──────────────────────────────────────────────────────────────
 
 const VehicleCard = ({ vehicle, onRespond }) => {
+  const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(vehicle.status);
   const [showReject, setShowReject] = useState(false);
@@ -714,8 +718,9 @@ const VehicleCard = ({ vehicle, onRespond }) => {
             </div>
           )}
 
-          {localStatus === "pending" && (
-            <div className="space-y-2">
+          {/* Actions */}
+          {!isOld && localStatus !== "approved" && hasPermission('approveDriversVehicles') && (
+            <div className="space-y-2 pt-3 border-t border-gray-50 mt-3">
               {!showReject ? (
                 <div className="flex gap-2">
                   <button
@@ -787,6 +792,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
 const DriverDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const [driverInfo, setDriverInfo] = useState(null);
   const [docs, setDocs] = useState([]);
@@ -963,7 +969,7 @@ const DriverDetails = () => {
             >
               <Pencil className="w-3.5 h-3.5" /> Edit Profile
             </button>
-            {totalPending > 0 && (
+            {totalPending > 0 && hasPermission('approveDriversVehicles') && (
               <>
                 <button
                   disabled={bulkLoading}
@@ -1061,11 +1067,11 @@ const DriverDetails = () => {
             <div className="mt-8 flex flex-wrap gap-2.5">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <Mail className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {pInfo?.email || "—"}
+                {hasPermission('seeSensitiveData') ? (pInfo?.email || "—") : maskEmail(pInfo?.email || "—")}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <Phone className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {pInfo?.phone || pInfo?.phoneNumber || "—"}
+                {hasPermission('seeSensitiveData') ? (pInfo?.phone || pInfo?.phoneNumber || "—") : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <CreditCard  className="w-3.5 h-3.5 text-gray-400" />{" "}
@@ -1079,6 +1085,12 @@ const DriverDetails = () => {
                   ? `Joined ${formatDate(userDetails?.fullDetails.createdAt)}`
                   : "Onboarding"}
               </div>
+              {(pInfo?.address || userDetails?.fullDetails?.address) && (
+                <div className="flex items-start gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />{" "}
+                  <span className="line-clamp-2">{pInfo?.address || userDetails?.fullDetails?.address}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

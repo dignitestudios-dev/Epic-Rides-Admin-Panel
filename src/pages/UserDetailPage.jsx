@@ -3,12 +3,14 @@ import { useState } from "react";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { formatDate, formatDateTime } from "../utils/helpers";
+import { formatDate, formatDateTime, maskPhone } from "../utils/helpers";
+import { useAuth } from "../contexts/AuthContext";
 
 const UserDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
+  const { hasPermission } = useAuth();
 
   const user = state?.user;
   if (!user || user.id !== Number(id)) return <p>User not found</p>;
@@ -128,7 +130,7 @@ const UserDetailPage = () => {
             <h3 className="text-xl font-semibold border-b pb-2">
               Contact Information
             </h3>
-            <InfoRow label="Phone" value={userData.phone || "-"} />
+            <InfoRow label="Phone" value={hasPermission('seeSensitiveData') ? (userData.phone || "-") : maskPhone(userData.phone || "-")} />
             <InfoRow label="Address" value={userData.address || "-"} />
             <InfoRow label="City" value={userData.city || "-"} />
             <InfoRow label="State" value={userData.state || "-"} />

@@ -5,12 +5,44 @@ import {
   RefreshCcw,
   ChevronRight,
   ChevronLeft,
+  X,
 } from "lucide-react";
 import Table from "../ui/Table";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import { PAGINATION_CONFIG } from "../../config/constants";
+
+const getPageNumbers = (currentPage, totalPages) => {
+  const delta = 1;
+  const range = [];
+  const rangeWithDots = [];
+  let l;
+
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - delta && i <= currentPage + delta)
+    ) {
+      range.push(i);
+    }
+  }
+
+  for (const i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
+};
 
 const DataTable = ({
   data = [],
@@ -176,6 +208,17 @@ const DataTable = ({
               value={searchTerm}
               onChange={(e) => handleSearch(e)}
               leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+              rightIcon={
+                searchTerm ? (
+                  <button
+                    type="button"
+                    onClick={() => handleSearch({ target: { value: "" } })}
+                    className="text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                ) : null
+              }
               className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700"
             />
           </div>
@@ -227,16 +270,22 @@ const DataTable = ({
             >
               <ChevronLeft size={20} />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <Button
-                key={page}
-                variant={currentPage === page ? "primary" : "outline"}
-                disabled={loading}
-                size="sm"
-                onClick={() => onPageChange && onPageChange(page)}
-              >
-                {page}
-              </Button>
+            {getPageNumbers(currentPage, totalPages).map((page, index) => (
+              page === "..." ? (
+                <span key={`dots-${index}`} className="px-2 py-1 text-gray-500">
+                  ...
+                </span>
+              ) : (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "primary" : "outline"}
+                  disabled={loading}
+                  size="sm"
+                  onClick={() => onPageChange && onPageChange(page)}
+                >
+                  {page}
+                </Button>
+              )
             ))}
             <Button
               variant="outline"

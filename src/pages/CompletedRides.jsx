@@ -6,8 +6,10 @@ import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
+import FilterBar from "../components/ui/FilterBar";
 
 import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
+import { useAuth } from "../contexts/AuthContext";
 import useGetRides from "../hooks/rides/useGetRides";
 import useDebounce from "../hooks/global/useDebounce";
 import { api } from "../lib/services";
@@ -69,7 +71,7 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Ride ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
           <Row label="Status" value={statusBadge(ride.rideStatus)} />
           <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
-          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} mi.` : null} />
+          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} miles` : null} />
           <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
           <Row label="Pickup" value={ride.pickupPoint?.placeName} />
           <Row label="Dropoff" value={ride.dropOffPoint?.placeName} />
@@ -89,7 +91,7 @@ const RideDetailDialog = ({ ride, onClose }) => {
 
         <Section title="Payment">
           <Row label="Fare" value={ride.rideFare != null ? `$${ride.rideFare.toFixed(2)}` : null} />
-          <Row label="Method" value={ride.paymentMethod ? ride.paymentMethod.replace(/_/g, " ") : null} />
+          <Row label="Method" value={ride.paymentMethod ? <span className="capitalize">{ride.paymentMethod.replace(/_/g, " ")}</span> : null} />
           <Row label="Payment Status" value={paymentBadge(ride.paymentStatus)} />
         </Section>
 
@@ -109,11 +111,14 @@ const RideDetailDialog = ({ ride, onClose }) => {
 };
 
 const CompletedRides = () => {
+  const { hasPermission } = useAuth();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [selectedRide, setSelectedRide] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -122,6 +127,8 @@ const CompletedRides = () => {
     limit,
     debouncedSearch,
     "completed",
+    startDate,
+    endDate
   );
 
   const handleSearchChange = (val) => {
@@ -130,9 +137,14 @@ const CompletedRides = () => {
   };
 
   const handleExport = async () => {
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      toast.error("Please select both start and end dates for export.");
+      return;
+    }
+
     setIsExporting(true);
     try {
-      const response = await api.exportRides("completed");
+      const response = await api.exportRides("completed", startDate, endDate);
       const blob = response.data instanceof Blob
         ? response.data
         : new Blob([response.data], { type: "text/csv" });
@@ -242,14 +254,16 @@ const CompletedRides = () => {
             View and manage all completed ride records
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleExport}
-          disabled={isExporting}
-        >
-          {isExporting ? "Exporting..." : "Export CSV"}
-        </Button>
+        {hasPermission('downloadExcel') && (
+          <Button
+            variant="primary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+            disabled={isExporting}
+          >
+            {isExporting ? "Exporting..." : "Export CSV"}
+          </Button>
+       )}
       </div>
 
       {stats && (
@@ -274,6 +288,33 @@ const CompletedRides = () => {
           </Card>
         </div>
       )}
+
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <FilterBar
+          filters={[
+            {
+              key: "startDate",
+              label: "Start Date",
+              type: "date",
+              value: startDate,
+              onChange: (val) => { setStartDate(val); setPage(1); },
+            },
+            {
+              key: "endDate",
+              label: "End Date",
+              type: "date",
+              value: endDate,
+              onChange: (val) => { setEndDate(val); setPage(1); },
+            },
+          ]}
+          onClear={() => {
+            setSearch("");
+            setStartDate("");
+            setEndDate("");
+            setPage(1);
+          }}
+        />
+      </div>
 
       <DataTable
         data={rides}

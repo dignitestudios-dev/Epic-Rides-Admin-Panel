@@ -12,6 +12,8 @@ import {
   Loader2,
   Search,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -27,6 +29,8 @@ import { formatDateTime, downloadCSV } from "../utils/helpers";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import { useAuth } from "../contexts/AuthContext";
+import { USER_ROLES } from "../config/constants";
 
 // ── Status Badge Helper ───────────────────────────────────────────────────────
 
@@ -69,7 +73,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
       setUsers((prev) => reset ? fetched : [...prev, ...fetched]);
       const totalPages = res.pagination?.totalPages || 1;
       setHasMore(pageNum < totalPages);
-    } catch {}
+    } catch { }
     finally {
       setLoading(false);
       setLoadingMore(false);
@@ -140,16 +144,14 @@ const UserPicker = ({ type, selectedId, onChange }) => {
                 <div
                   key={id}
                   onClick={() => onChange(isSelected ? null : id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${
-                    isSelected
+                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${isSelected
                       ? "bg-primary-50 dark:bg-primary-900/20"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                  }`}
+                    }`}
                 >
                   {/* Radio indicator */}
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${
-                    isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
-                  }`}>
+                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
+                    }`}>
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                   </div>
                   <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
@@ -187,6 +189,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 const Notifications = () => {
+  const { hasRole, hasPermission } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = usePersistentState("notifications_page", 1);
@@ -204,6 +207,10 @@ const Notifications = () => {
   const [previewData, setPreviewData] = useState(null);
   const [sending, setSending] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [fetchingDetail, setFetchingDetail] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingNotification, setEditingNotification] = useState(null);
+  const [updating, setUpdating] = useState(false);
 
   const {
     register,
@@ -227,6 +234,24 @@ const Notifications = () => {
   const watchDeliveryType = watch("deliveryType");
 
   const isSpecific = watchAudienceType === "rider_only" || watchAudienceType === "driver_only";
+
+  const {
+    register: registerEdit,
+    handleSubmit: handleSubmitEdit,
+    reset: resetEdit,
+    watch: watchEdit,
+    formState: { errors: errorsEdit },
+  } = useForm({
+    defaultValues: {
+      title: "",
+      message: "",
+      recipientType: "both",
+      scheduledFor: "",
+    },
+  });
+
+  const watchEditTitle = watchEdit("title") || "";
+  const watchEditMessage = watchEdit("message") || "";
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
@@ -263,9 +288,79 @@ const Notifications = () => {
     downloadCSV(rows, "notifications_export");
   };
 
-  const handleView = (n) => {
+  const handleView = async (n) => {
     setSelectedNotification(n);
     setShowDetailModal(true);
+    try {
+      setFetchingDetail(true);
+      const res = await api.getNotificationById(n.id || n._id);
+      if (res.data) {
+        setSelectedNotification(res.data);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setFetchingDetail(false);
+    }
+  };
+
+  const handleEdit = async (n) => {
+    try {
+      const res = await api.getNotificationById(n.id || n._id);
+      const fullData = res.data || n;
+      setEditingNotification(fullData);
+      const dateStr = fullData.scheduledFor || fullData.dateAndTime;
+      let localDatetime = "";
+      if (dateStr) {
+        const d = new Date(dateStr);
+        if (!isNaN(d.getTime())) {
+          const tzOffset = d.getTimezoneOffset() * 60000;
+          localDatetime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
+        }
+      }
+
+      resetEdit({
+        title: fullData.title,
+        message: fullData.message || fullData.messagePreview || "",
+        recipientType: fullData.recipientType?.toLowerCase() || "both",
+        scheduledFor: localDatetime,
+      });
+      setShowEditModal(true);
+    } catch (err) {
+      toast.error("Failed to fetch notification details.");
+    }
+  };
+
+  const onEditSubmit = async (data) => {
+    if (!editingNotification) return;
+    setUpdating(true);
+    try {
+      const payload = {
+        title: data.title,
+        message: data.message,
+        recipientType: data.recipientType,
+        scheduledFor: new Date(data.scheduledFor).toISOString(),
+      };
+      await api.updateNotification(editingNotification.id || editingNotification._id, payload);
+      toast.success("Notification updated successfully!");
+      setShowEditModal(false);
+      fetchNotifications();
+    } catch (err) {
+      toast.error(err.message || "Failed to update notification");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this scheduled notification?")) return;
+    try {
+      await api.deleteNotification(id);
+      toast.success("Notification deleted successfully");
+      fetchNotifications();
+    } catch (err) {
+      toast.error(err.message || "Failed to delete notification");
+    }
   };
 
   const handlePreview = (formValues) => {
@@ -288,8 +383,8 @@ const Notifications = () => {
         recipientType: previewData.audienceType === "both"
           ? "both"
           : previewData.audienceType === "riders" || previewData.audienceType === "rider_only"
-          ? "rider"
-          : "driver",
+            ? "riders"
+            : "drivers",
       };
       if (specific && previewData.recipientId) {
         payload.recipientId = previewData.recipientId;
@@ -366,9 +461,17 @@ const Notifications = () => {
       key: "actions",
       label: "Actions",
       render: (_, row) => (
-        <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => handleView(row)}>
-          View
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => handleView(row)}>
+            View
+          </Button>
+          {row.status?.toLowerCase() === "scheduled" && (
+            <>
+              <Button variant="ghost" size="sm" icon={<Edit className="w-4 h-4 text-blue-600" />} onClick={() => handleEdit(row)} />
+              <Button variant="ghost" size="sm" icon={<Trash2 className="w-4 h-4 text-red-600" />} onClick={() => handleDelete(row.id || row._id)} />
+            </>
+          )}
+        </div>
       ),
     },
   ];
@@ -386,16 +489,20 @@ const Notifications = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
-            Export CSV
-          </Button>
-          <Button
-            variant="primary"
-            icon={<Plus className="w-4 h-4" />}
-            onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
-          >
-            Send Notification
-          </Button>
+          {hasPermission('downloadExcel') && (
+            <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+              Export CSV
+            </Button>
+          )}
+          {hasPermission('sendNotifications') && (
+            <Button
+              variant="primary"
+              icon={<Plus className="w-4 h-4" />}
+              onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
+            >
+              Send Notification
+            </Button>
+          )}
         </div>
       </div>
 
@@ -446,7 +553,8 @@ const Notifications = () => {
               { value: "rider_only", label: "Rider Only (Single)" },
               { value: "driver_only", label: "Driver Only (Single)" },
             ]}
-            {...register("audienceType", { required: "Recipient type is required",
+            {...register("audienceType", {
+              required: "Recipient type is required",
               onChange: () => setSelectedUserId(null),
             })}
             error={errors.audienceType?.message}
@@ -490,13 +598,13 @@ const Notifications = () => {
               label="Message"
               {...register("message", {
                 required: "Message is required",
-                maxLength: { value: 200, message: "Max 200 characters" },
+                maxLength: { value: 500, message: "Max 500 characters" },
               })}
               rows={4}
               placeholder="Enter the notification message..."
               error={errors.message?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/200</p>
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/500</p>
           </div>
 
           {/* Delivery — hidden for single user */}
@@ -572,8 +680,8 @@ const Notifications = () => {
                   {previewData.audienceType === "rider_only"
                     ? "1 Rider"
                     : previewData.audienceType === "driver_only"
-                    ? "1 Driver"
-                    : previewData.audienceType}
+                      ? "1 Driver"
+                      : previewData.audienceType}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -615,16 +723,21 @@ const Notifications = () => {
         title="Notification Details"
         size="md"
       >
-        {selectedNotification && (
+        {fetchingDetail ? (
+          <div className="flex items-center justify-center py-10 gap-2 text-gray-400">
+            <Loader2 className="w-6 h-6 animate-spin" />
+            <span>Loading details...</span>
+          </div>
+        ) : selectedNotification ? (
           <div className="space-y-5">
             <div className="bg-gray-50 rounded-xl p-5 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base font-bold text-gray-900">{selectedNotification.title}</h3>
-                <Badge variant={statusVariant(selectedNotification.status)}>
+                <h3 className="text-base  font-bold text-gray-900">{selectedNotification.title}</h3>
+                <Badge className="capitalize" variant={statusVariant(selectedNotification.status)}>
                   {selectedNotification.status}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">{selectedNotification.messagePreview}</p>
+              <p className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap">{selectedNotification.message || selectedNotification.messagePreview}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -638,7 +751,7 @@ const Notifications = () => {
               <div className="bg-white rounded-xl border border-gray-100 p-3">
                 <p className="text-xs text-gray-400 mb-1 font-medium">Date &amp; Time</p>
                 <p className="font-semibold text-gray-800">
-                  {selectedNotification.dateAndTime ? formatDateTime(selectedNotification.dateAndTime) : "—"}
+                  {selectedNotification.dateAndTime || selectedNotification.scheduledFor ? formatDateTime(selectedNotification.dateAndTime || selectedNotification.scheduledFor) : "—"}
                 </p>
               </div>
             </div>
@@ -647,7 +760,67 @@ const Notifications = () => {
               <Button variant="ghost" onClick={() => setShowDetailModal(false)}>Close</Button>
             </div>
           </div>
-        )}
+        ) : null}
+      </Modal>
+
+      {/* ── Edit Scheduled Notification Modal ─────────────────────────────────── */}
+      <Modal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Scheduled Notification"
+        size="md"
+      >
+        <form onSubmit={handleSubmitEdit(onEditSubmit)} className="space-y-5">
+          <Select
+            label="Recipient Type"
+            options={[
+              { value: "both", label: "Both (Riders & Drivers)" },
+              { value: "drivers", label: "Drivers Only" },
+              { value: "riders", label: "Riders Only" },
+            ]}
+            value={watchEdit("recipientType")}
+            {...registerEdit("recipientType", { required: "Recipient type is required" })}
+            error={errorsEdit.recipientType?.message}
+          />
+          <div>
+            <Input
+              label="Notification Title"
+              {...registerEdit("title", {
+                required: "Title is required",
+                maxLength: { value: 60, message: "Max 60 characters" },
+              })}
+              error={errorsEdit.title?.message}
+            />
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditTitle.length}/60</p>
+          </div>
+          <div>
+            <TextArea
+              label="Message"
+              {...registerEdit("message", {
+                required: "Message is required",
+                maxLength: { value: 500, message: "Max 500 characters" },
+              })}
+              rows={4}
+              error={errorsEdit.message?.message}
+            />
+            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditMessage.length}/500</p>
+          </div>
+          <Input
+            min={new Date().toISOString().slice(0, 16)}
+            label="Scheduled Date & Time"
+            type="datetime-local"
+            {...registerEdit("scheduledFor", { required: "Schedule date/time is required" })}
+            error={errorsEdit.scheduledFor?.message}
+          />
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="ghost" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={updating} disabled={updating}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

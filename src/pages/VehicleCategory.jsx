@@ -71,6 +71,7 @@ const VehicleCategoryManagement = () => {
     reset,
     control,
     clearErrors,
+    setError,
     formState: { errors },
   } = useForm({ defaultValues });
 
@@ -187,6 +188,19 @@ const VehicleCategoryManagement = () => {
 
   const onSubmit = async (data) => {
     try {
+      // Check for duplicate model name on the frontend
+      const isDuplicate = vehicleTypes?.some(
+        (v) => v.model.toLowerCase().trim() === data.model.toLowerCase().trim() && v._id !== editingVehicle?._id
+      );
+
+      if (isDuplicate) {
+        setError("model", {
+          type: "manual",
+          message: "This vehicle model already exists.",
+        });
+        return;
+      }
+
       if (editingVehicle) {
         const payload = {
           rideType: data.rideType,
@@ -334,9 +348,11 @@ const VehicleCategoryManagement = () => {
           <TextArea
             label="Notes"
             placeholder="Add any notes here..."
-            {...register("notes")}
+            maxLength={200}
+            {...register("notes", { maxLength: { value: 200, message: "Notes cannot exceed 200 characters" } })}
             disabled={loadingCreate || loadingActions}
             rows={3}
+            error={errors.notes?.message}
           />
 
           <div className="flex justify-end space-x-3 pt-4">

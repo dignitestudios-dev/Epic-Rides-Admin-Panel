@@ -21,6 +21,7 @@ import { formatDate, downloadCSV } from "../utils/helpers";
 import useGetSubscriptionRevenue from "../hooks/revenue/useGetSubscriptionRevenue";
 import useGetWithdrawalRevenue from "../hooks/revenue/useGetWithdrawalRevenue";
 import useDebounce from "../hooks/global/useDebounce";
+import { useAuth } from "../contexts/AuthContext";
 
 /* =========================
    DATE HELPERS
@@ -44,6 +45,7 @@ const isValidRange = (start, end) => start && end;
 ========================= */
 const Revenue = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState("subscription");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -210,9 +212,9 @@ const Revenue = () => {
     { key: "email", label: "Email" },
     {
       key: "subscriptionStatus",
-      label: "subscription Status",
+      label: "Subscription Status",
       render: (v) => (
-        <Badge className="ml-10" variant={v === "active" ? "success" : "danger"}>
+        <Badge className="ml-10 capitalize" variant={v === "active" ? "success" : "danger"}>
           {v}
         </Badge>
       ),
@@ -292,9 +294,11 @@ const Revenue = () => {
       {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Revenue Management</h1>
-        <Button onClick={handleExport}>
-          Export CSV
-        </Button>
+        {hasPermission('downloadExcel') && (
+          <Button onClick={handleExport}>
+            Export CSV
+          </Button>
+        )}
       </div>
 
       {/* TABS */}

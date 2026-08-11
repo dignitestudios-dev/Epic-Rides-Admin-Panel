@@ -53,12 +53,15 @@ import RiderDetail from "./pages/RiderDetail";
 import DriverDetail from "./pages/DriverDetail";
 
 import Revenue from "./pages/Revenue";
-import PromoCodes from "./pages/PromoCodes";
+import Campaigns from "./pages/Campaigns";
+import CampaignDetail from "./pages/CampaignDetail";
 import CancelledRides from "./pages/CancelledRides";
 import CompletedRides from "./pages/CompletedRides";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
+import AdminUsers from "./pages/AdminUsers";
+import { USER_ROLES } from "./config/constants";
 
 const SessionTimeoutModal = () => {
   const { showTimeoutModal, setShowTimeoutModal } = useAuth();
@@ -136,8 +139,20 @@ function App() {
 
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route
+                          path="/admin-users"
+                          element={
+                            <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                              <AdminUsers />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
                           path="/change-password"
-                          element={<ChangePassword />}
+                          element={
+                            <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                              <ChangePassword />
+                            </ProtectedRoute>
+                          }
                         />
 
                         {/* <Route path="/products">
@@ -156,16 +171,28 @@ function App() {
                         />
                         <Route
                           path="/vehicle-category"
-                          element={<VehicleCategoryManagement />}
+                          element={
+                            <ProtectedRoute requiredPermission="vehicleCategory">
+                              <VehicleCategoryManagement />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route path="/orders" element={<Orders />} />
                         <Route
                           path="/driver-requests"
-                          element={<DriverRequests />}
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <DriverRequests />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route
                           path="/driver/:id"
-                          element={<DriverDetails />}
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <DriverDetails />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route
                           path="/content-management"
@@ -176,10 +203,46 @@ function App() {
                           path="/reports-management"
                           element={<SupportTickets />}
                         />
-                        <Route path="/revenue" element={<Revenue />} />
-                        <Route path="/promo-codes" element={<PromoCodes />} />
-                        <Route path="/ride-rates" element={<RideRates />} />
-                        <Route path="/peak-windows" element={<PeakWindows />} />
+                        <Route
+                          path="/revenue"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <Revenue />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/campaigns"
+                          element={
+                            <ProtectedRoute requiredPermission="promos">
+                              <Campaigns />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/campaigns/:id"
+                          element={
+                            <ProtectedRoute requiredPermission="promos">
+                              <CampaignDetail />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/ride-rates"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <RideRates />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/peak-windows"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <PeakWindows />
+                            </ProtectedRoute>
+                          }
+                        />
                         <Route path="/cancelled-rides" element={<CancelledRides />} />
                         <Route path="/completed-rides" element={<CompletedRides />} />
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
@@ -189,7 +252,11 @@ function App() {
                         />
                         <Route
                           path="/notifications"
-                          element={<Notifications />}
+                          element={
+                            <ProtectedRoute requiredPermission="sendNotifications">
+                              <Notifications />
+                            </ProtectedRoute>
+                          }
                         />
                         <Route path="/history" element={<Emergencies />} />
                         <Route
@@ -209,7 +276,11 @@ function App() {
                           />
                           <Route
                             path="change-password"
-                            element={<ChangePassword />}
+                            element={
+                              <ProtectedRoute requiredRole={USER_ROLES.SUPER_ADMIN}>
+                                <ChangePassword />
+                              </ProtectedRoute>
+                            }
                           />
                           <Route path="configs" element={<Configurations />} />
                         </Route>

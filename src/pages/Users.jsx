@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Users as UsersIcon, UserCheck, Eye, Loader2, Download } from "lucide-react";
 import DataTable from "../components/common/DataTable";
 import Button from "../components/ui/Button";
@@ -14,6 +14,7 @@ import FilterBar from "../components/ui/FilterBar";
 import { usePersistentState } from "../hooks/global/usePersistentState";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
 
 const EXPORT_FIELDS = [
   { key: "firstName",   label: "First Name" },
@@ -153,13 +154,20 @@ const Users = () => {
   );
 
   const { loading: loadingAction, updateStatus } = useUserActions();
+  const { hasPermission } = useAuth();
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setCurrentPage(1);
   };
 
+  const isFirstRender = useRef(true);
+
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     setCurrentPage(1);
   }, [debouncedSearch, startDate, endDate]);
 
@@ -201,7 +209,7 @@ const Users = () => {
       render: (value) => {
         const v = value?.toLowerCase();
         const variant = v === "active" ? "success" : v === "expired" ? "danger" : "warning";
-        return <Badge variant={variant}>{value === null ? "unpaid" : value === "active" ? "paid" : "unpaid"}</Badge>;
+        return <Badge variant={variant}>{value === null ? "Unpaid" : value?.toLowerCase() === "active" ? "Paid" : "Unpaid"}</Badge>;
       },
     }] : []),
     {
@@ -212,7 +220,7 @@ const Users = () => {
           <Badge variant={value?.toLowerCase() === "active" ? "success" : "danger"}>{value}</Badge>
           <button
             onClick={() => handleStatusToggle(row)}
-            disabled={loadingAction}
+            disabled={loadingAction || !hasPermission('manageUsers')}
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
               value?.toLowerCase() === "active" ? "bg-[#39A300]" : "bg-gray-200"
             }`}
@@ -251,13 +259,15 @@ const Users = () => {
             Manage your riders and drivers across the platform
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={() => setExportOpen(true)}
-        >
-          Export CSV
-        </Button>
+        {hasPermission('downloadExcel') && (
+          <Button
+            variant="primary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={() => setExportOpen(true)}
+          >
+            Export CSV
+          </Button>
+        )}
       </div>
 
       <div className="flex border-b border-gray-200">

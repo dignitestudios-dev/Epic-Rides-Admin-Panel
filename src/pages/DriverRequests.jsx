@@ -6,15 +6,16 @@ import useGetDrivers from "../hooks/drivers/useGetDrivers";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import FilterBar from "../components/ui/FilterBar";
-import { 
-  CheckCircle, 
-  Clock, 
-  FileText, 
-  Download, 
-  Eye, 
+import {
+  CheckCircle,
+  Clock,
+  FileText,
+  Download,
+  Eye,
   AlertCircle
 } from "lucide-react";
 import { downloadCSV, formatDate } from "../utils/helpers";
+import { useAuth } from "../contexts/AuthContext";
 
 const statuses = [
   { value: "pending", label: "Pending" },
@@ -23,6 +24,7 @@ const statuses = [
 
 const DriverRequests = () => {
   const navigate = useNavigate();
+  const { hasPermission } = useAuth();
 
   const [statusFilter, setStatusFilter] = useState("");
   const [search, setSearch] = useState("");
@@ -46,7 +48,7 @@ const DriverRequests = () => {
 
   const handleExport = () => {
     if (!drivers || drivers.length === 0) return;
-    
+
     const dataToExport = drivers.map(driver => ({
       ID: driver._id,
       Name: [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "—",
@@ -130,12 +132,13 @@ const DriverRequests = () => {
       key: "requiresApproval",
       label: "Current Status",
       render: (val) => {
-      console.log(val)  
-        return(
-        <div className="flex items-center gap-3">
-          {getStatusBadge(val)}
-        </div>
-      )},
+        console.log(val)
+        return (
+          <div className="flex items-center gap-3">
+            {getStatusBadge(val)}
+          </div>
+        )
+      },
     },
     {
       key: "action",
@@ -164,13 +167,15 @@ const DriverRequests = () => {
             Review and manage driver registration requests and document verification.
           </p>
         </div>
-        <Button
-          variant="primary"
-          icon={<Download className="w-4 h-4" />}
-          onClick={handleExport}
-        >
-          Export CSV
-        </Button>
+        {hasPermission('downloadExcel') && (
+          <Button
+            variant="primary"
+            icon={<Download className="w-4 h-4" />}
+            onClick={handleExport}
+          >
+            Export CSV
+          </Button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
@@ -204,10 +209,10 @@ const DriverRequests = () => {
       </div>
 
       <Card className="overflow-hidden">
-        <DataTable 
+        <DataTable
           title="Verification Requests"
-          data={drivers} 
-          columns={columns} 
+          data={drivers}
+          columns={columns}
           loading={loading}
           totalPages={totalPages}
           totalData={totalData}

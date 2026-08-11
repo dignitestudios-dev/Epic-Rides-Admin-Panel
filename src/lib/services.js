@@ -12,6 +12,8 @@ const API = axios.create({
   headers: API_CONFIG.headers,
 });
 
+
+
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -250,6 +252,18 @@ const getAllVehicleTypes = (
     return API.get(url);
   });
 
+// Admin Users API
+const createAdminUser = (data) => apiHandler(() => API.post(`/admin-users`, data));
+const getAdminUsers = (page = 1, limit = 10, role = "", search = "", sort = "desc") =>
+  apiHandler(() => {
+    let url = `/admin-users?page=${page}&limit=${limit}&sort=${sort}`;
+    if (role) url += `&role=${role}`;
+    if (search) url += `&search=${search}`;
+    return API.get(url);
+  });
+const updateAdminUser = (id, data) => apiHandler(() => API.patch(`/admin-users/${id}`, data));
+const deleteAdminUser = (id) => apiHandler(() => API.delete(`/admin-users/${id}`));
+
 const createVehicleType = (payload) =>
   apiHandler(() => API.post("/vehicle-types", payload));
 
@@ -389,11 +403,22 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
-const getRides = (page = 1, limit = 10, search = "", rideStatus = "") =>
+const getNotificationById = (id) =>
+  apiHandler(() => API.get(`/notifications/${id}`));
+
+const updateNotification = (id, payload) =>
+  apiHandler(() => API.patch(`/notifications/${id}`, payload));
+
+const deleteNotification = (id) =>
+  apiHandler(() => API.delete(`/notifications/${id}`));
+
+const getRides = (page = 1, limit = 10, search = "", rideStatus = "", startDate = "", endDate = "") =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (rideStatus) url += `&rideStatus=${rideStatus}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -402,22 +427,49 @@ const resolveReport = (id, adminNotes = "") =>
 
 const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
-const exportRides = (status) => {
-  return API.get(`/rides/export?status=${status}`, { responseType: "blob" });
+const exportRides = (status, startDate = "", endDate = "") => {
+  let url = `/rides/export?status=${status}`;
+  if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+  if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+  return API.get(url, { responseType: "blob" });
 };
 
-// Promo Codes API
-const getPromoCodes = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
-  apiHandler(() => API.get(`/promo-code?page=${page}&limit=${limit}`));
+// Campaigns API
+const getCampaigns = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, status = "") => {
+  let url = `/campaigns?page=${page}&limit=${limit}`;
+  if (status) url += `&status=${status}`;
+  return apiHandler(() => API.get(url));
+};
 
-const createPromoCode = (payload) =>
-  apiHandler(() => API.post("/promo-code", payload));
+const getCampaignById = (id) =>
+  apiHandler(() => API.get(`/campaigns/${id}`));
 
-const updatePromoCode = (id, payload) =>
-  apiHandler(() => API.patch(`/promo-code/${id}`, payload));
+const createCampaign = (payload) =>
+  apiHandler(() => API.post("/campaigns", payload));
 
-const deletePromoCode = (id) =>
-  apiHandler(() => API.delete(`/promo-code/${id}`));
+const updateCampaign = (id, payload) =>
+  apiHandler(() => API.patch(`/campaigns/${id}`, payload));
+
+const updateCampaignStatus = (id, status) =>
+  apiHandler(() => API.patch(`/campaigns/${id}/status`, { status }));
+
+const deleteCampaign = (id) =>
+  apiHandler(() => API.delete(`/campaigns/${id}`));
+
+const getCampaignStats = (id) =>
+  apiHandler(() => API.get(`/campaigns/${id}/stats`));
+
+const getCampaignRedemptions = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "") => {
+  let url = `/campaigns/${id}/redemptions?page=${page}&limit=${limit}`;
+  if (search) url += `&search=${search}`;
+  return apiHandler(() => API.get(url));
+};
+
+const getGeneratedCodes = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
+  apiHandler(() => API.get(`/campaigns/${id}/codes?page=${page}&limit=${limit}`));
+
+const getUserRedemptionHistory = (campaignId, userId) =>
+  apiHandler(() => API.get(`/campaigns/${campaignId}/redemptions/${userId}`));
 
 // Ride Rates & Peak Windows API
 const getRideRates = () => apiHandler(() => API.get("/ride-rates"));
@@ -484,16 +536,29 @@ export const api = {
   deleteVehicleType,
   getReports,
   resolveReport,
+  createAdminUser,
+  getAdminUsers,
+  updateAdminUser,
+  deleteAdminUser,
   getReportById,
   getNotifications,
   sendNotification,
   getAdminNotifications,
+  getNotificationById,
+  updateNotification,
+  deleteNotification,
   getRides,
   exportRides,
-  getPromoCodes,
-  createPromoCode,
-  updatePromoCode,
-  deletePromoCode,
+  getCampaigns,
+  getCampaignById,
+  createCampaign,
+  updateCampaign,
+  updateCampaignStatus,
+  deleteCampaign,
+  getCampaignStats,
+  getCampaignRedemptions,
+  getGeneratedCodes,
+  getUserRedemptionHistory,
   getRideRates,
   updateRideRate,
   getPeakWindows,
