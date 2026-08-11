@@ -382,10 +382,9 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
             >
               {isLuxury ? "✦ Luxury" : "Economy"}
             </Badge>
-            <span
-              className={`text-[10px] font-medium ${
-                isOnTrip ? "text-blue-600" : "text-green-600"
-              }`}
+            <Badge
+              variant={isOnTrip ? "info" : "success"}
+              className="text-[10px] px-1.5 py-0.5"
             >
               {isOnTrip ? "On Trip" : "Available"}
             </Badge>
@@ -452,9 +451,7 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           </div>
           {/* Status dot */}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-              rider.rideStatus === "accepted" ? "bg-blue-500" : rider.rideStatus === "requested" ? "bg-amber-500" : "bg-gray-400"
-            }`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusInfo.dotBg}`}
           />
         </div>
 
@@ -651,12 +648,15 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
 
         {/* Pickup Info */}
         <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
-              <MapPin className="w-4 h-4" /> Pickup Details
+          <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+            <MapPin className="w-4 h-4" /> Pickup Details
+          </p>
+          <div className="text-gray-600 text-sm">
+            <p>
+              <span className="font-medium text-gray-500 mr-2">Place: </span>
+              {rider?.pickupPlaceName || "—"}
             </p>
-            <div className="text-gray-600 text-sm">
-              <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
-            </div>
+          </div>
         </div>
 
         {/* Location */}
