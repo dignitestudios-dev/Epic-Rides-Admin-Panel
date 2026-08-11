@@ -3,8 +3,8 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -276,7 +276,10 @@ const getUsers = (
     return API.get(url);
   });
 
-const exportUsers = (type, { status, sort, startDate, endDate, search, fields } = {}) => {
+const exportUsers = (
+  type,
+  { status, sort, startDate, endDate, search, fields } = {},
+) => {
   const params = new URLSearchParams();
   params.append("type", type);
   if (status) params.append("status", status);
@@ -286,7 +289,9 @@ const exportUsers = (type, { status, sort, startDate, endDate, search, fields } 
   if (search) params.append("search", search);
   if (fields?.length) fields.forEach((f) => params.append("fields", f));
   // Bypass apiHandler — response is raw CSV, not JSON with {success}
-  return API.get(`/users/export?${params.toString()}`, { responseType: "blob" });
+  return API.get(`/users/export?${params.toString()}`, {
+    responseType: "blob",
+  });
 };
 
 const getDrivers = (
@@ -311,18 +316,17 @@ const updateUserStatus = (id, type, status) =>
   apiHandler(() => API.patch(`/users/${id}/status`, { type, status }));
 
 const updateUser = (id, data) =>
-  apiHandler(() =>
-    API.patch(`/users/${id}`, data),
-  );
+  apiHandler(() => API.patch(`/users/${id}`, data));
 
 const deleteUser = (id, type) =>
   apiHandler(() => API.delete(`/users/${id}?type=${type}`));
 
 const getDriverTransactions = (driverId, page = 1, limit = 10) =>
-  apiHandler(() => API.get(`/drivers/${driverId}/transactions?page=${page}&limit=${limit}`));
+  apiHandler(() =>
+    API.get(`/drivers/${driverId}/transactions?page=${page}&limit=${limit}`),
+  );
 
-const getBirdsEyeView = () =>
-  apiHandler(() => API.get("/birds-eye-view"));
+const getBirdsEyeView = () => apiHandler(() => API.get("/birds-eye-view"));
 
 const getSubscriptionRevenue = (
   page = 1,
