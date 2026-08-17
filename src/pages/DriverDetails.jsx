@@ -820,10 +820,7 @@ const DriverDetails = () => {
       lastName: userDetails?.fullDetails?.lastName || "",
       email: pInfo?.email || userDetails?.fullDetails?.email || "",
       subscriptionStatus: userDetails?.fullDetails?.subscriptionStatus || "",
-      balance:
-        userDetails?.walletBalance !== undefined
-          ? userDetails.walletBalance
-          : (userDetails?.fullDetails?.balance ?? ""),
+      balance: 0,
     }),
     [userDetails, pInfo],
   );

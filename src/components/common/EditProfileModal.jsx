@@ -3,6 +3,7 @@ import Modal from "../ui/Modal";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
+import { AlertCircle } from "lucide-react";
 import { api } from "../../lib/services";
 import { handleError, handleSuccess } from "../../utils/helpers";
 
@@ -35,10 +36,11 @@ const EditProfileModal = ({
     lastName: "",
     email: "",
     subscriptionStatus: "",
-    balance: "",
+    balance: "0",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && initialData) {
@@ -48,12 +50,10 @@ const EditProfileModal = ({
         lastName: initialData.lastName || "",
         email: initialData.email || "",
         subscriptionStatus: initialData.subscriptionStatus == "Expired" ? "canceled" : "active" || "",
-        balance:
-          initialData.balance !== undefined && initialData.balance !== null
-            ? String(Math.round(Number(initialData.balance) * 100) / 100)
-            : "",
+        balance: "0",
       });
       setErrors({});
+      setConfirmModalOpen(false);
     }
   }, [isOpen, initialData]);
 
@@ -107,7 +107,7 @@ const EditProfileModal = ({
     return newErrors;
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
     const validationErrors = validate();
@@ -116,6 +116,10 @@ const EditProfileModal = ({
       return;
     }
 
+    setConfirmModalOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
     const payload = { type };
     if (form.firstName.trim()) payload.firstName = form.firstName.trim();
     if (form.lastName.trim()) payload.lastName = form.lastName.trim();
@@ -126,7 +130,8 @@ const EditProfileModal = ({
     setLoading(true);
     try {
       const response = await api.updateUser(userId, payload);
-      handleSuccess(response.message, "Profile updated successfully");
+      handleSuccess(response?.message, "Profile updated successfully");
+      setConfirmModalOpen(false);
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -137,98 +142,146 @@ const EditProfileModal = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile" size="md">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Name */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Input
-              label="First Name *"
-              name="firstName"
-              value={form.firstName}
-              onChange={handleChange}
-              placeholder="First name"
-              error={errors.firstName}
-              maxLength={LIMITS.firstName}
-            />
-            <p className="text-xs text-gray-400 text-right mt-0.5">
-              {form.firstName.length}/{LIMITS.firstName}
-            </p>
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title="Edit Profile" size="md">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Input
+                label="First Name *"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                placeholder="First name"
+                error={errors.firstName}
+                maxLength={LIMITS.firstName}
+              />
+              <p className="text-xs text-gray-400 text-right mt-0.5">
+                {form.firstName.length}/{LIMITS.firstName}
+              </p>
+            </div>
+            <div>
+              <Input
+                label="Last Name"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                placeholder="Last name"
+                error={errors.lastName}
+                maxLength={LIMITS.lastName}
+              />
+              <p className="text-xs text-gray-400 text-right mt-0.5">
+                {form.lastName.length}/{LIMITS.lastName}
+              </p>
+            </div>
           </div>
-          <div>
-            <Input
-              label="Last Name"
-              name="lastName"
-              value={form.lastName}
-              onChange={handleChange}
-              placeholder="Last name"
-              error={errors.lastName}
-              maxLength={LIMITS.lastName}
-            />
-            <p className="text-xs text-gray-400 text-right mt-0.5">
-              {form.lastName.length}/{LIMITS.lastName}
-            </p>
-          </div>
-        </div>
 
-        {/* Email */}
-        <div>
+          {/* Email */}
+          <div>
+            <Input
+              label="Email *"
+              name="email"
+              type="text"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="email@example.com"
+              error={errors.email}
+              maxLength={LIMITS.email}
+            />
+            <p className="text-xs text-gray-400 text-right mt-0.5">
+              {form.email.length}/{LIMITS.email}
+            </p>
+          </div>
+
+          {/* Subscription Status */}
+          {type === "driver" && (
+            <Select
+              label="Subscription Status"
+              name="subscriptionStatus"
+              value={form.subscriptionStatus}
+              onChange={handleChange}
+              options={SUBSCRIPTION_OPTIONS}
+              placeholder="Select status..."
+            />
+          )}
+
+          {/* Balance */}
           <Input
-            label="Email *"
-            name="email"
-            type="text"
-            value={form.email}
+            label="Add Balance (Points)"
+            name="balance"
+            type="number"
+            min="0"
+            max={LIMITS.balance}
+            step="0.01"
+            value={form.balance}
             onChange={handleChange}
-            placeholder="email@example.com"
-            error={errors.email}
-            maxLength={LIMITS.email}
+            placeholder="0.00"
+            error={errors.balance}
           />
-          <p className="text-xs text-gray-400 text-right mt-0.5">
-            {form.email.length}/{LIMITS.email}
-          </p>
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary" loading={loading}>
+              Save Changes
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Confirm Changes"
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">
+                Are you sure you want to save these changes?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {Number(form.balance) > 0 ? (
+                  <>This will update profile details and add <strong className="text-gray-900 dark:text-white">{form.balance}</strong> points to the user balance.</>
+                ) : (
+                  <>This action will update the profile details for this user.</>
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setConfirmModalOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleConfirmSave}
+              loading={loading}
+            >
+              Yes, Save Changes
+            </Button>
+          </div>
         </div>
-
-        {/* Subscription Status */}
-        {type === "driver" && (
-          <Select
-            label="Subscription Status"
-            name="subscriptionStatus"
-            value={form.subscriptionStatus}
-            onChange={handleChange}
-            options={SUBSCRIPTION_OPTIONS}
-            placeholder="Select status..."
-          />
-        )}
-
-        {/* Balance */}
-        <Input
-          label="Balance (Points)"
-          name="balance"
-          type="number"
-          min="0"
-          max={LIMITS.balance}
-          step="0.01"
-          value={form.balance}
-          onChange={handleChange}
-          placeholder="0.00"
-          error={errors.balance}
-        />
-
-        <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="primary" loading={loading}>
-            Save Changes
-          </Button>
-        </div>
-      </form>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 

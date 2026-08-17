@@ -42,10 +42,7 @@ const RiderDetail = () => {
       lastName: details?.fullDetails?.lastName || "",
       email: details?.personalInfo?.email || details?.fullDetails?.email || "",
       subscriptionStatus: details?.fullDetails?.subscriptionStatus || "",
-      balance:
-        details?.walletBalance !== undefined
-          ? details.walletBalance
-          : (details?.fullDetails?.balance ?? ""),
+      balance: 0,
     }),
     [details],
   );
@@ -273,14 +270,23 @@ const RiderDetail = () => {
         {/* Right Column: Stats & History */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stats Cards */}
-          <div className="mb-4">
+          <div className={`mb-4 grid gap-4 ${details?.rewardedBalance != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <StatsCard
               title="Wallet Balance"
-              value={`$${walletBalance.toFixed(2) || 0}`}
+              value={`$${(walletBalance || 0).toFixed(2)}`}
               icon={<Wallet />}
               colored
               index={3}
             />
+            {details?.rewardedBalance != null && (
+              <StatsCard
+                title="Rewarded Balance"
+                value={`$${(details?.rewardedBalance || 0).toFixed(2)}`}
+                icon={<Wallet />}
+                colored
+                index={4}
+              />
+            )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatsCard
