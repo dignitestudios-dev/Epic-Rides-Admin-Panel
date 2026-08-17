@@ -281,12 +281,61 @@ const flyToMap = (map, targetPos, targetZoom = 16, duration = 1500) => {
   requestAnimationFrame(animate);
 };
 
+// ── Status Mapping Helper ───────────────────────────────────────────────────
+const getStatusInfo = (rawStatus) => {
+  if (!rawStatus) {
+    return {
+      category: "idle",
+      label: "Idle",
+      dotBg: "bg-gray-400",
+      textColor: "text-gray-500",
+      badgeVariant: "default",
+    };
+  }
+  const s = String(rawStatus).toLowerCase().trim().replace(/_/g, "-");
+  if (s === "requested") {
+    return {
+      category: "requested",
+      label: "Requested",
+      dotBg: "bg-amber-500",
+      textColor: "text-amber-600",
+      badgeVariant: "warning",
+    };
+  }
+  if (s === "accepted") {
+    return {
+      category: "accepted",
+      label: "Accepted",
+      dotBg: "bg-green-500",
+      textColor: "text-green-600",
+      badgeVariant: "success",
+    };
+  }
+  if (s === "arrived" || s === "in-progress" || s === "inprogress" || s === "coming") {
+    return {
+      category: "on-trip",
+      label: "On Trip",
+      dotBg: "bg-blue-500",
+      textColor: "text-blue-600",
+      badgeVariant: "info",
+    };
+  }
+  // completed, cancelled, canceled, expired, null / empty
+  return {
+    category: "idle",
+    label: "Idle",
+    dotBg: "bg-gray-400",
+    textColor: "text-gray-500",
+    badgeVariant: "default",
+  };
+};
+
 // ── Driver sidebar card ───────────────────────────────────────────────────────
 const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
   const name =
-    [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "Unknown";
-  const isLuxury = driver.vehicleType?.toLowerCase() === "luxury";
-  const isOnTrip = !!driver.activeRideId;
+    [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const isLuxury = driver?.vehicleType?.toLowerCase() === "luxury";
+  const isOnTrip = !!driver?.activeRideId;
 
   return (
     <div
@@ -299,7 +348,7 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-            {driver.profilePicture ? (
+            {driver?.profilePicture ? (
               <img
                 src={driver.profilePicture}
                 alt={name}
@@ -324,7 +373,7 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
           <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
           <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
-            {driver.phone ? formatPhoneNumber(driver.phone) : "—"}
+            {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <Badge
@@ -333,12 +382,12 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
             >
               {isLuxury ? "✦ Luxury" : "Economy"}
             </Badge>
-            <span
-              className={`text-[10px] font-medium ${isOnTrip ? "text-blue-600" : "text-green-600"
-                }`}
+            <Badge
+              variant={isOnTrip ? "info" : "success"}
+              className="text-[10px] px-1.5 py-0.5"
             >
               {isOnTrip ? "On Trip" : "Available"}
-            </span>
+            </Badge>
           </div>
         </div>
       </div>
@@ -372,8 +421,9 @@ DriverCard.displayName = "DriverCard";
 // ── Rider sidebar card ────────────────────────────────────────────────────────
 const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
   const name =
-    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "Unknown";
-  const isOnTrip = rider.rideStatus === "accepted";
+    [rider?.firstName, rider?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const rawStatus = rider?.rideStatus || rider?.status;
+  const statusInfo = getStatusInfo(rawStatus);
 
   return (
     <div
@@ -386,7 +436,7 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
         {/* Avatar */}
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-            {rider.profilePicture ? (
+            {rider?.profilePicture ? (
               <img
                 src={rider.profilePicture}
                 alt={name}
@@ -401,8 +451,7 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           </div>
           {/* Status dot */}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${rider.rideStatus === "accepted" ? "bg-blue-500" : rider.rideStatus === "requested" ? "bg-amber-500" : "bg-gray-400"
-              }`}
+            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusInfo.dotBg}`}
           />
         </div>
 
@@ -411,16 +460,15 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
           <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
           <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
-            {rider.phone ? formatPhoneNumber(rider.phone) : "—"}
+            {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
           </p>
           <div className="flex items-center gap-2 mt-1.5">
-            {rider.rideStatus === "accepted" ? (
-              <Badge variant="primary" className="text-[10px] px-1.5 py-0.5">Accepted</Badge>
-            ) : rider.rideStatus === "requested" ? (
-              <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">Requested</Badge>
-            ) : (
-              <Badge variant="default" className="text-[10px] px-1.5 py-0.5">Idle</Badge>
-            )}
+            <Badge
+              variant={statusInfo.badgeVariant}
+              className="text-[10px] px-1.5 py-0.5"
+            >
+              {statusInfo.label}
+            </Badge>
           </div>
         </div>
       </div>
@@ -457,10 +505,10 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
   if (!driver) return null;
 
   const name =
-    [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "—";
-  const vd = driver.vehicleDetails;
-  const isLuxury = driver.vehicleType?.toLowerCase() === "luxury";
-  const isOnTrip = !!driver.activeRideId;
+    [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "—";
+  const vd = driver?.vehicleDetails;
+  const isLuxury = driver?.vehicleType?.toLowerCase() === "luxury";
+  const isOnTrip = !!driver?.activeRideId;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Driver Details" size="sm">
@@ -468,7 +516,7 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
         {/* Profile row */}
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
-            {driver.profilePicture ? (
+            {driver?.profilePicture ? (
               <img
                 src={driver.profilePicture}
                 alt={name}
@@ -482,13 +530,13 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             <h3 className="text-base font-bold text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
-              {driver.phone ? formatPhoneNumber(driver.phone) : "—"}
+              {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
               <Badge variant={isLuxury ? "warning" : "success"}>
                 {isLuxury ? "✦ Luxury" : "Economy"}
               </Badge>
-              <Badge variant={isOnTrip ? "primary" : "success"}>
+              <Badge variant={isOnTrip ? "info" : "success"}>
                 {isOnTrip ? "On Trip" : "Available"}
               </Badge>
             </div>
@@ -503,24 +551,24 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             </p>
             <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-sm">
               <span className="font-medium text-gray-500">Make</span>
-              <span>{vd.make || "—"}</span>
+              <span>{vd?.make || "—"}</span>
               <span className="font-medium text-gray-500">Model</span>
-              <span>{vd.model || "—"}</span>
+              <span>{vd?.model || "—"}</span>
               <span className="font-medium text-gray-500">Year</span>
-              <span>{vd.yearOfManufacture || "—"}</span>
+              <span>{vd?.yearOfManufacture || "—"}</span>
               <span className="font-medium text-gray-500">Color</span>
-              <span className="capitalize">{vd.color || "—"}</span>
+              <span className="capitalize">{vd?.color || "—"}</span>
               <span className="font-medium text-gray-500">Plate</span>
-              <span>{vd.licensePlateNumber || "—"}</span>
+              <span>{vd?.licensePlateNumber || "—"}</span>
               <span className="font-medium text-gray-500">Reg. No.</span>
-              <span>{vd.registrationNumber || "—"}</span>
+              <span>{vd?.registrationNumber || "—"}</span>
               <span className="font-medium text-gray-500">Doc Status</span>
               <span>
                 <Badge
-                  variant={vd.status === "approved" ? "success" : "warning"}
+                  variant={vd?.status === "approved" ? "success" : "warning"}
                   className="text-xs"
                 >
-                  {vd.status}
+                  {vd?.status || "—"}
                 </Badge>
               </span>
             </div>
@@ -533,8 +581,8 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             <MapPin className="w-3.5 h-3.5" /> Current Location
           </p>
           <p className="text-gray-700 font-mono text-xs">
-            {driver.location?.coordinates?.[1]?.toFixed(6)},{" "}
-            {driver.location?.coordinates?.[0]?.toFixed(6)}
+            {driver?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
+            {driver?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
         </div>
 
@@ -547,7 +595,7 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             variant="primary"
             onClick={() => {
               onClose();
-              navigate(`/user-management/driver/${driver.id}`);
+              if (driver?.id) navigate(`/user-management/driver/${driver.id}`);
             }}
           >
             Full Profile
@@ -564,8 +612,9 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
   if (!rider) return null;
 
   const name =
-    [rider.firstName, rider.lastName].filter(Boolean).join(" ") || "—";
-  const isOnTrip = rider.rideStatus === "accepted";
+    [rider?.firstName, rider?.lastName].filter(Boolean).join(" ") || "—";
+  const rawStatus = rider?.rideStatus || rider?.status;
+  const statusInfo = getStatusInfo(rawStatus);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Rider Details" size="sm">
@@ -573,7 +622,7 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
         {/* Profile row */}
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
-            {rider.profilePicture ? (
+            {rider?.profilePicture ? (
               <img
                 src={rider.profilePicture}
                 alt={name}
@@ -587,16 +636,12 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             <h3 className="text-base font-bold text-gray-900">{name}</h3>
             <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
-              {rider.phone ? formatPhoneNumber(rider.phone) : "—"}
+              {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
             </p>
             <div className="flex items-center gap-2 mt-1.5">
-              {rider.rideStatus === "accepted" ? (
-                <Badge variant="primary">Accepted</Badge>
-              ) : rider.rideStatus === "requested" ? (
-                <Badge variant="warning">Requested</Badge>
-              ) : (
-                <Badge variant="default">Idle</Badge>
-              )}
+              <Badge variant={statusInfo.badgeVariant}>
+                {statusInfo.label}
+              </Badge>
             </div>
           </div>
         </div>
@@ -607,7 +652,10 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             <MapPin className="w-4 h-4" /> Pickup Details
           </p>
           <div className="text-gray-600 text-sm">
-            <p><span className="font-medium text-gray-500 mr-2">Place: </span>{rider.pickupPlaceName || "—"}</p>
+            <p>
+              <span className="font-medium text-gray-500 mr-2">Place: </span>
+              {rider?.pickupPlaceName || "—"}
+            </p>
           </div>
         </div>
 
@@ -617,8 +665,8 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             <MapPin className="w-3.5 h-3.5" /> Current Location
           </p>
           <p className="text-gray-700 font-mono text-xs">
-            {rider.location?.coordinates?.[1]?.toFixed(6)},{" "}
-            {rider.location?.coordinates?.[0]?.toFixed(6)}
+            {rider?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
+            {rider?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
         </div>
 
@@ -631,7 +679,7 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             variant="primary"
             onClick={() => {
               onClose();
-              navigate(`/user-management/rider/${rider.id}`);
+              if (rider?.id) navigate(`/user-management/rider/${rider.id}`);
             }}
           >
             Full Profile
@@ -758,22 +806,60 @@ const BirdsEyeView = () => {
 
   const filteredItems = useMemo(
     () =>
-      activeItems.filter((item) => {
+      (Array.isArray(activeItems) ? activeItems : []).filter((item) => {
         if (!search) return true;
-        const name = [item.firstName, item.lastName].join(" ").toLowerCase();
-        return name.includes(search.toLowerCase()) || (item.phone || "").includes(search);
+        const q = search.toLowerCase();
+        const name = [item?.firstName, item?.lastName]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        const phone = (item?.phone || "").toLowerCase();
+        if (item?._type === "drivers") {
+          const vType = (item?.vehicleType || "").toLowerCase();
+          const dStatus = item?.activeRideId ? "on trip" : "available";
+          return (
+            name.includes(q) ||
+            phone.includes(q) ||
+            vType.includes(q) ||
+            dStatus.includes(q)
+          );
+        }
+        const rawStatus = item?.rideStatus || item?.status;
+        const statusInfo = getStatusInfo(rawStatus);
+        return (
+          name.includes(q) ||
+          phone.includes(q) ||
+          statusInfo?.label?.toLowerCase().includes(q)
+        );
       }),
     [activeItems, search]
   );
 
-  const economyCount = data.drivers.filter(
-    (d) => d.vehicleType?.toLowerCase() !== "luxury"
-  ).length;
-  const luxuryCount = data.drivers.length - economyCount;
+  // Driver vehicle statistics breakdown
+  const driverStats = useMemo(() => {
+    const rawDrivers = Array.isArray(data?.drivers) ? data.drivers : [];
+    const economy = rawDrivers.filter(
+      (d) => d?.vehicleType?.toLowerCase() !== "luxury"
+    ).length;
+    const luxury = rawDrivers.length - economy;
+    const onTrip = rawDrivers.filter((d) => !!d?.activeRideId).length;
+    return { economy, luxury, onTrip, total: rawDrivers.length };
+  }, [data]);
 
-  const requestedCount = data.riders.filter((r) => r.rideStatus === "requested").length;
-  const acceptedCount = data.riders.filter((r) => r.rideStatus === "accepted").length;
-  const idleCount = data.riders.filter((r) => !r.rideStatus).length;
+  // Rider status statistics breakdown
+  const riderStats = useMemo(() => {
+    const counts = { idle: 0, requested: 0, accepted: 0, onTrip: 0 };
+    const rawRiders = Array.isArray(data?.riders) ? data.riders : [];
+    rawRiders.forEach((r) => {
+      const rawStatus = r?.rideStatus || r?.status;
+      const info = getStatusInfo(rawStatus);
+      if (info?.category === "requested") counts.requested++;
+      else if (info?.category === "accepted") counts.accepted++;
+      else if (info?.category === "on-trip") counts.onTrip++;
+      else counts.idle++;
+    });
+    return counts;
+  }, [data]);
 
   if (loadError) {
     return (
@@ -934,34 +1020,34 @@ const BirdsEyeView = () => {
             <div className="flex gap-2 mt-2.5">
               <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
                 <p className="text-xs text-green-600 font-medium">Economy</p>
-                <p className="text-lg font-bold text-green-700">{economyCount}</p>
+                <p className="text-lg font-bold text-green-700">{driverStats.economy}</p>
               </div>
               <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
                 <p className="text-xs text-amber-600 font-medium">Luxury</p>
-                <p className="text-lg font-bold text-amber-700">{luxuryCount}</p>
+                <p className="text-lg font-bold text-amber-700">{driverStats.luxury}</p>
               </div>
               <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
                 <p className="text-xs text-blue-600 font-medium">Total</p>
-                <p className="text-lg font-bold text-blue-700">{data.drivers.length}</p>
+                <p className="text-lg font-bold text-blue-700">{driverStats.total}</p>
               </div>
             </div>
           ) : (
-            <div className="flex gap-2 mt-2.5">
-              <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
-                <p className="text-xs text-gray-600 font-medium">Idle</p>
-                <p className="text-lg font-bold text-gray-700">{idleCount}</p>
+            <div className="grid grid-cols-4 gap-1 mt-2.5">
+              <div className="bg-gray-50 rounded-lg p-1.5 text-center border border-gray-200">
+                <p className="text-[10px] text-gray-500 font-medium truncate">Idle</p>
+                <p className="text-sm font-bold text-gray-700">{riderStats.idle}</p>
               </div>
-              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
-                <p className="text-xs text-amber-600 font-medium">Req.</p>
-                <p className="text-lg font-bold text-amber-700">{requestedCount}</p>
+              <div className="bg-amber-50 rounded-lg p-1.5 text-center border border-amber-100">
+                <p className="text-[10px] text-amber-600 font-medium truncate">Req.</p>
+                <p className="text-sm font-bold text-amber-700">{riderStats.requested}</p>
               </div>
-              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
-                <p className="text-xs text-blue-600 font-medium">Acc.</p>
-                <p className="text-lg font-bold text-blue-700">{acceptedCount}</p>
+              <div className="bg-green-50 rounded-lg p-1.5 text-center border border-green-100">
+                <p className="text-[10px] text-green-600 font-medium truncate">Acc.</p>
+                <p className="text-sm font-bold text-green-700">{riderStats.accepted}</p>
               </div>
-              <div className="flex-1 bg-gray-50 rounded-lg px-2.5 py-1.5 text-center border border-gray-200">
-                <p className="text-xs text-gray-600 font-medium">Total</p>
-                <p className="text-lg font-bold text-gray-700">{data.riders.length}</p>
+              <div className="bg-blue-50 rounded-lg p-1.5 text-center border border-blue-100">
+                <p className="text-[10px] text-blue-600 font-medium truncate">Trip</p>
+                <p className="text-sm font-bold text-blue-700">{riderStats.onTrip}</p>
               </div>
             </div>
           )}
@@ -971,7 +1057,7 @@ const BirdsEyeView = () => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or phone…"
+            placeholder="Search by name, phone or status…"
             className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
           />
         </div>
@@ -993,23 +1079,27 @@ const BirdsEyeView = () => {
                 On Trip
               </span>
               <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
-                <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+                <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
                 Available
               </span>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
-                <span className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0" />
+            <div className="flex flex-wrap gap-1.5">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                 Idle
               </span>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
-                <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
                 Requested
               </span>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
-                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-green-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
                 Accepted
+              </span>
+              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+                On Trip
               </span>
             </div>
           )}
