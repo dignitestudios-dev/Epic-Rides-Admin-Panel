@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Eye, MapPin, User, Car, Download } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Eye, MapPin, User, Car, Download, XCircle, CheckCircle2 } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
@@ -12,12 +12,11 @@ import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers"
 import { useAuth } from "../contexts/AuthContext";
 import useGetRides from "../hooks/rides/useGetRides";
 import useDebounce from "../hooks/global/useDebounce";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 
-/* ─── helpers ──────────────────────────────────────────────────── */
-const fullName = (obj) =>
-  [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
+const fullName = (obj) => [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
 
 const statusBadge = (status) => {
   switch (status) {
@@ -47,7 +46,6 @@ const paymentBadge = (status) => {
   }
 };
 
-/* ─── Detail Dialog ─────────────────────────────────────────────── */
 const RideDetailDialog = ({ ride, onClose }) => {
   const Row = ({ label, value }) => (
     <div className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
@@ -76,7 +74,8 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
           <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} miles` : null} />
           <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
-          <Row label="Pickup" value={ride.pickupPoint} />
+          <Row label="Pickup" value={ride.pickupPoint?.placeName || ride.pickupPoint} />
+          <Row label="Dropoff" value={ride.dropOffPoint?.placeName || ride.dropOffPoint} />
         </Section>
 
         <Section title="Rider">
@@ -97,10 +96,12 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Payment Status" value={paymentBadge(ride.paymentStatus)} />
         </Section>
 
-        <Section title="Cancellation">
-          <Row label="Cancelled By" value={ride.cancelledBy ? ride.cancelledBy.charAt(0).toUpperCase() + ride.cancelledBy.slice(1) : null} />
-          <Row label="Reason" value={ride.cancellationReason} />
-        </Section>
+        {ride.rideStatus === "cancelled" && (
+          <Section title="Cancellation">
+            <Row label="Cancelled By" value={ride.cancelledBy ? ride.cancelledBy.charAt(0).toUpperCase() + ride.cancelledBy.slice(1) : null} />
+            <Row label="Reason" value={ride.cancellationReason} />
+          </Section>
+        )}
 
         <Section title="Timestamps">
           <Row label="Booked At" value={ride.createdAt ? formatDateTime(ride.createdAt) : null} />
@@ -112,16 +113,18 @@ const RideDetailDialog = ({ ride, onClose }) => {
   );
 };
 
-/* ─── Main Page ─────────────────────────────────────────────────── */
-const CancelledRides = () => {
+const PrivateRides = () => {
   const { hasPermission } = useAuth();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  
+  const [activeTab, setActiveTab] = usePersistentState("privaterides_activeTab", "cancelled");
+  const [search, setSearch] = usePersistentState("privaterides_search", "");
+  const [page, setPage] = usePersistentState("privaterides_page", 1);
+  const [limit, setLimit] = usePersistentState("privaterides_limit", 10);
+  const [startDate, setStartDate] = usePersistentState("privaterides_startDate", "");
+  const [endDate, setEndDate] = usePersistentState("privaterides_endDate", "");
+  
   const [selectedRide, setSelectedRide] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -129,10 +132,25 @@ const CancelledRides = () => {
     page,
     limit,
     debouncedSearch,
-    "cancelled",
+    activeTab,
     startDate,
     endDate
   );
+
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setPage(1);
+  }, [debouncedSearch, startDate, endDate, activeTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
 
   const handleSearchChange = (val) => {
     setSearch(val);
@@ -147,7 +165,7 @@ const CancelledRides = () => {
 
     setIsExporting(true);
     try {
-      const response = await api.exportRides("cancelled", startDate, endDate);
+      const response = await api.exportRides(activeTab, startDate, endDate);
       const blob = response.data instanceof Blob
         ? response.data
         : new Blob([response.data], { type: "text/csv" });
@@ -155,7 +173,7 @@ const CancelledRides = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Cancelled_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Export downloaded successfully");
@@ -175,11 +193,23 @@ const CancelledRides = () => {
         <div className="flex items-center gap-2 max-w-[200px]">
           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
           <span className="truncate text-sm text-gray-700 dark:text-gray-300">
-            {val || "—"}
+            {typeof val === 'string' ? val : val?.placeName || "—"}
           </span>
         </div>
       ),
     },
+    ...(activeTab === "completed" ? [{
+      key: "dropOffPoint",
+      label: "Dropoff Location",
+      render: (val) => (
+        <div className="flex items-center gap-2 max-w-[200px]">
+          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+            {typeof val === 'string' ? val : val?.placeName || "—"}
+          </span>
+        </div>
+      ),
+    }] : []),
     {
       key: "user",
       label: "Rider",
@@ -232,7 +262,7 @@ const CancelledRides = () => {
         </span>
       ),
     },
-    {
+    ...(activeTab === "cancelled" ? [{
       key: "cancelledBy",
       label: "Cancelled By",
       render: (val) => (
@@ -240,7 +270,7 @@ const CancelledRides = () => {
           {val || "—"}
         </span>
       ),
-    },
+    }] : []),
     {
       key: "createdAt",
       label: "Date",
@@ -262,15 +292,15 @@ const CancelledRides = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Cancelled Rides
+            Private Ride
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            View and manage all cancelled ride records
+            View and manage your private ride records
           </p>
         </div>
         {hasPermission('downloadExcel') && (
@@ -285,11 +315,42 @@ const CancelledRides = () => {
         )}
       </div>
 
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => handleTabChange("cancelled")}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === "cancelled"
+              ? "text-[#39A300] border-b-2 border-[#39A300]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-base">
+            <XCircle className="w-4 h-4" />
+            Cancelled Rides
+          </div>
+        </button>
+        <button
+          onClick={() => handleTabChange("completed")}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === "completed"
+              ? "text-[#39A300] border-b-2 border-[#39A300]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-base">
+            <CheckCircle2 className="w-4 h-4" />
+            Completed Rides
+          </div>
+        </button>
+      </div>
+
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Cancelled Rides</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Total {activeTab === "cancelled" ? "Cancelled" : "Completed"} Rides
+            </p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {stats.totalRides ?? "—"}
             </p>
@@ -330,25 +391,26 @@ const CancelledRides = () => {
         />
       </div>
 
-      {/* Table */}
-      <DataTable
-        data={rides}
-        columns={columns}
-        title="Rides"
-        loading={loading}
-        searchable
-        searchTerm={search}
-        searchPlaceholder="Search by rider or driver..."
-        onSearch={handleSearchChange}
-        addButton={false}
-        exportable={false}
-        totalPages={totalPages}
-        totalData={totalData}
-        currentPage={page}
-        pageSize={limit}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
-      />
+      <Card className="overflow-hidden">
+        <DataTable
+          data={rides}
+          columns={columns}
+          title={`${activeTab === "cancelled" ? "Cancelled" : "Completed"} Rides`}
+          loading={loading}
+          searchable
+          searchTerm={search}
+          searchPlaceholder="Search by rider or driver..."
+          onSearch={handleSearchChange}
+          addButton={false}
+          exportable={false}
+          totalPages={totalPages}
+          totalData={totalData}
+          currentPage={page}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
+        />
+      </Card>
 
       {/* Detail Dialog */}
       <RideDetailDialog
@@ -359,4 +421,4 @@ const CancelledRides = () => {
   );
 };
 
-export default CancelledRides;
+export default PrivateRides;

@@ -64,7 +64,7 @@ const EditProfileModal = ({
     if (name === "firstName" && value.length > LIMITS.firstName) return;
     if (name === "lastName" && value.length > LIMITS.lastName) return;
     if (name === "email" && value.length > LIMITS.email) return;
-    
+
     // Restrict balance to 2 decimal places max
     if (name === "balance" && value && !/^\d*\.?\d{0,2}$/.test(value)) return;
 

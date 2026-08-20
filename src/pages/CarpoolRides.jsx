@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Eye, MapPin, User, Car, Download } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Eye, MapPin, User, Users, Car, Download, XCircle, CheckCircle2 } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
@@ -10,8 +10,9 @@ import FilterBar from "../components/ui/FilterBar";
 
 import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
-import useGetRides from "../hooks/rides/useGetRides";
+import useGetCarpoolRides from "../hooks/rides/useGetCarpoolRides";
 import useDebounce from "../hooks/global/useDebounce";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 
@@ -23,25 +24,12 @@ const statusBadge = (status) => {
       return <Badge variant="danger">Cancelled</Badge>;
     case "completed":
       return <Badge variant="success">Completed</Badge>;
-    case "ongoing":
-      return <Badge variant="warning">Ongoing</Badge>;
+    case "active":
+      return <Badge variant="warning">Active</Badge>;
+    case "full":
+      return <Badge variant="primary">Full</Badge>;
     default:
       return <Badge variant="default">{status || "—"}</Badge>;
-  }
-};
-
-const paymentBadge = (status) => {
-  if (!status) return <Badge variant="default">—</Badge>;
-  const formatted = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-  switch (status.toLowerCase()) {
-    case "paid":
-      return <Badge variant="success">{formatted}</Badge>;
-    case "pending":
-      return <Badge variant="warning">{formatted}</Badge>;
-    case "failed":
-      return <Badge variant="danger">{formatted}</Badge>;
-    default:
-      return <Badge variant="default">{formatted}</Badge>;
   }
 };
 
@@ -65,22 +53,21 @@ const RideDetailDialog = ({ ride, onClose }) => {
   if (!ride) return null;
 
   return (
-    <Modal isOpen={!!ride} onClose={onClose} title="Ride Details" size="md">
+    <Modal isOpen={!!ride} onClose={onClose} title="Carpool Route Details" size="md">
       <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-        <Section title="Ride Info">
-          <Row label="Ride ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
-          <Row label="Status" value={statusBadge(ride.rideStatus)} />
-          <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
-          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} miles` : null} />
-          <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
-          <Row label="Pickup" value={ride.pickupPoint?.placeName} />
-          <Row label="Dropoff" value={ride.dropOffPoint?.placeName} />
+        <Section title="Route Info">
+          <Row label="Route ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
+          <Row label="Status" value={statusBadge(ride.status)} />
+          <Row label="Distance" value={ride.distance ? `${ride.distance.toFixed(2)} km` : null} />
+          <Row label="Est. Duration" value={ride.avgTime ? `${ride.avgTime} min` : null} />
+          <Row label="Pickup" value={ride.startingPoint} />
+          <Row label="Dropoff" value={ride.destination} />
         </Section>
 
-        <Section title="Rider">
-          <Row label="Name" value={fullName(ride.user)} />
-          <Row label="Email" value={ride.user?.email} />
-          <Row label="Phone" value={ride.user?.phone ? formatPhoneNumber(ride.user.phone) : null} />
+        <Section title="Seats & Time">
+          <Row label="Max Passengers" value={ride.maxPassengers} />
+          <Row label="Available Seats" value={ride.availableSeats} />
+          <Row label="Grace Time" value={ride.graceTime ? `${ride.graceTime} min` : null} />
         </Section>
 
         <Section title="Driver">
@@ -89,47 +76,52 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Phone" value={ride.driver?.phone ? formatPhoneNumber(ride.driver.phone) : null} />
         </Section>
 
-        <Section title="Payment">
-          <Row label="Fare" value={ride.rideFare != null ? `$${ride.rideFare.toFixed(2)}` : null} />
-          <Row label="Method" value={ride.paymentMethod ? <span className="capitalize">{ride.paymentMethod.replace(/_/g, " ")}</span> : null} />
-          <Row label="Payment Status" value={paymentBadge(ride.paymentStatus)} />
-        </Section>
-
-        <Section title="Cancellation">
-          <Row label="Cancelled By" value={ride.cancelledBy ? ride.cancelledBy.charAt(0).toUpperCase() + ride.cancelledBy.slice(1) : null} />
-          <Row label="Reason" value={ride.cancellationReason} />
-        </Section>
-
         <Section title="Timestamps">
-          <Row label="Booked At" value={ride.createdAt ? formatDateTime(ride.createdAt) : null} />
-          <Row label="Start Time" value={ride.startTime ? formatDateTime(ride.startTime) : null} />
-          <Row label="End Time" value={ride.endTime ? formatDateTime(ride.endTime) : null} />
+          <Row label="Created At" value={ride.createdAt ? formatDateTime(ride.createdAt) : null} />
         </Section>
       </div>
     </Modal>
   );
 };
 
-const CompletedRides = () => {
+const CarpoolRides = () => {
   const { hasPermission } = useAuth();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  
+  const [activeTab, setActiveTab] = usePersistentState("carpoolrides_activeTab", "completed");
+  const [search, setSearch] = usePersistentState("carpoolrides_search", "");
+  const [page, setPage] = usePersistentState("carpoolrides_page", 1);
+  const [limit, setLimit] = usePersistentState("carpoolrides_limit", 10);
+  const [startDate, setStartDate] = usePersistentState("carpoolrides_startDate", "");
+  const [endDate, setEndDate] = usePersistentState("carpoolrides_endDate", "");
+  
   const [selectedRide, setSelectedRide] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   const debouncedSearch = useDebounce(search, 500);
 
-  const { rides, stats, loading, totalPages, totalData } = useGetRides(
+  const { rides, stats, loading, totalPages, totalData } = useGetCarpoolRides(
     page,
     limit,
     debouncedSearch,
-    "completed",
+    activeTab, // "cancelled" or "completed"
     startDate,
     endDate
   );
+
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setPage(1);
+  }, [debouncedSearch, startDate, endDate, activeTab]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
 
   const handleSearchChange = (val) => {
     setSearch(val);
@@ -144,7 +136,7 @@ const CompletedRides = () => {
 
     setIsExporting(true);
     try {
-      const response = await api.exportRides("completed", startDate, endDate);
+      const response = await api.exportCarpoolRides(activeTab, startDate, endDate);
       const blob = response.data instanceof Blob
         ? response.data
         : new Blob([response.data], { type: "text/csv" });
@@ -152,7 +144,7 @@ const CompletedRides = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Completed_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}_Carpool_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Export downloaded successfully");
@@ -166,37 +158,26 @@ const CompletedRides = () => {
 
   const columns = [
     {
-      key: "pickupPoint",
+      key: "startingPoint",
       label: "Pickup Location",
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-          <span className="truncate text-sm text-gray-700 dark:text-gray-300">{val?.placeName || "—"}</span>
+          <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+            {val || "—"}
+          </span>
         </div>
       ),
     },
     {
-      key: "dropOffPoint",
+      key: "destination",
       label: "Dropoff Location",
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-          <span className="truncate text-sm text-gray-700 dark:text-gray-300">{val?.placeName || "—"}</span>
-        </div>
-      ),
-    },
-    {
-      key: "user",
-      label: "Rider",
-      render: (val) => (
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
-            <User className="w-3.5 h-3.5 text-primary-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{fullName(val)}</p>
-            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
-          </div>
+          <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+            {val || "—"}
+          </span>
         </div>
       ),
     },
@@ -209,30 +190,40 @@ const CompletedRides = () => {
             <Car className="w-3.5 h-3.5 text-gray-500" />
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">{fullName(val)}</p>
+            <p className="text-sm font-medium text-gray-900 dark:text-white">
+              {fullName(val)}
+            </p>
             <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
           </div>
         </div>
       ),
     },
     {
-      key: "rideType",
-      label: "Type",
-      render: (val) => <span className="text-sm capitalize text-gray-700 dark:text-gray-300">{val || "—"}</span>,
+      key: "seats",
+      label: "Seats",
+      render: (_, row) => (
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {row.availableSeats} / {row.maxPassengers}
+        </span>
+      ),
     },
     {
-      key: "rideFare",
-      label: "Fare",
+      key: "distance",
+      label: "Distance",
       render: (val) => (
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
-          {val != null ? `$${val.toFixed(2)}` : "—"}
+        <span className="text-sm text-gray-700 dark:text-gray-300">
+          {val != null ? `${val.toFixed(2)} km` : "—"}
         </span>
       ),
     },
     {
       key: "createdAt",
       label: "Date",
-      render: (val) => <span className="text-sm text-gray-500 dark:text-gray-400">{val ? formatDate(val) : "—"}</span>,
+      render: (val) => (
+        <span className="text-sm text-gray-500 dark:text-gray-400">
+          {val ? formatDate(val) : "—"}
+        </span>
+      ),
     },
     {
       key: "_id",
@@ -246,12 +237,15 @@ const CompletedRides = () => {
   ];
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Completed Rides</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Carpool Rides
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            View and manage all completed ride records
+            View and manage all carpool routes and rides
           </p>
         </div>
         {hasPermission('downloadExcel') && (
@@ -263,23 +257,49 @@ const CompletedRides = () => {
           >
             {isExporting ? "Exporting..." : "Export CSV"}
           </Button>
-       )}
+        )}
       </div>
 
+      <div className="flex border-b border-gray-200">
+        <button
+          onClick={() => handleTabChange("completed")}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === "completed"
+              ? "text-[#39A300] border-b-2 border-[#39A300]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-base">
+            <CheckCircle2 className="w-4 h-4" />
+            Completed Rides
+          </div>
+        </button>
+        <button
+          onClick={() => handleTabChange("cancelled")}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === "cancelled"
+              ? "text-[#39A300] border-b-2 border-[#39A300]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-base">
+            <XCircle className="w-4 h-4" />
+            Cancelled Rides
+          </div>
+        </button>
+      </div>
+
+      {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Total Rides</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalRides ?? "—"}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+              Total {activeTab === "cancelled" ? "Cancelled" : "Completed"} Rides
+            </p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              {stats.totalRides ?? "—"}
+            </p>
           </Card>
-          {/* <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Cancelled</p>
-            <p className="text-2xl font-bold text-red-500">{stats.totalCancelledRides ?? "—"}</p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Completed</p>
-            <p className="text-2xl font-bold text-green-500">{stats.totalCompletedRides ?? "—"}</p>
-          </Card> */}
           <Card className="p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Revenue</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -316,31 +336,34 @@ const CompletedRides = () => {
         />
       </div>
 
-      <DataTable
-        data={rides}
-        columns={columns}
-        title="Rides"
-        loading={loading}
-        searchable
-        searchTerm={search}
-        searchPlaceholder="Search by rider or driver..."
-        onSearch={handleSearchChange}
-        addButton={false}
-        exportable={false}
-        totalPages={totalPages}
-        totalData={totalData}
-        currentPage={page}
-        pageSize={limit}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setLimit(size);
-          setPage(1);
-        }}
-      />
+      <Card className="overflow-hidden">
+        <DataTable
+          data={rides}
+          columns={columns}
+          title={`${activeTab === "cancelled" ? "Cancelled" : "Completed"} Carpool Rides`}
+          loading={loading}
+          searchable
+          searchTerm={search}
+          searchPlaceholder="Search by driver name/email or place..."
+          onSearch={handleSearchChange}
+          addButton={false}
+          exportable={false}
+          totalPages={totalPages}
+          totalData={totalData}
+          currentPage={page}
+          pageSize={limit}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
+        />
+      </Card>
 
-      <RideDetailDialog ride={selectedRide} onClose={() => setSelectedRide(null)} />
+      {/* Detail Dialog */}
+      <RideDetailDialog
+        ride={selectedRide}
+        onClose={() => setSelectedRide(null)}
+      />
     </div>
   );
 };
 
-export default CompletedRides;
+export default CarpoolRides;

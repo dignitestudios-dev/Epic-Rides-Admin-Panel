@@ -3,8 +3,8 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
@@ -434,6 +434,53 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
+const getCarpoolRides = (page = 1, limit = 10, search = "", status = "", startDate = "", endDate = "", sort = "desc") =>
+  apiHandler(() => {
+    let url = `/carpool-rides?page=${page}&limit=${limit}&sort=${sort}`;
+    if (search) url += `&search=${search}`;
+    if (status) url += `&status=${status}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    return API.get(url);
+  });
+
+const exportCarpoolRides = (status, startDate = "", endDate = "") => {
+  let url = `/carpool-rides/export?status=${status}`;
+  if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+  if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+  return API.get(url, { responseType: "blob" });
+};
+
+// Suspended Drivers API
+const getSuspendedDrivers = (page = 1, limit = 10, suspensionType = "all", search = "") =>
+  apiHandler(() => {
+    let url = `/drivers/suspended?page=${page}&limit=${limit}`;
+    if (suspensionType) url += `&suspensionType=${suspensionType}`;
+    if (search) url += `&search=${search}`;
+    return API.get(url);
+  });
+
+const getDriverSuspensionDetails = (id) =>
+  apiHandler(() => API.get(`/drivers/${id}/suspension`));
+
+const suspendDriver = (id, payload) =>
+  apiHandler(() => API.post(`/drivers/${id}/suspend`, payload));
+
+const unsuspendDriver = (id) =>
+  apiHandler(() => API.post(`/drivers/${id}/unsuspend`));
+
+// Rewarded Balance History
+const getRewardedBalanceHistory = (page = 1, limit = 10, userType = "all", search = "", startDate = "", endDate = "", sortBy = "createdAt", order = "desc") =>
+  apiHandler(() => {
+    let url = `/rewarded-balance-history?page=${page}&limit=${limit}&sortBy=${sortBy}&order=${order}`;
+    if (userType && userType !== "all") url += `&userType=${userType}`;
+    if (search) url += `&search=${search}`;
+    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    return API.get(url);
+  });
+
+
 // Campaigns API
 const getCampaigns = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, status = "") => {
   let url = `/campaigns?page=${page}&limit=${limit}`;
@@ -549,6 +596,13 @@ export const api = {
   deleteNotification,
   getRides,
   exportRides,
+  getCarpoolRides,
+  exportCarpoolRides,
+  getSuspendedDrivers,
+  getDriverSuspensionDetails,
+  suspendDriver,
+  unsuspendDriver,
+  getRewardedBalanceHistory,
   getCampaigns,
   getCampaignById,
   createCampaign,

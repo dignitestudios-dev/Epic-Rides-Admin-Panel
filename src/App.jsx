@@ -51,12 +51,14 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import VehicleCategoryManagement from "./pages/VehicleCategory";
 import RiderDetail from "./pages/RiderDetail";
 import DriverDetail from "./pages/DriverDetail";
+import SuspendedDrivers from "./pages/SuspendedDrivers";
+import RewardedBalanceHistory from "./pages/RewardedBalanceHistory";
 
 import Revenue from "./pages/Revenue";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetail from "./pages/CampaignDetail";
-import CancelledRides from "./pages/CancelledRides";
-import CompletedRides from "./pages/CompletedRides";
+import PrivateRides from "./pages/PrivateRides";
+import CarpoolRides from "./pages/CarpoolRides";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
@@ -195,6 +197,22 @@ function App() {
                           }
                         />
                         <Route
+                          path="/suspended-drivers"
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <SuspendedDrivers />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/rewarded-balance-history"
+                          element={
+                            <ProtectedRoute requiredPermission="viewDriverRequests">
+                              <RewardedBalanceHistory />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
                           path="/content-management"
                           element={<ContentManagement />}
                         />
@@ -243,8 +261,8 @@ function App() {
                             </ProtectedRoute>
                           }
                         />
-                        <Route path="/cancelled-rides" element={<CancelledRides />} />
-                        <Route path="/completed-rides" element={<CompletedRides />} />
+                        <Route path="/private-rides" element={<PrivateRides />} />
+                        <Route path="/carpool-rides" element={<CarpoolRides />} />
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
                         <Route
                           path="/reports-detail/:id"
