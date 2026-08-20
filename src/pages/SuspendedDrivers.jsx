@@ -51,6 +51,7 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [unsuspendLoading, setUnsuspendLoading] = useState(false);
+  const [confirmUnsuspend, setConfirmUnsuspend] = useState(false);
 
   useEffect(() => {
     if (selectedData?.driverId) {
@@ -70,14 +71,17 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
     }
   };
 
-  const handleUnsuspend = async () => {
-    if (!window.confirm("Are you sure you want to unsuspend this driver? This clears all active suspensions.")) return;
-    
+  const handleUnsuspend = () => {
+    setConfirmUnsuspend(true);
+  };
+
+  const confirmUnsuspendAction = async () => {
     setUnsuspendLoading(true);
     try {
       await api.unsuspendDriver(selectedData.driverId);
       toast.success("Driver unsuspended successfully");
       onRefresh();
+      setConfirmUnsuspend(false);
       onClose();
     } catch (err) {
       toast.error(err.message || "Failed to unsuspend driver");
@@ -117,7 +121,7 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
                   Record #{idx + 1}
                 </h4>
                 <Row label="Type" value={typeBadge(suspension.suspensionType)} />
-                <Row label="Reason" value={suspension.reason} />
+                <Row label="Reason" value={suspension.reason === "admin_deactivated" ? "Deactivated by Admin" : suspension.reason} />
                 <Row label="Suspended At" value={suspension.suspendedAt ? formatDateTime(suspension.suspendedAt) : "—"} />
                 <Row label="Time Left" value={formatRemainingTime(suspension.remainingSeconds)} />
                 
@@ -147,6 +151,31 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
           </Button>
         </div>
       )}
+
+      {/* Unsuspend Confirmation Modal for Dialog */}
+      <Modal
+        isOpen={confirmUnsuspend}
+        onClose={() => setConfirmUnsuspend(false)}
+        title="Confirm Unsuspend"
+        size="sm"
+      >
+        <p className="text-sm text-gray-500 mb-6">
+          Are you sure you want to unsuspend this driver? This clears all active suspensions.
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setConfirmUnsuspend(false)} disabled={unsuspendLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            loading={unsuspendLoading}
+            disabled={unsuspendLoading}
+            onClick={confirmUnsuspendAction}
+          >
+            Yes, Unsuspend
+          </Button>
+        </div>
+      </Modal>
     </Modal>
   );
 };
@@ -161,6 +190,7 @@ const SuspendedDrivers = () => {
   
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [unsuspendLoading, setUnsuspendLoading] = useState(false);
+  const [confirmUnsuspend, setConfirmUnsuspend] = useState(null);
 
   const debouncedSearch = useDebounce(search, 500);
 
@@ -191,14 +221,19 @@ const SuspendedDrivers = () => {
     setPage(1);
   };
 
-  const handleUnsuspendQuick = async (driverId) => {
-    if (!window.confirm("Are you sure you want to unsuspend this driver?")) return;
+  const handleUnsuspendQuick = (driverId) => {
+    setConfirmUnsuspend(driverId);
+  };
+
+  const confirmUnsuspendAction = async () => {
+    if (!confirmUnsuspend) return;
     
     setUnsuspendLoading(true);
     try {
-      await api.unsuspendDriver(driverId);
+      await api.unsuspendDriver(confirmUnsuspend);
       toast.success("Driver unsuspended successfully");
       refresh();
+      setConfirmUnsuspend(null);
     } catch (err) {
       toast.error(err.message || "Failed to unsuspend driver");
     } finally {
@@ -234,7 +269,7 @@ const SuspendedDrivers = () => {
       label: "Reason",
       render: (val) => (
         <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate block" title={val}>
-          {val || "—"}
+          {val === "admin_deactivated" ? "Deactivated by Admin" : (val || "—")}
         </span>
       ),
     },
@@ -322,19 +357,6 @@ const SuspendedDrivers = () => {
           </div>
         </button>
         <button
-          onClick={() => handleTabChange("admin_manual")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "admin_manual"
-              ? "text-red-600 border-b-2 border-red-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <Clock className="w-4 h-4" />
-            Admin (Timed)
-          </div>
-        </button>
-        <button
           onClick={() => handleTabChange("admin_permanent")}
           className={`px-6 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
             activeTab === "admin_permanent"
@@ -382,6 +404,31 @@ const SuspendedDrivers = () => {
         onClose={() => setSelectedRecord(null)}
         onRefresh={refresh}
       />
+
+      {/* Unsuspend Confirmation Modal */}
+      <Modal
+        isOpen={!!confirmUnsuspend}
+        onClose={() => setConfirmUnsuspend(null)}
+        title="Confirm Unsuspend"
+        size="sm"
+      >
+        <p className="text-sm text-gray-500 mb-6">
+          Are you sure you want to unsuspend this driver?
+        </p>
+        <div className="flex justify-end gap-3">
+          <Button variant="outline" onClick={() => setConfirmUnsuspend(null)} disabled={unsuspendLoading}>
+            Cancel
+          </Button>
+          <Button
+            variant="success"
+            loading={unsuspendLoading}
+            disabled={unsuspendLoading}
+            onClick={confirmUnsuspendAction}
+          >
+            Yes, Unsuspend
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };

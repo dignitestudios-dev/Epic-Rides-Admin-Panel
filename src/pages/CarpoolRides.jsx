@@ -70,6 +70,35 @@ const RideDetailDialog = ({ ride, onClose }) => {
           <Row label="Grace Time" value={ride.graceTime ? `${ride.graceTime} min` : null} />
         </Section>
 
+        {ride.stops && ride.stops.length > 0 && (
+          <Section title="Stops">
+            {ride.stops.map((stop, index) => (
+              <Row key={index} label={`Stop ${index + 1}`} value={stop.placeName || stop.address || stop} />
+            ))}
+          </Section>
+        )}
+
+        {ride.passengers && ride.passengers.length > 0 && (
+          <Section title="Passengers">
+            {ride.passengers.map((p, index) => {
+              const pName = fullName(p.user || p) || "Unknown User";
+              const pSeats = p.seats || p.bookedSeats || p.passengerCount || 1;
+              const pFare = p.fare != null ? `$${Number(p.fare).toFixed(2)}` : "—";
+              return (
+                <div key={index} className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{pName}</span>
+                    <span className="text-xs text-gray-500">Seats Booked: {pSeats}</span>
+                  </div>
+                  <span className="text-sm font-medium text-green-600 dark:text-green-400 text-right mt-1">
+                    {pFare}
+                  </span>
+                </div>
+              );
+            })}
+          </Section>
+        )}
+
         <Section title="Driver">
           <Row label="Name" value={fullName(ride.driver)} />
           <Row label="Email" value={ride.driver?.email} />
@@ -217,6 +246,15 @@ const CarpoolRides = () => {
       ),
     },
     {
+      key: "totalFare",
+      label: "Total Fare",
+      render: (val, row) => (
+        <span className="text-sm font-medium text-green-600 dark:text-green-400">
+          ${val != null ? Number(val).toFixed(2) : (row.fare != null ? Number(row.fare).toFixed(2) : "0.00")}
+        </span>
+      ),
+    },
+    {
       key: "createdAt",
       label: "Date",
       render: (val) => (
@@ -248,16 +286,6 @@ const CarpoolRides = () => {
             View and manage all carpool routes and rides
           </p>
         </div>
-        {hasPermission('downloadExcel') && (
-          <Button
-            variant="primary"
-            icon={<Download className="w-4 h-4" />}
-            onClick={handleExport}
-            disabled={isExporting}
-          >
-            {isExporting ? "Exporting..." : "Export CSV"}
-          </Button>
-        )}
       </div>
 
       <div className="flex border-b border-gray-200">

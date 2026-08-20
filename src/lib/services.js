@@ -53,10 +53,16 @@ const handleApiError = (error) => {
   }
   throw new Error(error?.message || error || "An Unexpected error occurred");
 };
-const formatDateForApi = (date) => {
+const formatStartDateForApi = (date) => {
   if (!date) return "";
   if (date.includes("T")) return date;
-  return `${date}T12:00:00.000Z`;
+  return `${date}T00:00:00.000Z`;
+};
+
+const formatEndDateForApi = (date) => {
+  if (!date) return "";
+  if (date.includes("T")) return date;
+  return `${date}T23:59:59.999Z`;
 };
 
 const handleApiResponse = (response) => {
@@ -188,7 +194,7 @@ const getOrders = (
 ) =>
   apiHandler(() =>
     API.get(
-      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${formatDateForApi(startDate)}&endDate=${formatDateForApi(endDate)}&search=${search}&page=${page}&limit=${limit}`,
+      `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${formatStartDateForApi(startDate)}&endDate=${formatEndDateForApi(endDate)}&search=${search}&page=${page}&limit=${limit}`,
     ),
   );
 
@@ -285,8 +291,8 @@ const getUsers = (
   apiHandler(() => {
     let url = `/users?type=${type}&page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -353,8 +359,8 @@ const getSubscriptionRevenue = (
   apiHandler(() => {
     let url = `/subscription-revenue?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     if (status) url += `&subscriptionStatus=${status}`;
     return API.get(url);
   });
@@ -369,8 +375,8 @@ const getWithdrawalRevenue = (
   apiHandler(() => {
     let url = `/withdrawals?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -392,8 +398,8 @@ const getNotifications = (
   apiHandler(() => {
     let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -417,8 +423,8 @@ const getRides = (page = 1, limit = 10, search = "", rideStatus = "", startDate 
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (rideStatus) url += `&rideStatus=${rideStatus}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
@@ -429,8 +435,8 @@ const getReportById = (id) => apiHandler(() => API.get(`/reports/${id}`));
 
 const exportRides = (status, startDate = "", endDate = "") => {
   let url = `/rides/export?status=${status}`;
-  if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-  if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+  if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+  if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
   return API.get(url, { responseType: "blob" });
 };
 
@@ -439,15 +445,15 @@ const getCarpoolRides = (page = 1, limit = 10, search = "", status = "", startDa
     let url = `/carpool-rides?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
     if (status) url += `&status=${status}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
 const exportCarpoolRides = (status, startDate = "", endDate = "") => {
   let url = `/carpool-rides/export?status=${status}`;
-  if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-  if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+  if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+  if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
   return API.get(url, { responseType: "blob" });
 };
 
@@ -475,8 +481,8 @@ const getRewardedBalanceHistory = (page = 1, limit = 10, userType = "all", searc
     let url = `/rewarded-balance-history?page=${page}&limit=${limit}&sortBy=${sortBy}&order=${order}`;
     if (userType && userType !== "all") url += `&userType=${userType}`;
     if (search) url += `&search=${search}`;
-    if (startDate) url += `&startDate=${formatDateForApi(startDate)}`;
-    if (endDate) url += `&endDate=${formatDateForApi(endDate)}`;
+    if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
+    if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     return API.get(url);
   });
 
