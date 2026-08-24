@@ -92,6 +92,7 @@ const RiderDetail = () => {
     ratingAndFeedback,
     transactionHistory,
     walletBalance,
+    carpoolHistory,
   } = details;
 
   const historyColumns = [
@@ -140,6 +141,60 @@ const RiderDetail = () => {
       render: (val) => (
         <Badge
         className="capitalize"
+          variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
+        >
+          {val}
+        </Badge>
+      ),
+    },
+  ];
+
+  const carpoolHistoryColumns = [
+    {
+      key: "createdAt",
+      label: "Date",
+      render: (val) => formatDate(val),
+    },
+    {
+      key: "driver",
+      label: "Driver",
+      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
+    },
+    {
+      key: "startingPoint",
+      label: "Pickup",
+      render: (point) => (
+        <span
+          className="text-xs max-w-[150px] block truncate"
+          title={point?.placeName}
+        >
+          {point?.placeName || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "destination",
+      label: "Drop-off",
+      render: (point) => (
+        <span
+          className="text-xs max-w-[150px] block truncate"
+          title={point?.placeName}
+        >
+          {point?.placeName || "N/A"}
+        </span>
+      ),
+    },
+    {
+      key: "fareCharged",
+      label: "Fare",
+      render: (val) => `$${val || 0}`,
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (val) => (
+        <Badge
+          className="capitalize"
           variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
         >
           {val}
@@ -327,6 +382,24 @@ const RiderDetail = () => {
               ) : (
                 <p className="text-gray-500 text-center py-4">
                   No ride history available
+                </p>
+              )}
+            </div>
+          </Card>
+
+          {/* Carpool History */}
+          <Card>
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">
+                Carpool History
+              </h3>
+              {carpoolHistory && carpoolHistory.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table data={carpoolHistory} columns={carpoolHistoryColumns} />
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-4">
+                  No carpool history available
                 </p>
               )}
             </div>

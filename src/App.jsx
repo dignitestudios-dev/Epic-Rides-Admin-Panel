@@ -59,6 +59,7 @@ import Campaigns from "./pages/Campaigns";
 import CampaignDetail from "./pages/CampaignDetail";
 import PrivateRides from "./pages/PrivateRides";
 import CarpoolRides from "./pages/CarpoolRides";
+import CarpoolRideDetail from "./pages/CarpoolRideDetail";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
@@ -263,6 +264,7 @@ function App() {
                         />
                         <Route path="/private-rides" element={<PrivateRides />} />
                         <Route path="/carpool-rides" element={<CarpoolRides />} />
+                        <Route path="/carpool-rides/:id" element={<CarpoolRideDetail />} />
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
                         <Route
                           path="/reports-detail/:id"

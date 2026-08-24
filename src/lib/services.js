@@ -450,6 +450,8 @@ const getCarpoolRides = (page = 1, limit = 10, search = "", status = "", startDa
     return API.get(url);
   });
 
+const getCarpoolRideById = (id) => apiHandler(() => API.get(`/carpool-rides/${id}`));
+
 const exportCarpoolRides = (status, startDate = "", endDate = "") => {
   let url = `/carpool-rides/export?status=${status}`;
   if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
@@ -603,6 +605,7 @@ export const api = {
   getRides,
   exportRides,
   getCarpoolRides,
+  getCarpoolRideById,
   exportCarpoolRides,
   getSuspendedDrivers,
   getDriverSuspensionDetails,

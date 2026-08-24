@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { Eye, MapPin, User, Users, Car, Download, XCircle, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
@@ -33,89 +34,12 @@ const statusBadge = (status) => {
   }
 };
 
-const RideDetailDialog = ({ ride, onClose }) => {
-  const Row = ({ label, value }) => (
-    <div className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{label}</span>
-      <span className="text-sm font-medium text-gray-900 dark:text-white text-right break-words max-w-[60%]">
-        {value ?? "—"}
-      </span>
-    </div>
-  );
 
-  const Section = ({ title, children }) => (
-    <div className="mb-4">
-      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{title}</h4>
-      {children}
-    </div>
-  );
-
-  if (!ride) return null;
-
-  return (
-    <Modal isOpen={!!ride} onClose={onClose} title="Carpool Route Details" size="md">
-      <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-        <Section title="Route Info">
-          <Row label="Route ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
-          <Row label="Status" value={statusBadge(ride.status)} />
-          <Row label="Distance" value={ride.distance ? `${ride.distance.toFixed(2)} km` : null} />
-          <Row label="Est. Duration" value={ride.avgTime ? `${ride.avgTime} min` : null} />
-          <Row label="Pickup" value={ride.startingPoint} />
-          <Row label="Dropoff" value={ride.destination} />
-        </Section>
-
-        <Section title="Seats & Time">
-          <Row label="Max Passengers" value={ride.maxPassengers} />
-          <Row label="Available Seats" value={ride.availableSeats} />
-          <Row label="Grace Time" value={ride.graceTime ? `${ride.graceTime} min` : null} />
-        </Section>
-
-        {ride.stops && ride.stops.length > 0 && (
-          <Section title="Stops">
-            {ride.stops.map((stop, index) => (
-              <Row key={index} label={`Stop ${index + 1}`} value={stop.placeName || stop.address || stop} />
-            ))}
-          </Section>
-        )}
-
-        {ride.passengers && ride.passengers.length > 0 && (
-          <Section title="Passengers">
-            {ride.passengers.map((p, index) => {
-              const pName = fullName(p.user || p) || "Unknown User";
-              const pSeats = p.seats || p.bookedSeats || p.passengerCount || 1;
-              const pFare = p.fare != null ? `$${Number(p.fare).toFixed(2)}` : "—";
-              return (
-                <div key={index} className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">{pName}</span>
-                    <span className="text-xs text-gray-500">Seats Booked: {pSeats}</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600 dark:text-green-400 text-right mt-1">
-                    {pFare}
-                  </span>
-                </div>
-              );
-            })}
-          </Section>
-        )}
-
-        <Section title="Driver">
-          <Row label="Name" value={fullName(ride.driver)} />
-          <Row label="Email" value={ride.driver?.email} />
-          <Row label="Phone" value={ride.driver?.phone ? formatPhoneNumber(ride.driver.phone) : null} />
-        </Section>
-
-        <Section title="Timestamps">
-          <Row label="Created At" value={ride.createdAt ? formatDateTime(ride.createdAt) : null} />
-        </Section>
-      </div>
-    </Modal>
-  );
-};
 
 const CarpoolRides = () => {
   const { hasPermission } = useAuth();
   
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = usePersistentState("carpoolrides_activeTab", "completed");
   const [search, setSearch] = usePersistentState("carpoolrides_search", "");
   const [page, setPage] = usePersistentState("carpoolrides_page", 1);
@@ -123,10 +47,14 @@ const CarpoolRides = () => {
   const [startDate, setStartDate] = usePersistentState("carpoolrides_startDate", "");
   const [endDate, setEndDate] = usePersistentState("carpoolrides_endDate", "");
   
-  const [selectedRide, setSelectedRide] = useState(null);
-  const [isExporting, setIsExporting] = useState(false);
+  const [isExporting, React_useState] = React.useState(false);
+  const setIsExporting = React_useState;
 
   const debouncedSearch = useDebounce(search, 500);
+
+  const handleViewRide = (id) => {
+    navigate(`/carpool-rides/${id}`);
+  };
 
   const { rides, stats, loading, totalPages, totalData } = useGetCarpoolRides(
     page,
@@ -267,7 +195,12 @@ const CarpoolRides = () => {
       key: "_id",
       label: "",
       render: (_, row) => (
-        <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => setSelectedRide(row)}>
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          icon={<Eye className="w-4 h-4" />} 
+          onClick={() => handleViewRide(row._id)}
+        >
           View
         </Button>
       ),
@@ -385,11 +318,7 @@ const CarpoolRides = () => {
         />
       </Card>
 
-      {/* Detail Dialog */}
-      <RideDetailDialog
-        ride={selectedRide}
-        onClose={() => setSelectedRide(null)}
-      />
+
     </div>
   );
 };
