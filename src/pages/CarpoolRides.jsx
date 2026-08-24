@@ -157,10 +157,10 @@ const CarpoolRides = () => {
     },
     {
       key: "seats",
-      label: "Seats",
+      label: "Passengers",
       render: (_, row) => (
         <span className="text-sm text-gray-700 dark:text-gray-300">
-          {row.availableSeats} / {row.maxPassengers}
+          {row.maxPassengers - row.availableSeats} / {row.maxPassengers}
         </span>
       ),
     },
@@ -173,15 +173,18 @@ const CarpoolRides = () => {
         </span>
       ),
     },
-    {
-      key: "totalFare",
-      label: "Total Fare",
-      render: (val, row) => (
-        <span className="text-sm font-medium text-green-600 dark:text-green-400">
-          ${val != null ? Number(val).toFixed(2) : (row.fare != null ? Number(row.fare).toFixed(2) : "0.00")}
-        </span>
-      ),
-    },
+    // {
+    //   key: "totalFare",
+    //   label: "Total Fare",
+    //   render: (val, row) => {
+    //     const fare = row.totalFareReceived ?? row.totalFareCharged ?? row.totalFare ?? row.fare ?? val;
+    //     return (
+    //       <span className="text-sm font-medium text-green-600 dark:text-green-400">
+    //         ${fare != null ? Number(fare).toFixed(2) : "0.00"}
+    //       </span>
+    //     );
+    //   },
+    // },
     {
       key: "createdAt",
       label: "Date",

@@ -121,7 +121,7 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
                   Record #{idx + 1}
                 </h4>
                 <Row label="Type" value={typeBadge(suspension.suspensionType)} />
-                <Row label="Reason" value={suspension.reason === "admin_deactivated" ? "Deactivated by Admin" : suspension.reason} />
+                <Row label="Reason" value={suspension.reason === "admin_deactivated" ? "Deactivated by Admin" : suspension.reason === "ride_cancellations" ? "Ride Cancelled" : suspension.reason} />
                 <Row label="Suspended At" value={suspension.suspendedAt ? formatDateTime(suspension.suspendedAt) : "—"} />
                 <Row label="Time Left" value={formatRemainingTime(suspension.remainingSeconds)} />
                 
@@ -269,7 +269,7 @@ const SuspendedDrivers = () => {
       label: "Reason",
       render: (val) => (
         <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate block" title={val}>
-          {val === "admin_deactivated" ? "Deactivated by Admin" : (val || "—")}
+          {val === "admin_deactivated" ? "Deactivated by Admin" : val === "ride_cancellations" ? "Ride Cancelled" : (val || "—")}
         </span>
       ),
     },

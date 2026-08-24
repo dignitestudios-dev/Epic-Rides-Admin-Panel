@@ -198,7 +198,7 @@ console.log(details)
     {
       key: "fareCharged",
       label: "Fare",
-      render: (val) => `$${val || 0}`,
+      render: (val) => `$${val != null ? Number(val).toFixed(2) : "0.0000"}`,
     },
     {
       key: "status",

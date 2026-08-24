@@ -31,6 +31,14 @@ const statusBadge = (status) => {
   }
 };
 
+const formatMinutes = (totalMinutes) => {
+  if (totalMinutes === null || totalMinutes === undefined) return "—";
+  if (totalMinutes < 60) return `${Math.round(totalMinutes)} min`;
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = Math.round(totalMinutes % 60);
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+};
+
 const SectionHeading = ({ title, icon: Icon }) => (
   <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
     {Icon && <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />}
@@ -119,10 +127,11 @@ const CarpoolRideDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
             <SectionHeading title="Trip Overview" icon={Activity} />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               <InfoItem label="Distance" value={ride.distance ? `${ride.distance.toFixed(2)} km` : "—"} />
-              <InfoItem label="Est. Time" value={ride.avgTime ? `${ride.avgTime} min` : "—"} />
-              <InfoItem label="Seats" value={`${ride.maxPassengers - ride.availableSeats} / ${ride.maxPassengers} Booked`} />
+              <InfoItem label="Est. Time" value={formatMinutes(ride.avgTime)} />
+              <InfoItem label="Passengers" value={`${ride.maxPassengers - ride.availableSeats} / ${ride.maxPassengers} Booked`} />
+              <InfoItem label="Total Fare" value={`$${bookings?.reduce((sum, b) => sum + (b.fareCharged || 0), 0).toFixed(2) || "0.00"}`} />
               <InfoItem label="Created At" value={ride.createdAt ? formatDateTime(ride.createdAt) : "—"} />
             </div>
           </Card>
@@ -142,7 +151,7 @@ const CarpoolRideDetail = () => {
               </div>
 
               {/* Waypoints */}
-              {routes && routes.map((stop, idx) => (
+              {routes && routes.slice(1, -1).map((stop, idx) => (
                 <div key={idx} className="relative">
                   <div className="absolute -left-[30px] top-1.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-gray-800 z-10" />
                   <h4 className="text-sm font-medium text-gray-800 dark:text-gray-200">Stop {idx + 1}</h4>
@@ -190,9 +199,14 @@ const CarpoolRideDetail = () => {
                       <div className="flex items-center gap-3">
                         {statusBadge(booking.status)}
                         <Badge variant="outline">{booking.requiredSeats} Seat(s)</Badge>
-                        <span className="font-semibold text-green-600 dark:text-green-400">
-                          ${booking.fareCharged?.toFixed(2)}
-                        </span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-semibold text-green-600 dark:text-green-400">
+                            ${booking.fareCharged?.toFixed(2)}
+                          </span>
+                          <span className="text-[11px] text-gray-500">
+                            ${(booking.fareCharged / (booking.requiredSeats || 1)).toFixed(2)} / seat
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">

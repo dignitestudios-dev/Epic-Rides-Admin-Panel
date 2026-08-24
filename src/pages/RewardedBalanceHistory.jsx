@@ -37,8 +37,8 @@ const RewardedBalanceHistory = () => {
     debouncedSearch,
     startDate,
     endDate,
-    sortBy?.target?.value,
-    order?.target?.value
+    sortBy?.target?.value || sortBy,
+    order?.target?.value || order
   );
 
   const isFirstRender = useRef(true);
@@ -212,7 +212,7 @@ const RewardedBalanceHistory = () => {
                 { label: "Reward Date", value: "date" },
                 { label: "Amount", value: "amount" },
               ],
-              value: sortBy?.target?.value,
+              value: sortBy?.target?.value || sortBy,
               onChange: (val) => { setSortBy(val?.value || val); setPage(1); },
             },
             {
@@ -223,7 +223,7 @@ const RewardedBalanceHistory = () => {
                 { label: "Descending", value: "desc" },
                 { label: "Ascending", value: "asc" },
               ],
-              value: order?.target?.value,
+              value: order?.target?.value || order,
               onChange: (val) => { setOrder(val?.value || val); setPage(1); },
             },
           ]}
