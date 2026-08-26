@@ -527,10 +527,17 @@ const getUserRedemptionHistory = (campaignId, userId) =>
   apiHandler(() => API.get(`/campaigns/${campaignId}/redemptions/${userId}`));
 
 // Ride Rates & Peak Windows API
-const getRideRates = () => apiHandler(() => API.get("/ride-rates"));
+const getRideRates = (city) =>
+  apiHandler(() => API.get(city ? `/ride-rates?city=${encodeURIComponent(city)}` : "/ride-rates"));
 
 const updateRideRate = (rideType, payload) =>
   apiHandler(() => API.put(`/ride-rates/${rideType}`, payload));
+
+const createCityRideRate = (payload) =>
+  apiHandler(() => API.post("/city-ride-rates", payload));
+
+const updateCityRideRate = (id, payload) =>
+  apiHandler(() => API.put(`/city-ride-rates/${id}`, payload));
 
 const getPeakWindows = () => apiHandler(() => API.get("/peak-windows"));
 
@@ -624,6 +631,8 @@ export const api = {
   getUserRedemptionHistory,
   getRideRates,
   updateRideRate,
+  createCityRideRate,
+  updateCityRideRate,
   getPeakWindows,
   createPeakWindow,
   updatePeakWindow,

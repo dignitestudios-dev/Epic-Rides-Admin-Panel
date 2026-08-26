@@ -4,15 +4,21 @@ import { handleError, handleSuccess } from "../../utils/helpers";
 
 const useRideRatesActions = () => {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState({ rates: [], cityRates: [], peakWindows: [] });
+  const [cityFilter, setCityFilter] = useState("");
 
-  const getRideRates = useCallback(async () => {
+  const getRideRates = useCallback(async (city) => {
     setLoading(true);
     try {
-      const response = await api.getRideRates();
-      const payload = response.data?.data || response.data || { rates: [], peakWindows: [] };
-      setData(payload);
-      return payload;
+      const response = await api.getRideRates(city);
+      const payload = response.data?.data || response.data || {};
+      const normalizedData = {
+        rates: payload.rates || [],
+        cityRates: payload.cityRates || [],
+        peakWindows: payload.peakWindows || [],
+      };
+      setData(normalizedData);
+      return normalizedData;
     } catch (error) {
       handleError(error);
       return null;
@@ -25,8 +31,38 @@ const useRideRatesActions = () => {
     setLoading(true);
     try {
       const response = await api.updateRideRate(rideType, payload);
-      handleSuccess(`${rideType.charAt(0).toUpperCase() + rideType.slice(1)} ride rate updated successfully`);
-      await getRideRates();
+      handleSuccess(`${rideType.charAt(0).toUpperCase() + rideType.slice(1)} global ride rate updated successfully`);
+      await getRideRates(cityFilter);
+      return response.data?.data || response.data;
+    } catch (error) {
+      handleError(error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createCityRideRate = async (payload) => {
+    setLoading(true);
+    try {
+      const response = await api.createCityRideRate(payload);
+      handleSuccess(response?.data?.message || response?.message || "City pricing created successfully");
+      await getRideRates(cityFilter);
+      return response.data?.data || response.data;
+    } catch (error) {
+      handleError(error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateCityRideRate = async (id, payload) => {
+    setLoading(true);
+    try {
+      const response = await api.updateCityRideRate(id, payload);
+      handleSuccess(response?.data?.message || response?.message || "City pricing updated successfully");
+      await getRideRates(cityFilter);
       return response.data?.data || response.data;
     } catch (error) {
       handleError(error);
@@ -37,14 +73,18 @@ const useRideRatesActions = () => {
   };
 
   useEffect(() => {
-    getRideRates();
-  }, [getRideRates]);
+    getRideRates(cityFilter);
+  }, [getRideRates, cityFilter]);
 
   return {
     loading,
     data,
+    cityFilter,
+    setCityFilter,
     getRideRates,
     updateRideRate,
+    createCityRideRate,
+    updateCityRideRate,
   };
 };
 
