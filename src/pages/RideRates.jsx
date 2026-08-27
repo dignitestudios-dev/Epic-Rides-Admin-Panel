@@ -17,7 +17,9 @@ import {
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import { FLORIDA_CITIES } from "../config/constants";
 import useRideRatesActions from "../hooks/ride-rates/useRideRatesActions";
 
 // Standard 5 mileage brackets required for city-based pricing
@@ -197,6 +199,15 @@ const RideRates = () => {
   });
 
   const watchCityIsActive = watchCity("isActive");
+  const watchCityName = watchCity("city");
+
+  const cityOptions = useMemo(() => {
+    const currentCity = watchCityName || editingCityRate?.city;
+    if (currentCity && !FLORIDA_CITIES.some((c) => c.value.toLowerCase() === currentCity.toLowerCase())) {
+      return [{ value: currentCity, label: currentCity }, ...FLORIDA_CITIES];
+    }
+    return FLORIDA_CITIES;
+  }, [watchCityName, editingCityRate]);
 
   useEffect(() => {
     resetCity(cityFormDefaults);
@@ -599,10 +610,18 @@ const RideRates = () => {
       >
         <form onSubmit={handleSubmitCity(onSubmitCity)} className="space-y-5">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input
+            <Select
               label="City Name"
-              placeholder="e.g. Miami"
-              {...registerCity("city")}
+              placeholder="Select a city..."
+              searchable={true}
+              options={cityOptions}
+              value={watchCityName}
+              onChange={(e) =>
+                setCityValue("city", e.target.value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
               error={cityErrors.city?.message}
             />
 

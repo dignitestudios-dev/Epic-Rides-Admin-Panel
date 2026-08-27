@@ -19,40 +19,10 @@ import Select from "../components/ui/Select";
 import MultiSelect from "../components/ui/MultiSelect";
 import StatsCard from "../components/common/StatsCard";
 import { formatDate } from "../utils/helpers";
-import { PAGINATION_CONFIG } from "../config/constants";
+import { PAGINATION_CONFIG, FLORIDA_CITIES } from "../config/constants";
 import useCampaigns from "../hooks/campaigns/useCampaigns";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
-
-const FLORIDA_CITIES = [
-  { value: "Jacksonville", label: "Jacksonville, FL" },
-  { value: "Miami", label: "Miami, FL" },
-  { value: "Tampa", label: "Tampa, FL" },
-  { value: "Orlando", label: "Orlando, FL" },
-  { value: "St. Petersburg", label: "St. Petersburg, FL" },
-  { value: "Hialeah", label: "Hialeah, FL" },
-  { value: "Tallahassee", label: "Tallahassee, FL" },
-  { value: "Fort Lauderdale", label: "Fort Lauderdale, FL" },
-  { value: "Port St. Lucie", label: "Port St. Lucie, FL" },
-  { value: "Cape Coral", label: "Cape Coral, FL" },
-  { value: "Pembroke Pines", label: "Pembroke Pines, FL" },
-  { value: "Hollywood", label: "Hollywood, FL" },
-  { value: "Miramar", label: "Miramar, FL" },
-  { value: "Gainesville", label: "Gainesville, FL" },
-  { value: "Coral Springs", label: "Coral Springs, FL" },
-  { value: "Clearwater", label: "Clearwater, FL" },
-  { value: "Palm Bay", label: "Palm Bay, FL" },
-  { value: "Pompano Beach", label: "Pompano Beach, FL" },
-  { value: "Lakeland", label: "Lakeland, FL" },
-  { value: "West Palm Beach", label: "West Palm Beach, FL" },
-  { value: "Miami Gardens", label: "Miami Gardens, FL" },
-  { value: "Sarasota", label: "Sarasota, FL" },
-  { value: "Fort Myers", label: "Fort Myers, FL" },
-  { value: "Naples", label: "Naples, FL" },
-  { value: "Pensacola", label: "Pensacola, FL" },
-  { value: "Daytona Beach", label: "Daytona Beach, FL" },
-  { value: "Ocala", label: "Ocala, FL" },
-];
 
 const EMPTY_FORM = {
   name: "",
