@@ -72,6 +72,53 @@ const useRideRatesActions = () => {
     }
   };
 
+  const deleteCityRideRate = async (id) => {
+    setLoading(true);
+    try {
+      const response = await api.deleteCityRideRate(id);
+      handleSuccess(response?.data?.message || response?.message || "City pricing deleted successfully");
+      await getRideRates(cityFilter);
+      return response.data?.data || response.data;
+    } catch (error) {
+      handleError(error);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleCityRideRateStatus = async (rate) => {
+    const rateId = rate._id || rate.id;
+    if (!rateId) return;
+
+    const previousIsActive = rate.isActive;
+    const nextIsActive = !previousIsActive;
+
+    // 1. Instant Optimistic State Update
+    setData((prev) => ({
+      ...prev,
+      cityRates: prev.cityRates.map((item) =>
+        (item._id || item.id) === rateId ? { ...item, isActive: nextIsActive } : item
+      ),
+    }));
+
+    try {
+      const response = await api.updateCityRideRate(rateId, { isActive: nextIsActive });
+      handleSuccess(response?.data?.message || response?.message || "Status updated successfully");
+      return response.data?.data || response.data;
+    } catch (error) {
+      // Revert optimistic update on failure
+      setData((prev) => ({
+        ...prev,
+        cityRates: prev.cityRates.map((item) =>
+          (item._id || item.id) === rateId ? { ...item, isActive: previousIsActive } : item
+        ),
+      }));
+      handleError(error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     getRideRates(cityFilter);
   }, [getRideRates, cityFilter]);
@@ -81,10 +128,14 @@ const useRideRatesActions = () => {
     data,
     cityFilter,
     setCityFilter,
+    cityNameFilter: cityFilter,
+    setCityNameFilter: setCityFilter,
     getRideRates,
     updateRideRate,
     createCityRideRate,
     updateCityRideRate,
+    deleteCityRideRate,
+    toggleCityRideRateStatus,
   };
 };
 

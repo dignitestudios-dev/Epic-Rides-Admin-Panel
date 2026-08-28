@@ -10,8 +10,11 @@ import {
   MapPin,
   Plus,
   RefreshCcw,
+  Search,
   ToggleLeft,
   ToggleRight,
+  Trash2,
+  X as XIcon,
   XCircle,
 } from "lucide-react";
 import Card from "../components/ui/Card";
@@ -19,8 +22,10 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import ConfirmModal from "../components/global/ConfirmModal";
 import { FLORIDA_CITIES } from "../config/constants";
 import useRideRatesActions from "../hooks/ride-rates/useRideRatesActions";
+import useDebounce from "../hooks/global/useDebounce";
 
 // Standard 5 mileage brackets required for city-based pricing
 const DEFAULT_CITY_BRACKETS = [
@@ -31,41 +36,133 @@ const DEFAULT_CITY_BRACKETS = [
   { minMiles: 21, maxMiles: null, price: 30 },
 ];
 
+const RIDE_TYPE_ORDER = {
+  economy: 1,
+  luxury: 2,
+  carpool: 3,
+};
+
+const RIDE_TYPE_OPTIONS = [
+  { value: "economy", label: "Economy" },
+  { value: "luxury", label: "Luxury" },
+  { value: "carpool", label: "Carpool" },
+];
+
+const getRideTypePriority = (type) => {
+  const normalized = String(type || "").toLowerCase().trim();
+  return RIDE_TYPE_ORDER[normalized] ?? 99;
+};
+
 const cityBracketSchema = z.object({
-  minMiles: z.coerce.number().min(0, "Min miles must be 0 or more"),
-  maxMiles: z
-    .union([z.coerce.number().positive("Max miles must be greater than 0"), z.literal("")])
-    .nullable()
-    .optional(),
-  price: z.coerce.number().min(0, "Price must be 0 or greater"),
+  minMiles: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.coerce
+      .number({
+        required_error: "Min miles is required",
+        invalid_type_error: "Min miles must be a number",
+      })
+      .min(0, "Min miles must be 0 or more")
+  ),
+  maxMiles: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z
+      .union([
+        z.coerce.number().positive("Max miles must be greater than 0"),
+        z.null(),
+      ])
+      .optional()
+  ),
+  price: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.coerce
+      .number({
+        required_error: "Price is required",
+        invalid_type_error: "Price must be a valid number",
+      })
+      .min(0, "Price must be 0 or greater")
+      .max(99999, "Price cannot exceed $99,999")
+  ),
 });
 
 const cityRateSchema = z.object({
-  city: z.string().trim().min(1, "City name is required"),
+  city: z
+    .string({ required_error: "City name is required" })
+    .trim()
+    .min(1, "City name is required")
+    .max(50, "City name cannot exceed 50 characters"),
   rideType: z.enum(["economy", "luxury", "carpool"], {
-    errorMap: () => ({ message: "Ride type must be economy, luxury, or carpool" }),
+    errorMap: () => ({ message: "Ride type is required" }),
   }),
-  peakSurchargePerMile: z.coerce.number().min(0, "Peak surcharge must be 0 or greater"),
+  peakSurchargePerMile: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.coerce
+      .number({
+        required_error: "Peak surcharge is required",
+        invalid_type_error: "Peak surcharge must be a valid number",
+      })
+      .min(0, "Peak surcharge must be 0 or greater")
+      .max(9999, "Peak surcharge cannot exceed $9,999")
+  ),
   isActive: z.boolean(),
   brackets: z.array(cityBracketSchema).length(5, "Exactly 5 mileage brackets are required"),
 });
 
 // Global rate schema
 const globalBracketSchema = z.object({
-  minMiles: z.coerce.number().min(0, "Min miles must be 0 or more"),
-  maxMiles: z
-    .union([z.coerce.number().positive("Max miles must be greater than 0"), z.literal("")])
-    .nullable()
-    .optional(),
-  ratePerMile: z.coerce.number().positive("Rate per mile must be greater than 0"),
+  minMiles: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.coerce
+      .number({
+        required_error: "Min miles is required",
+        invalid_type_error: "Min miles must be a number",
+      })
+      .min(0, "Min miles must be 0 or more")
+  ),
+  maxMiles: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? null : val),
+    z
+      .union([
+        z.coerce.number().positive("Max miles must be greater than 0"),
+        z.null(),
+      ])
+      .optional()
+  ),
+  ratePerMile: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : val),
+    z.coerce
+      .number({
+        required_error: "Rate per mile is required",
+        invalid_type_error: "Rate per mile must be a valid number",
+      })
+      .positive("Rate per mile must be greater than 0")
+      .max(9999, "Rate per mile cannot exceed $9,999")
+  ),
 });
 
 const globalRateSchema = z
   .object({
-    rideType: z.string().min(1),
+    rideType: z.string().min(1, "Ride type is required"),
     brackets: z.array(globalBracketSchema).min(1, "At least one bracket is required"),
-    peakSurchargePerMile: z.coerce.number().min(0).max(100000, "Peak surcharge cannot exceed 100000"),
-    discountPercentage: z.coerce.number().min(0).max(100),
+    peakSurchargePerMile: z.preprocess(
+      (val) => (val === "" || val === null || val === undefined ? undefined : val),
+      z.coerce
+        .number({
+          required_error: "Peak surcharge is required",
+          invalid_type_error: "Peak surcharge must be a valid number",
+        })
+        .min(0, "Peak surcharge must be 0 or greater")
+        .max(9999, "Peak surcharge cannot exceed $9,999")
+    ),
+    discountPercentage: z.preprocess(
+      (val) => (val === "" || val === null || val === undefined ? undefined : val),
+      z.coerce
+        .number({
+          required_error: "Discount percentage is required",
+          invalid_type_error: "Discount percentage must be a valid number",
+        })
+        .min(0, "Discount percentage must be 0 or greater")
+        .max(100, "Discount percentage cannot exceed 100")
+    ),
   })
   .superRefine((value, ctx) => {
     value.brackets.forEach((bracket, index) => {
@@ -149,22 +246,51 @@ const normalizeGlobalBrackets = (brackets) =>
   });
 
 const RideRates = () => {
+  const [searchCity, setSearchCity] = useState("");
+  const debouncedSearchCity = useDebounce(searchCity, 400);
+
   const {
     loading,
     data,
     updateRideRate,
     createCityRideRate,
     updateCityRideRate,
+    deleteCityRideRate,
+    toggleCityRideRateStatus,
+    setCityFilter,
   } = useRideRatesActions();
+
+  useEffect(() => {
+    setCityFilter(debouncedSearchCity);
+  }, [debouncedSearchCity, setCityFilter]);
 
   const [activeTab, setActiveTab] = useState("city"); // "city" | "global"
   const [editingCityRate, setEditingCityRate] = useState(null); // null | object
   const [isCreatingCity, setIsCreatingCity] = useState(false);
   const [editingGlobalRate, setEditingGlobalRate] = useState(null);
+  const [deleteCityTarget, setDeleteCityTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [togglingCityIds, setTogglingCityIds] = useState(new Set());
 
   const globalRates = data?.rates || [];
   const cityRates = data?.cityRates || [];
   const peakWindows = data?.peakWindows || [];
+
+  const sortedCityRates = useMemo(() => {
+    return [...cityRates].sort((a, b) => {
+      const cityComparison = (a.city || "").localeCompare(b.city || "", undefined, {
+        sensitivity: "base",
+      });
+      if (cityComparison !== 0) return cityComparison;
+      return getRideTypePriority(a.rideType) - getRideTypePriority(b.rideType);
+    });
+  }, [cityRates]);
+
+  const sortedGlobalRates = useMemo(() => {
+    return [...globalRates].sort(
+      (a, b) => getRideTypePriority(a.rideType) - getRideTypePriority(b.rideType)
+    );
+  }, [globalRates]);
 
   // Form for City Rate (Create / Edit)
   const cityFormDefaults = useMemo(() => {
@@ -200,6 +326,7 @@ const RideRates = () => {
 
   const watchCityIsActive = watchCity("isActive");
   const watchCityName = watchCity("city");
+  const watchRideType = watchCity("rideType");
 
   const cityOptions = useMemo(() => {
     const currentCity = watchCityName || editingCityRate?.city;
@@ -210,8 +337,30 @@ const RideRates = () => {
   }, [watchCityName, editingCityRate]);
 
   useEffect(() => {
-    resetCity(cityFormDefaults);
-  }, [cityFormDefaults, resetCity]);
+    if (editingCityRate) {
+      resetCity({
+        city: editingCityRate.city || "",
+        rideType: editingCityRate.rideType || "economy",
+        peakSurchargePerMile: editingCityRate.peakSurchargePerMile ?? 0,
+        isActive: editingCityRate.isActive ?? true,
+        brackets: editingCityRate.brackets?.length === 5
+          ? editingCityRate.brackets.map((b) => ({
+              minMiles: b.minMiles,
+              maxMiles: b.maxMiles ?? "",
+              price: b.price ?? 0,
+            }))
+          : DEFAULT_CITY_BRACKETS,
+      });
+    } else if (isCreatingCity) {
+      resetCity({
+        city: "",
+        rideType: "economy",
+        peakSurchargePerMile: 0,
+        isActive: true,
+        brackets: DEFAULT_CITY_BRACKETS,
+      });
+    }
+  }, [editingCityRate, isCreatingCity, resetCity]);
 
   // Form for Global Rate (Edit)
   const globalFormDefaults = useMemo(() => {
@@ -278,16 +427,43 @@ const RideRates = () => {
   const handleOpenCreateCity = () => {
     setEditingCityRate(null);
     setIsCreatingCity(true);
+    resetCity({
+      city: "",
+      rideType: "economy",
+      peakSurchargePerMile: 0,
+      isActive: true,
+      brackets: DEFAULT_CITY_BRACKETS,
+    });
   };
 
   const handleOpenEditCity = (rate) => {
     setIsCreatingCity(false);
     setEditingCityRate(rate);
+    resetCity({
+      city: rate.city || "",
+      rideType: rate.rideType || "economy",
+      peakSurchargePerMile: rate.peakSurchargePerMile ?? 0,
+      isActive: rate.isActive ?? true,
+      brackets: rate.brackets?.length === 5
+        ? rate.brackets.map((b) => ({
+            minMiles: b.minMiles,
+            maxMiles: b.maxMiles ?? "",
+            price: b.price ?? 0,
+          }))
+        : DEFAULT_CITY_BRACKETS,
+    });
   };
 
   const handleCloseCityModal = () => {
     setIsCreatingCity(false);
     setEditingCityRate(null);
+    resetCity({
+      city: "",
+      rideType: "economy",
+      peakSurchargePerMile: 0,
+      isActive: true,
+      brackets: DEFAULT_CITY_BRACKETS,
+    });
   };
 
   const onSubmitCity = async (values) => {
@@ -303,18 +479,44 @@ const RideRates = () => {
       })),
     };
 
+    let res;
     if (editingCityRate?._id || editingCityRate?.id) {
-      await updateCityRideRate(editingCityRate._id || editingCityRate.id, payload);
+      res = await updateCityRideRate(editingCityRate._id || editingCityRate.id, payload);
     } else {
-      await createCityRideRate(payload);
+      res = await createCityRideRate(payload);
     }
-    handleCloseCityModal();
+    if (res) {
+      handleCloseCityModal();
+    }
   };
 
   const handleToggleCityActive = async (rate) => {
     const rateId = rate._id || rate.id;
+    if (!rateId || togglingCityIds.has(rateId)) return;
+
+    setTogglingCityIds((prev) => new Set(prev).add(rateId));
+    try {
+      await toggleCityRideRateStatus(rate);
+    } finally {
+      setTogglingCityIds((prev) => {
+        const next = new Set(prev);
+        next.delete(rateId);
+        return next;
+      });
+    }
+  };
+
+  const handleConfirmDeleteCity = async () => {
+    if (!deleteCityTarget) return;
+    const rateId = deleteCityTarget._id || deleteCityTarget.id;
     if (!rateId) return;
-    await updateCityRideRate(rateId, { isActive: !rate.isActive });
+    setDeleteLoading(true);
+    try {
+      await deleteCityRideRate(rateId);
+      setDeleteCityTarget(null);
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   // Global Handlers
@@ -322,11 +524,13 @@ const RideRates = () => {
   const handleCloseGlobalModal = () => setEditingGlobalRate(null);
 
   const onSubmitGlobal = async (values) => {
-    await updateRideRate(editingGlobalRate.rideType, {
+    const res = await updateRideRate(editingGlobalRate.rideType, {
       ...values,
       brackets: normalizeGlobalBrackets(values.brackets),
     });
-    handleCloseGlobalModal();
+    if (res) {
+      handleCloseGlobalModal();
+    }
   };
 
   return (
@@ -388,6 +592,35 @@ const RideRates = () => {
       {/* Tab Content: City-Based Pricing */}
       {activeTab === "city" && (
         <div className="space-y-6">
+          {/* Search Filter Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="w-full sm:max-w-md">
+              <Input
+                placeholder="Search by city name (e.g. Orlando, Miami)..."
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                leftIcon={<Search className="h-4 w-4 text-gray-400" />}
+                rightIcon={
+                  searchCity ? (
+                    <button
+                      type="button"
+                      onClick={() => setSearchCity("")}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  ) : null
+                }
+                className="bg-white dark:bg-gray-800"
+              />
+            </div>
+            {searchCity && (
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Found {cityRates.length} rate{cityRates.length === 1 ? "" : "s"} for "{searchCity}"
+              </div>
+            )}
+          </div>
+
           {/* Loading State */}
           {loading && !cityRates.length ? (
             <div className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-12 text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -399,11 +632,20 @@ const RideRates = () => {
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
                 <MapPin className="h-6 w-6" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">No City Rates Found</h3>
+              <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                {searchCity ? `No City Rates matching "${searchCity}"` : "No City Rates Found"}
+              </h3>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                No city pricing rates have been configured yet. Create a city pricing record to replace fallback per-mile rates.
+                {searchCity
+                  ? "Try searching for another city name or clear the search filter."
+                  : "No city pricing rates have been configured yet. Create a city pricing record to replace fallback per-mile rates."}
               </p>
-              <div className="mt-6 flex justify-center">
+              <div className="mt-6 flex justify-center gap-3">
+                {searchCity && (
+                  <Button variant="outline" onClick={() => setSearchCity("")}>
+                    Clear Search
+                  </Button>
+                )}
                 <Button onClick={handleOpenCreateCity} icon={<Plus className="h-4 w-4" />}>
                   Create City Pricing
                 </Button>
@@ -411,7 +653,7 @@ const RideRates = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              {cityRates.map((rate) => {
+              {sortedCityRates.map((rate) => {
                 const rateId = rate._id || rate.id;
                 return (
                   <Card
@@ -450,14 +692,15 @@ const RideRates = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             role="switch"
                             aria-checked={rate.isActive}
+                            disabled={togglingCityIds.has(rateId)}
                             onClick={() => handleToggleCityActive(rate)}
                             title={rate.isActive ? "Deactivate city rate" : "Activate city rate"}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed ${
                               rate.isActive ? "bg-indigo-600 dark:bg-indigo-500" : "bg-gray-300 dark:bg-gray-700"
                             }`}
                           >
@@ -475,6 +718,14 @@ const RideRates = () => {
                           >
                             Edit
                           </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => setDeleteCityTarget(rate)}
+                            icon={<Trash2 className="h-4 w-4" />}
+                          >
+                            Delete
+                          </Button>
                         </div>
                       </div>
 
@@ -491,7 +742,7 @@ const RideRates = () => {
                             >
                               <div>
                                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  {b.minMiles} – {b.maxMiles != null ? `${b.maxMiles} mi` : "21+ mi"}
+                                  {b.minMiles} – {b.maxMiles != null ? `${b.maxMiles} miles` : "21+ miles"}
                                 </span>
                               </div>
                               <span className="text-sm font-bold text-gray-900 dark:text-white">
@@ -509,7 +760,7 @@ const RideRates = () => {
                             Peak Surcharge Per Mile
                           </span>
                           <span className="text-base font-bold text-gray-900 dark:text-white">
-                            ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mi
+                            ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mile
                           </span>
                         </div>
                       </div>
@@ -536,7 +787,7 @@ const RideRates = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-              {globalRates.map((rate) => (
+              {sortedGlobalRates.map((rate) => (
                 <Card key={rate.rideType} className="border border-gray-200 shadow-sm dark:border-gray-800">
                   <Card.Content>
                     <div className="flex items-start justify-between gap-3">
@@ -583,7 +834,7 @@ const RideRates = () => {
                       <div className="rounded-xl bg-indigo-50 px-4 py-3 dark:bg-indigo-950/40">
                         <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Peak surcharge</div>
                         <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                          ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mi
+                          ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mile
                         </div>
                       </div>
                       <div className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
@@ -625,23 +876,21 @@ const RideRates = () => {
               error={cityErrors.city?.message}
             />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Ride Type
-              </label>
-              <select
-                {...registerCity("rideType")}
-                disabled={!!editingCityRate}
-                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white disabled:opacity-60"
-              >
-                <option value="economy">Economy</option>
-                <option value="luxury">Luxury</option>
-                <option value="carpool">Carpool</option>
-              </select>
-              {cityErrors.rideType?.message && (
-                <p className="mt-1 text-xs text-red-500">{cityErrors.rideType.message}</p>
-              )}
-            </div>
+            <Select
+              label="Ride Type"
+              placeholder="Select a ride type..."
+              searchable={false}
+              disabled={!!editingCityRate}
+              options={RIDE_TYPE_OPTIONS}
+              value={watchRideType}
+              onChange={(e) =>
+                setCityValue("rideType", e.target.value, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+              error={cityErrors.rideType?.message}
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -649,6 +898,12 @@ const RideRates = () => {
               label="Peak Surcharge Per Mile ($)"
               type="number"
               step="0.01"
+              min="0"
+              max="9999"
+              maxLength={6}
+              onInput={(e) => {
+                if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6);
+              }}
               placeholder="0.25"
               {...registerCity("peakSurchargePerMile")}
               error={cityErrors.peakSurchargePerMile?.message}
@@ -721,6 +976,12 @@ const RideRates = () => {
                       label="Fixed Price ($)"
                       type="number"
                       step="0.01"
+                      min="0"
+                      max="99999"
+                      maxLength={6}
+                      onInput={(e) => {
+                        if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6);
+                      }}
                       placeholder="e.g. 15.00"
                       {...registerCity(`brackets.${bracket.index}.price`)}
                       error={cityErrors.brackets?.[bracket.index]?.price?.message}
@@ -755,7 +1016,12 @@ const RideRates = () => {
               label="Peak surcharge per mile ($)"
               type="number"
               step="0.01"
-              max="100000"
+              min="0"
+              max="9999"
+              maxLength={6}
+              onInput={(e) => {
+                if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6);
+              }}
               {...registerGlobal("peakSurchargePerMile")}
               error={globalErrors.peakSurchargePerMile?.message}
             />
@@ -763,6 +1029,12 @@ const RideRates = () => {
               label="Discount percentage (%)"
               type="number"
               step="0.01"
+              min="0"
+              max="100"
+              maxLength={5}
+              onInput={(e) => {
+                if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5);
+              }}
               {...registerGlobal("discountPercentage")}
               error={globalErrors.discountPercentage?.message}
             />
@@ -790,6 +1062,12 @@ const RideRates = () => {
                       label="Min miles"
                       type="number"
                       step="1"
+                      min="0"
+                      max="9999"
+                      maxLength={5}
+                      onInput={(e) => {
+                        if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5);
+                      }}
                       {...registerGlobal(`brackets.${index}.minMiles`)}
                       error={globalErrors.brackets?.[index]?.minMiles?.message}
                       readOnly={index > 0}
@@ -798,6 +1076,12 @@ const RideRates = () => {
                       label="Max miles"
                       type="number"
                       step="1"
+                      min="1"
+                      max="9999"
+                      maxLength={5}
+                      onInput={(e) => {
+                        if (e.target.value.length > 5) e.target.value = e.target.value.slice(0, 5);
+                      }}
                       placeholder="Leave blank for infinity"
                       {...registerGlobal(`brackets.${index}.maxMiles`)}
                       error={globalErrors.brackets?.[index]?.maxMiles?.message}
@@ -806,6 +1090,12 @@ const RideRates = () => {
                       label="Rate per mile ($)"
                       type="number"
                       step="0.01"
+                      min="0"
+                      max="9999"
+                      maxLength={6}
+                      onInput={(e) => {
+                        if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6);
+                      }}
                       {...registerGlobal(`brackets.${index}.ratePerMile`)}
                       error={globalErrors.brackets?.[index]?.ratePerMile?.message}
                     />
@@ -836,6 +1126,16 @@ const RideRates = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Confirm Delete City Rate Modal */}
+      <ConfirmModal
+        isOpen={!!deleteCityTarget}
+        onClose={() => setDeleteCityTarget(null)}
+        title="Delete City Pricing"
+        message={`Are you sure you want to delete ${deleteCityTarget?.city} (${deleteCityTarget?.rideType}) pricing? This action cannot be undone and rides in this city will fall back to global rates.`}
+        confirmText={deleteLoading ? "Deleting..." : "Delete"}
+        onConfirm={handleConfirmDeleteCity}
+      />
     </div>
   );
 };

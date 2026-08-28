@@ -527,8 +527,18 @@ const getUserRedemptionHistory = (campaignId, userId) =>
   apiHandler(() => API.get(`/campaigns/${campaignId}/redemptions/${userId}`));
 
 // Ride Rates & Peak Windows API
-const getRideRates = (city) =>
-  apiHandler(() => API.get(city ? `/ride-rates?city=${encodeURIComponent(city)}` : "/ride-rates"));
+const getRideRates = (cityName) => {
+  if (typeof cityName === "string" && cityName.trim()) {
+    return apiHandler(() => API.get(`/ride-rates?cityName=${encodeURIComponent(cityName.trim())}`));
+  }
+  if (cityName && typeof cityName === "object") {
+    const searchVal = cityName.cityName || cityName.city;
+    if (searchVal && typeof searchVal === "string" && searchVal.trim()) {
+      return apiHandler(() => API.get(`/ride-rates?cityName=${encodeURIComponent(searchVal.trim())}`));
+    }
+  }
+  return apiHandler(() => API.get("/ride-rates"));
+};
 
 const updateRideRate = (rideType, payload) =>
   apiHandler(() => API.put(`/ride-rates/${rideType}`, payload));
@@ -538,6 +548,9 @@ const createCityRideRate = (payload) =>
 
 const updateCityRideRate = (id, payload) =>
   apiHandler(() => API.put(`/city-ride-rates/${id}`, payload));
+
+const deleteCityRideRate = (id) =>
+  apiHandler(() => API.delete(`/city-ride-rates/${id}`));
 
 const getPeakWindows = () => apiHandler(() => API.get("/peak-windows"));
 
@@ -633,6 +646,7 @@ export const api = {
   updateRideRate,
   createCityRideRate,
   updateCityRideRate,
+  deleteCityRideRate,
   getPeakWindows,
   createPeakWindow,
   updatePeakWindow,

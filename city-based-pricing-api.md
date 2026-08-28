@@ -28,9 +28,10 @@ admin endpoints require an authenticated admin.
 | --- | --- | --- |
 | `POST` | `/admin/login` | Obtain an admin JWT |
 | `GET` | `/admin/ride-rates` | List global rates, city rates, and peak windows |
-| `GET` | `/admin/ride-rates?city=Miami` | List pricing filtered to one city |
+| `GET` | `/admin/ride-rates?cityName=Miami` | List pricing filtered to one city or search term |
 | `POST` | `/admin/city-ride-rates` | Create pricing for a city and ride type |
 | `PUT` | `/admin/city-ride-rates/:id` | Update city pricing or its peak surcharge |
+| `DELETE` | `/admin/city-ride-rates/:id` | Delete city pricing |
 | `PUT` | `/admin/ride-rates/:rideType` | Update the existing global fallback rate |
 | `GET` | `/admin/peak-windows` | List the global peak-hour windows |
 | `POST` | `/admin/peak-windows` | Create a peak-hour window |
@@ -276,6 +277,13 @@ curl --request PUT "$BASE_URL/admin/city-ride-rates/$CITY_RATE_ID" \
   --header "Authorization: Bearer $ADMIN_TOKEN" \
   --header "Content-Type: application/json" \
   --data '{ "isActive": false }'
+```
+
+### Delete city pricing
+
+```bash
+curl --request DELETE "$BASE_URL/admin/city-ride-rates/$CITY_RATE_ID" \
+  --header "Authorization: Bearer $ADMIN_TOKEN"
 ```
 
 ## 6. Calculate a city fare
