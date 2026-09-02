@@ -60,6 +60,11 @@ const RideConfigurationTab = () => {
       return;
     }
 
+    if (radiusNum > 99 || nearbyRadius.length > 2) {
+      setError("Nearby radius cannot exceed 2 digits (max 99 miles).");
+      return;
+    }
+
     setError("");
     setSaving(true);
     try {
@@ -117,19 +122,22 @@ const RideConfigurationTab = () => {
                   label="Nearby Radius (in miles) *"
                   name="nearbyRadius"
                   type="number"
-                  step="any"
-                  min="0.1"
+                  min="1"
+                  max="99"
+                  maxLength={2}
                   placeholder="e.g. 5"
                   value={nearbyRadius}
                   onChange={(e) => {
-                    setNearbyRadius(e.target.value);
+                    const val = e.target.value;
+                    if (val.length > 2) return;
+                    setNearbyRadius(val);
                     if (error) setError("");
                   }}
                   error={error}
                   disabled={saving}
                 />
                 <p className="text-xs text-gray-500 mt-1.5">
-                  Enter the maximum distance in miles to detect nearby drivers.
+                  Enter a 1 to 2 digit distance in miles (max 99).
                 </p>
               </div>
 
@@ -147,14 +155,6 @@ const RideConfigurationTab = () => {
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-700">
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={saving}
-                onClick={fetchConfig}
-              >
-                Reset
-              </Button>
               <Button
                 type="submit"
                 variant="primary"
