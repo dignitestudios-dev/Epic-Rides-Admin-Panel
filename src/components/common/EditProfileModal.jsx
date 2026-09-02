@@ -13,8 +13,8 @@ const SUBSCRIPTION_OPTIONS = [
 ];
 
 const LIMITS = {
-  firstName: 15,
-  lastName: 15,
+  firstName: 40,
+  lastName: 40,
   email: 100,
   balance: 999999,
 };
