@@ -560,8 +560,6 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
               <span className="capitalize">{vd?.color || "—"}</span>
               <span className="font-medium text-gray-500">Plate</span>
               <span>{vd?.licensePlateNumber || "—"}</span>
-              <span className="font-medium text-gray-500">Reg. No.</span>
-              <span>{vd?.registrationNumber || "—"}</span>
               <span className="font-medium text-gray-500">Doc Status</span>
               <span>
                 <Badge

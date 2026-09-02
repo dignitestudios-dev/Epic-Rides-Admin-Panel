@@ -706,7 +706,6 @@ const VehicleCard = ({ vehicle, onRespond }) => {
             <Detail label="Year" value={vehicle.yearOfManufacture} />
             <Detail label="Plate #" value={vehicle.licensePlateNumber} />
             <Detail label="VIN" value={vehicle.vehicleIdentificationNumber} />
-            <Detail label="Reg #" value={vehicle.registrationNumber} />
             <Detail label="Region" value={vehicle.regionOfRegistration} />
             <Detail label="Expiry" value={formatDate(vehicle.expiryDate)} />
           </div>

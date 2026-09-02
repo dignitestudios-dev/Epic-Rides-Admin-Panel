@@ -13,8 +13,8 @@ const SUBSCRIPTION_OPTIONS = [
 ];
 
 const LIMITS = {
-  firstName: 15,
-  lastName: 15,
+  firstName: 40,
+  lastName: 40,
   email: 100,
   balance: 999999,
 };
@@ -79,12 +79,18 @@ const EditProfileModal = ({
       newErrors.firstName = "First name is required.";
     } else if (form.firstName.trim().length < 2) {
       newErrors.firstName = "First name must be at least 2 characters.";
+    } else if (form.firstName.trim().length > LIMITS.firstName) {
+      newErrors.firstName = `First name cannot exceed ${LIMITS.firstName} characters.`;
     } else if (!/^[a-zA-Z\s'-]+$/.test(form.firstName.trim())) {
       newErrors.firstName = "First name can only contain letters.";
     }
 
-    if (form.lastName.trim() && !/^[a-zA-Z\s'-]+$/.test(form.lastName.trim())) {
-      newErrors.lastName = "Last name can only contain letters.";
+    if (form.lastName.trim()) {
+      if (form.lastName.trim().length > LIMITS.lastName) {
+        newErrors.lastName = `Last name cannot exceed ${LIMITS.lastName} characters.`;
+      } else if (!/^[a-zA-Z\s'-]+$/.test(form.lastName.trim())) {
+        newErrors.lastName = "Last name can only contain letters.";
+      }
     }
 
     if (!form.email.trim()) {
