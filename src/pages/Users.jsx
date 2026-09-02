@@ -184,11 +184,11 @@ const Users = () => {
       render: (_, row) => {
         const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || "—";
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+          <div className="flex items-center gap-3 max-w-[260px] min-w-0">
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
               {name.charAt(0).toUpperCase()}
             </div>
-            <span className="font-medium text-gray-900">{name}</span>
+            <span className="font-medium text-gray-900 truncate" title={name}>{name}</span>
           </div>
         );
       },
@@ -196,7 +196,11 @@ const Users = () => {
     {
       key: "email",
       label: "Email",
-      render: (value) => <span className="text-gray-600">{value}</span>,
+      render: (value) => (
+        <span className="text-gray-600 truncate max-w-[220px] block" title={value || "—"}>
+          {value || "—"}
+        </span>
+      ),
     },
     {
       key: "phoneNumber",

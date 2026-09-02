@@ -135,8 +135,8 @@ const ReportDetail = () => {
     <div className="p-5 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
       
       {/* Header */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="flex justify-between items-start mb-4 gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {info.profilePicture ? (
             <img 
               src={info.profilePicture} 
@@ -149,17 +149,17 @@ const ReportDetail = () => {
             </div>
           )}
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
               {label}
             </p>
-            <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
+            <h4 className="text-base font-bold text-gray-900 dark:text-white truncate" title={displayName}>
               {displayName}
             </h4>
           </div>
         </div>
 
-        <Badge variant={info.isDeactivatedByAdmin ? "danger" : "success"}>
+        <Badge variant={info.isDeactivatedByAdmin ? "danger" : "success"} className="shrink-0">
           {info.isDeactivatedByAdmin ? "Deactivated" : "Active"}
         </Badge>
       </div>

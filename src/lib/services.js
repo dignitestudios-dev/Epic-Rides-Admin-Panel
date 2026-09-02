@@ -563,6 +563,12 @@ const updatePeakWindow = (id, payload) =>
 const deletePeakWindow = (id) =>
   apiHandler(() => API.delete(`/peak-windows/${id}`));
 
+const getRideConfiguration = () =>
+  apiHandler(() => API.get("/ride-configuration"));
+
+const updateRideConfiguration = (payload) =>
+  apiHandler(() => API.patch("/ride-configuration", payload));
+
 export const api = {
   getUsers,
   exportUsers,
@@ -651,4 +657,6 @@ export const api = {
   createPeakWindow,
   updatePeakWindow,
   deletePeakWindow,
+  getRideConfiguration,
+  updateRideConfiguration,
 };

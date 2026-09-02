@@ -59,30 +59,36 @@ const Reports = () => {
     {
       key: "reporterName",
       label: "Reporter Name",
-      render: (_, row) => (
-        <div className="flex flex-col text-sm">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {`${row?.reporterFirstName || ""} ${row?.reporterLastName || ""}`.trim() || "N/A"}
-          </span>
-          <span className="text-gray-500 dark:text-gray-400 text-xs">
-            {row?.reporterType}
-          </span>
-        </div>
-      ),
+      render: (_, row) => {
+        const name = `${row?.reporterFirstName || ""} ${row?.reporterLastName || ""}`.trim() || "N/A";
+        return (
+          <div className="flex flex-col text-sm max-w-[180px] min-w-0">
+            <span className="font-medium text-gray-900 dark:text-white truncate" title={name}>
+              {name}
+            </span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">
+              {row?.reporterType}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "reportedPersonName",
       label: "Reported Person",
-      render: (_, row) => (
-        <div className="flex flex-col text-sm">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {`${row?.reportedPersonFirstName || ""} ${row?.reportedPersonLastName || ""}`.trim() || "N/A"}
-          </span>
-          <span className="text-gray-500 dark:text-gray-400 text-xs">
-            {row?.reportedPersonType}
-          </span>
-        </div>
-      ),
+      render: (_, row) => {
+        const name = `${row?.reportedPersonFirstName || ""} ${row?.reportedPersonLastName || ""}`.trim() || "N/A";
+        return (
+          <div className="flex flex-col text-sm max-w-[180px] min-w-0">
+            <span className="font-medium text-gray-900 dark:text-white truncate" title={name}>
+              {name}
+            </span>
+            <span className="text-gray-500 dark:text-gray-400 text-xs">
+              {row?.reportedPersonType}
+            </span>
+          </div>
+        );
+      },
     },
     {
       key: "reportReason",

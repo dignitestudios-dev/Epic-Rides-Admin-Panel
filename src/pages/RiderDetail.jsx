@@ -104,7 +104,17 @@ const RiderDetail = () => {
     {
       key: "driver",
       label: "Driver",
-      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
+      render: (driver) => {
+        const name = [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A";
+        return (
+          <span
+            className="text-xs max-w-[150px] block truncate"
+            title={name}
+          >
+            {name}
+          </span>
+        );
+      },
     },
     {
       key: "pickupPoint",
@@ -158,7 +168,17 @@ const RiderDetail = () => {
     {
       key: "driver",
       label: "Driver",
-      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
+      render: (driver) => {
+        const name = [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A";
+        return (
+          <span
+            className="text-xs max-w-[150px] block truncate"
+            title={name}
+          >
+            {name}
+          </span>
+        );
+      },
     },
     {
       key: "startingPoint",
@@ -237,7 +257,7 @@ const RiderDetail = () => {
                   <User className="w-12 h-12 text-blue-600" />
                 )}
               </div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-gray-900 break-words max-w-full text-center">
                {[personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "N/A"}
               </h2>
               <Badge

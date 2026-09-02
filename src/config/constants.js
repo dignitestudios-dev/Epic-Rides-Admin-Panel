@@ -243,6 +243,13 @@ export const MENU_ITEMS = [
     path: "/birds-eye-view",
     children: [],
   },
+  {
+    id: "configurations",
+    label: "Configuration",
+    icon: "Sliders",
+    path: "/configurations",
+    children: [],
+  },
   // {
   //   id: "history",
   //   label: "History",

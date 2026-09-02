@@ -73,15 +73,15 @@ const RewardedBalanceHistory = () => {
         // Fallback to row.user if user/driver split is complex or nested differently
         const userData = row.user || row.driver || row.rider || val;
         return (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 max-w-[220px] min-w-0">
             <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
               <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={fullName(userData)}>
                 {fullName(userData)}
               </p>
-              <p className="text-xs text-gray-400">{userData?.email || userData?.phone || ""}</p>
+              <p className="text-xs text-gray-400 truncate" title={userData?.email || userData?.phone || ""}>{userData?.email || userData?.phone || ""}</p>
             </div>
           </div>
         );
@@ -111,14 +111,15 @@ const RewardedBalanceHistory = () => {
       label: "Rewarded By",
       render: (val, row) => {
         const adminData = row.admin || val;
+        const adminName = fullName(adminData) !== "—" ? fullName(adminData) : "Admin";
         return (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 max-w-[180px] min-w-0">
             <ShieldCheck className="w-4 h-4 text-gray-400 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                {fullName(adminData) !== "—" ? fullName(adminData) : "Admin"}
+            <div className="flex flex-col min-w-0 flex-1">
+              <span className="text-sm text-gray-700 dark:text-gray-300 truncate" title={adminName}>
+                {adminName}
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-400 truncate" title={adminData?.email || ""}>
                 {adminData?.email || ""}
               </span>
             </div>

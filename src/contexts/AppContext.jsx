@@ -49,6 +49,8 @@ export const AppProvider = ({ children }) => {
           return permissions.cancelledRides;
         case "birds-eye-view":
           return permissions.birdsEye;
+        case "configurations":
+          return userRole === USER_ROLES.SUPER_ADMIN || userRole === USER_ROLES.ADMIN;
         default:
           return true; // Dashboard, User Management, Reports, Completed Rides allowed for all
       }

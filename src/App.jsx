@@ -283,6 +283,10 @@ function App() {
                           path="/user-detail/:id"
                           element={<UserDetailPage />}
                         />
+                        <Route
+                          path="/configurations"
+                          element={<Configurations />}
+                        />
                         <Route path="/settings">
                           <Route
                             path=""

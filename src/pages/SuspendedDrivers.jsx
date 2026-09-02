@@ -246,15 +246,15 @@ const SuspendedDrivers = () => {
       key: "driver",
       label: "Driver",
       render: (val) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-w-[200px] min-w-0">
           <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
             <UserX className="w-4 h-4 text-red-600 dark:text-red-400" />
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-gray-900 dark:text-white truncate" title={fullName(val)}>
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.email}</p>
+            <p className="text-xs text-gray-400 truncate" title={val?.email}>{val?.email}</p>
           </div>
         </div>
       ),

@@ -1018,7 +1018,7 @@ const DriverDetails = () => {
 
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 ml-[116px]">
               <div>
-                <h1 className="text-[26px] font-bold text-gray-900 leading-none mb-2">
+                <h1 className="text-[26px] font-bold text-gray-900 leading-tight mb-2 break-words max-w-full">
                   {[pInfo?.firstName, pInfo?.lastName].filter(Boolean).join(" ") || "Driver Application"}
                 </h1>
                 <div className="flex items-center gap-3">
