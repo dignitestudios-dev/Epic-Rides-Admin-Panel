@@ -122,7 +122,7 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
             })}
             placeholder="John Doe"
             autoComplete="off"
-            leftIcon={<User className="w-4 h-4 text-gray-400" />}
+            leftIcon={<User className="w-4 h-4 text-ink-faint" />}
             error={errors.name?.message}
           />
         </div>
@@ -143,7 +143,7 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
             type="email"
             autoComplete="new-email" // use new-email or something else to prevent autocomplete
             disabled={isEditing} // Email is usually non-editable
-            leftIcon={<Mail className="w-4 h-4 text-gray-400" />}
+            leftIcon={<Mail className="w-4 h-4 text-ink-faint" />}
             error={errors.email?.message}
           />
         </div>
@@ -157,12 +157,12 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
             type={showPassword ? "text" : "password"}
             placeholder={isEditing ? "Enter new password" : "Enter password"}
             autoComplete="new-password"
-            leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+            leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
             rightIcon={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="text-ink-faint hover:text-ink-muted focus:outline-none"
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />
@@ -190,12 +190,12 @@ const AdminUserModal = ({ isOpen, onClose, onSubmit, editingAdmin = null }) => {
             type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm password"
             autoComplete="new-password"
-            leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+            leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
             rightIcon={
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                className="text-ink-faint hover:text-ink-muted focus:outline-none"
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-4 h-4" />

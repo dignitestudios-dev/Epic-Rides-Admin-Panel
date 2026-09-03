@@ -1,23 +1,18 @@
-import {
-  Search,
-  Download,
-  Plus,
-  RefreshCcw,
-  ChevronRight,
-  ChevronLeft,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Search, X } from "lucide-react";
 import Table from "../ui/Table";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import Select from "../ui/Select";
 import { PAGINATION_CONFIG } from "../../config/constants";
 
+/**
+ * Paginated table panel. Renders without a border of its own — most callers
+ * wrap it in a <Card>, which supplies the frame.
+ */
 const getPageNumbers = (currentPage, totalPages) => {
   const delta = 1;
   const range = [];
   const rangeWithDots = [];
-  let l;
+  let last;
 
   for (let i = 1; i <= totalPages; i++) {
     if (
@@ -30,27 +25,28 @@ const getPageNumbers = (currentPage, totalPages) => {
   }
 
   for (const i of range) {
-    if (l) {
-      if (i - l === 2) {
-        rangeWithDots.push(l + 1);
-      } else if (i - l !== 1) {
-        rangeWithDots.push("...");
-      }
+    if (last) {
+      if (i - last === 2) rangeWithDots.push(last + 1);
+      else if (i - last !== 1) rangeWithDots.push("...");
     }
     rangeWithDots.push(i);
-    l = i;
+    last = i;
   }
 
   return rangeWithDots;
 };
 
+const nf = new Intl.NumberFormat("en-US");
+
 const DataTable = ({
   data = [],
   columns = [],
   title,
+  description,
   searchable = false,
   exportable = false,
   addButton = true,
+  addLabel = "Add new",
   onAdd,
   onExport,
   loading = false,
@@ -63,239 +59,215 @@ const DataTable = ({
   onPageChange,
   onPageSizeChange,
   onSearch,
+  onRowClick,
+  emptyMessage,
+  emptyHint,
   selectedUsers = [],
   handleBulkSuspend,
   handleBulkUnsuspend,
   handleExportCSV,
-  exportBTn
+  exportBTn,
+  actions,
 }) => {
-  // Export handler
   const handleExport = () => {
-    if (onExport) {
-      // Call custom export function and get formatted data
-      const formattedData = onExport(data);
+    const formattedData = onExport ? onExport(data) : null;
 
-      if (!formattedData || formattedData.length === 0) {
-        console.warn("No data to export");
-        return;
-      }
+    const rows =
+      formattedData && formattedData.length > 0
+        ? formattedData
+        : data.map((row) =>
+            Object.fromEntries(columns.map((col) => [col.label, row[col.key] ?? ""]))
+          );
 
-      // Get headers from the first row keys
-      const headers = Object.keys(formattedData[0]);
+    if (!rows.length) return;
 
-      // Create CSV content
-      const csvContent = [
-        // Header row
-        headers.map((header) => `"${header}"`).join(","),
-        // Data rows
-        ...formattedData.map((row) =>
-          headers
-            .map((header) => {
-              let value = row[header] || "";
-              // Clean and escape for CSV
-              value = value.toString().replace(/"/g, '""');
-              return `"${value}"`;
-            })
-            .join(",")
-        ),
-      ].join("\n");
+    const headers = Object.keys(rows[0]);
+    const csv = [
+      headers.map((header) => `"${header}"`).join(","),
+      ...rows.map((row) =>
+        headers
+          .map((header) => `"${String(row[header] ?? "").replace(/"/g, '""')}"`)
+          .join(",")
+      ),
+    ].join("\n");
 
-      // Create and download file
-      const BOM = "\uFEFF"; // Byte Order Mark for proper UTF-8 encoding
-      const blob = new Blob([BOM + csvContent], {
-        type: "text/csv;charset=utf-8;",
-      });
-
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = `${title?.replace(/\s+/g, "_") || "data"}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-    } else {
-      // Fallback to original logic if no custom export function
-      const csv = [
-        columns.map((col) => col.label).join(","),
-        ...data.map((row) =>
-          columns.map((col) => row[col.key] || "").join(",")
-        ),
-      ].join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${title || "data"}.csv`;
-      a.click();
-    }
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${title?.replace(/\s+/g, "_") || "data"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
   };
 
-  const handleSearch = (e) => {
-    if (loading) return;
-
-    onSearch && onSearch(e.target.value);
-  };
+  const rangeStart = totalData === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const rangeEnd = Math.min(currentPage * pageSize, totalData);
+  const hasToolbar = title || description || searchable || (addButton && onAdd) || exportBTn || exportable || actions;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          {title && (
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {title}
-            </h2>
-          )}
-          {/* <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Showing {(currentPage - 1) * pageSize + 1} to{" "}
-            {Math.min(currentPage * pageSize, totalData)} of {totalData} results
-          </p> */}
-        </div>
-        <div className="flex items-center space-x-2">
-          {/* {exportable && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              icon={<Download className="w-4 h-4" />}
-              disabled={loading}
-            >
-              Export
-            </Button>
-          )} */}
-          {addButton && onAdd && (
-            <Button
-              size="sm"
-              onClick={onAdd}
-              icon={<Plus className="w-4 h-4" />}
-              disabled={loading}
-            >
-              Add New
-            </Button>
-          )}
-          {exportBTn && (
-            <div className="flex space-x-2 ">
-              <Button
-                variant="outline"
-                onClick={handleBulkSuspend}
-                disabled={selectedUsers.length === 0}
-              >
-                Suspend Selected
-              </Button>
+    <div className="flex flex-col">
+      {hasToolbar && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-line">
+          <div className="min-w-0">
+            {title && (
+              <h2 className="text-lg font-semibold text-ink truncate">{title}</h2>
+            )}
+            {description && (
+              <p className="text-caption text-ink-muted truncate">{description}</p>
+            )}
+          </div>
 
-              <Button
-                variant="outline"
-                onClick={handleBulkUnsuspend}
-                disabled={selectedUsers.length === 0}
-              >
-                Reinstate Selected
-              </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {searchable && (
+              <div className="w-full sm:w-56">
+                <Input
+                  placeholder={searchPlaceholder}
+                  value={searchTerm}
+                  onChange={(event) => !loading && onSearch?.(event.target.value)}
+                  leftIcon={<Search />}
+                  rightIcon={
+                    searchTerm ? (
+                      <button
+                        type="button"
+                        onClick={() => onSearch?.("")}
+                        aria-label="Clear search"
+                        className="pointer-events-auto text-ink-faint hover:text-ink transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null
+                  }
+                />
+              </div>
+            )}
 
-              <Button variant="secondary" onClick={handleExportCSV}>
+            {exportBTn && (
+              <>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={handleBulkSuspend}
+                  disabled={selectedUsers.length === 0}
+                >
+                  Suspend selected
+                </Button>
+                <Button
+                  variant="outline"
+                  size="md"
+                  onClick={handleBulkUnsuspend}
+                  disabled={selectedUsers.length === 0}
+                >
+                  Reinstate selected
+                </Button>
+                <Button variant="secondary" size="md" onClick={handleExportCSV}>
+                  Export CSV
+                </Button>
+              </>
+            )}
+
+            {exportable && !exportBTn && (
+              <Button variant="outline" size="md" onClick={handleExport} disabled={loading}>
                 Export CSV
               </Button>
-            </div>
-          )}
+            )}
+
+            {actions}
+
+            {addButton && onAdd && (
+              <Button size="md" onClick={onAdd} icon={<Plus />} disabled={loading}>
+                {addLabel}
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        {searchable && (
-          <div className="flex-1 max-w-md">
-            <Input
-              placeholder={searchPlaceholder || "Search..."}
-              value={searchTerm}
-              onChange={(e) => handleSearch(e)}
-              leftIcon={<Search className="w-4 h-4 text-gray-400" />}
-              rightIcon={
-                searchTerm ? (
-                  <button
-                    type="button"
-                    onClick={() => handleSearch({ target: { value: "" } })}
-                    className="text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                ) : null
-              }
-              className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-700"
-            />
-          </div>
-        )}
-      </div>
+      <Table
+        data={data}
+        columns={columns}
+        loading={loading}
+        onRowClick={onRowClick}
+        emptyMessage={emptyMessage}
+        emptyHint={emptyHint}
+        maxHeight={null}
+      />
 
-      {/* Table */}
-      <div className="bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-        {loading ? (
-          <div className="flex items-center justify-center py-12 gap-2">
-            <RefreshCcw className={`animate-spin text-primary-600`} />{" "}
-            <span className="text-gray-400">Loading...</span>
-          </div>
-        ) : (
-          <Table data={data} columns={columns} loading={loading} />
-        )}
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-700 dark:text-gray-300">Show</span>
-          <select
-            name="pageSize"
-            id="pageSize"
-            className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
-            value={pageSize}
-            onChange={(e) =>
-              onPageSizeChange && onPageSizeChange(Number(e.target.value))
-            }
-          >
-            {PAGINATION_CONFIG.pageSizeOptions.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <span className="text-sm text-gray-700 dark:text-gray-300">
-            entries
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5 border-t border-line">
+        <div className="flex items-center gap-2 text-caption text-ink-muted">
+          <span className="tnum">
+            {loading
+              ? "Loading…"
+              : totalData > 0
+              ? `${nf.format(rangeStart)}–${nf.format(rangeEnd)} of ${nf.format(totalData)}`
+              : "No results"}
           </span>
-        </div>
-        {totalPages > 1 && (
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1 || loading}
-              onClick={() => onPageChange && onPageChange(currentPage - 1)}
+
+          <span aria-hidden="true" className="text-ink-faint">·</span>
+
+          <label className="flex items-center gap-1.5">
+            <span className="sr-only sm:not-sr-only">Rows</span>
+            <select
+              value={pageSize}
+              onChange={(event) => onPageSizeChange?.(Number(event.target.value))}
+              className="h-7 pl-2 pr-6 rounded border border-line bg-surface text-ink text-caption cursor-pointer transition-colors hover:border-line-strong focus:outline-none focus:border-interactive focus:ring-2 focus:ring-interactive/25"
             >
-              <ChevronLeft size={20} />
-            </Button>
-            {getPageNumbers(currentPage, totalPages).map((page, index) => (
+              {PAGINATION_CONFIG.pageSizeOptions.map((size) => (
+                <option key={size} value={size}>
+                  {size}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
+        {totalPages > 1 && (
+          <nav className="flex items-center gap-1" aria-label="Pagination">
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<ChevronLeft />}
+              aria-label="Previous page"
+              disabled={currentPage === 1 || loading}
+              onClick={() => onPageChange?.(currentPage - 1)}
+            />
+
+            {getPageNumbers(currentPage, totalPages).map((page, index) =>
               page === "..." ? (
-                <span key={`dots-${index}`} className="px-2 py-1 text-gray-500">
-                  ...
+                <span
+                  key={`gap-${index}`}
+                  aria-hidden="true"
+                  className="px-1 text-caption text-ink-faint"
+                >
+                  …
                 </span>
               ) : (
-                <Button
+                <button
                   key={page}
-                  variant={currentPage === page ? "primary" : "outline"}
+                  type="button"
                   disabled={loading}
-                  size="sm"
-                  onClick={() => onPageChange && onPageChange(page)}
+                  aria-current={currentPage === page ? "page" : undefined}
+                  onClick={() => onPageChange?.(page)}
+                  className={`tnum h-7 min-w-[28px] px-1.5 rounded text-caption font-medium transition-colors ${
+                    currentPage === page
+                      ? "bg-interactive text-interactive-ink"
+                      : "text-ink-muted hover:text-ink hover:bg-surface-hover"
+                  }`}
                 >
                   {page}
-                </Button>
+                </button>
               )
-            ))}
+            )}
+
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
+              icon={<ChevronRight />}
+              aria-label="Next page"
               disabled={currentPage === totalPages || loading}
-              onClick={() => onPageChange && onPageChange(currentPage + 1)}
-            >
-              <ChevronRight size={20} />
-            </Button>
-          </div>
+              onClick={() => onPageChange?.(currentPage + 1)}
+            />
+          </nav>
         )}
       </div>
     </div>

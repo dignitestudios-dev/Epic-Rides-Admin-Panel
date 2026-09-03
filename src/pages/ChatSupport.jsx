@@ -299,7 +299,7 @@ const ChatSupport = () => {
               placeholder="Search conversations..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Search className="w-4 h-4 text-ink-faint" />}
             />
           </div>
 
@@ -316,7 +316,7 @@ const ChatSupport = () => {
                 <div className="flex items-center space-x-3">
                   <div className="relative">
                     <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-gray-600 font-medium">
+                      <span className="text-ink-muted font-medium">
                         {chat.userName.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -332,7 +332,7 @@ const ChatSupport = () => {
                       <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {chat.userName}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-ink-subtle">
                         {new Date(chat.lastMessageTime).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -366,7 +366,7 @@ const ChatSupport = () => {
                   <div className="flex items-center space-x-3">
                     <div className="relative">
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-ink-muted font-medium">
                           {selectedChat.userName.charAt(0).toUpperCase()}
                         </span>
                       </div>
@@ -380,7 +380,7 @@ const ChatSupport = () => {
                       <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                         {selectedChat.userName}
                       </h4>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-ink-subtle">
                         {selectedChat.userEmail}
                       </p>
                     </div>
@@ -467,11 +467,11 @@ const ChatSupport = () => {
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <MessageSquare className="w-12 h-12 text-ink-faint mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   Select a conversation
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-ink-subtle">
                   Choose a chat from the list to start messaging
                 </p>
               </div>

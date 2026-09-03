@@ -90,11 +90,11 @@ const ImageUploader = ({
         {allowUpload && (
           <label className="w-24 h-24 border border-dashed border-gray-300 dark:border-gray-600 rounded-md flex items-center justify-center cursor-pointer">
             {multiple ? (
-              <Plus className="w-6 h-6 text-gray-400" />
+              <Plus className="w-6 h-6 text-ink-faint" />
             ) : !multiple && previews.length === 1 ? (
               <p className="text-sm text-gray-200">Change</p>
             ) : (
-              <Plus className="w-6 h-6 text-gray-400" />
+              <Plus className="w-6 h-6 text-ink-faint" />
             )}
             <input
               type="file"

@@ -95,7 +95,7 @@ const AdminUsers = () => {
           <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-medium">
             {value?.charAt(0).toUpperCase()}
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-ink">
             {value}
           </span>
         </div>

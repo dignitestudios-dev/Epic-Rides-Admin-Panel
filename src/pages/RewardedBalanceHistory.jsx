@@ -81,7 +81,7 @@ const RewardedBalanceHistory = () => {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {fullName(userData)}
               </p>
-              <p className="text-xs text-gray-400">{userData?.email || userData?.phone || ""}</p>
+              <p className="text-xs text-ink-faint">{userData?.email || userData?.phone || ""}</p>
             </div>
           </div>
         );
@@ -113,12 +113,12 @@ const RewardedBalanceHistory = () => {
         const adminData = row.admin || val;
         return (
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-gray-400 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-ink-faint shrink-0" />
             <div className="flex flex-col">
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 {fullName(adminData) !== "—" ? fullName(adminData) : "Admin"}
               </span>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-ink-faint">
                 {adminData?.email || ""}
               </span>
             </div>

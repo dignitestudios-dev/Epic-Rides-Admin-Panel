@@ -22,7 +22,7 @@ export default function EmergencyDetails({ data, onClose }) {
           <h4 className="text-lg font-semibold text-red-700 mb-2">
             Alert ID: {data.alertId}
           </h4>
-          <p className="text-sm text-gray-700">
+          <p className="text-sm text-ink-muted">
             Time: {new Date(data.timestamp).toLocaleString()}
           </p>
           <Badge variant={getStatusVariant(data.status)}>{data.status}</Badge>
@@ -33,13 +33,13 @@ export default function EmergencyDetails({ data, onClose }) {
           <div className="p-4 bg-gray-50 rounded">
             <h4 className="font-bold mb-1">Rider Info</h4>
             <p>{data.rider.name}</p>
-            <p className="text-sm text-gray-600">{data.rider.phone}</p>
+            <p className="text-sm text-ink-muted">{data.rider.phone}</p>
           </div>
 
           <div className="p-4 bg-gray-50 rounded">
             <h4 className="font-bold mb-1">Driver Info</h4>
             <p>{data.driver.name}</p>
-            <p className="text-sm text-gray-600">{data.driver.phone}</p>
+            <p className="text-sm text-ink-muted">{data.driver.phone}</p>
           </div>
         </div>
 

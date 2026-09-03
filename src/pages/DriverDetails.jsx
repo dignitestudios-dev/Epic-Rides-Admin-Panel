@@ -74,8 +74,8 @@ const StatusPill = ({ status }) => {
 
 const Detail = ({ label, value }) => (
   <div className="flex justify-between items-center text-xs py-2 border-b border-gray-50 last:border-0">
-    <span className="text-gray-400 font-medium">{label}</span>
-    <span className="font-semibold text-gray-800 text-right max-w-[55%] truncate">
+    <span className="text-ink-faint font-medium">{label}</span>
+    <span className="font-semibold text-ink text-right max-w-[55%] truncate">
       {value || "—"}
     </span>
   </div>
@@ -365,8 +365,8 @@ const DocCard = ({ doc, onRespond, isOld }) => {
           title="Confirm Approval"
           size="sm"
         >
-          <p className="text-sm text-gray-500 mb-6">
-            Are you sure you want to approve <strong className="text-gray-900">{docTypeLabel}</strong>? This action cannot be undone.
+          <p className="text-sm text-ink-subtle mb-6">
+            Are you sure you want to approve <strong className="text-ink">{docTypeLabel}</strong>? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
@@ -394,7 +394,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
           <div className="flex items-center gap-3">
             <FileText className="w-5 h-5 text-slate-400" />
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[15px] text-gray-700 capitalize">
+              <span className="font-semibold text-[15px] text-ink-muted capitalize">
                 {docTypeLabel}
               </span>
               {isOld && (
@@ -514,7 +514,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
                 <p className="text-xs text-red-600">{doc.rejectReason}</p>
               </div>
             )}
-            <p className="text-[11px] text-gray-400">
+            <p className="text-[11px] text-ink-faint">
               Submitted: {formatDate(doc.createdAt)}
             </p>
 
@@ -644,8 +644,8 @@ const VehicleCard = ({ vehicle, onRespond }) => {
           title="Confirm Approval"
           size="sm"
         >
-          <p className="text-sm text-gray-500 mb-6">
-            Are you sure you want to approve <strong className="text-gray-900">{vehicle.make} {vehicle.model}</strong>? This action cannot be undone.
+          <p className="text-sm text-ink-subtle mb-6">
+            Are you sure you want to approve <strong className="text-ink">{vehicle.make} {vehicle.model}</strong>? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
@@ -675,7 +675,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-semibold capitalize text-[15px] text-gray-700">
+              <span className="font-semibold capitalize text-[15px] text-ink-muted">
                 {vehicle.make} {vehicle.model}
               </span>
               {isOld && (
@@ -684,7 +684,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                 </span>
               )}
             </div>
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-ink-faint">
               {vehicle.vehicleType} · {vehicle.color}
             </span>
           </div>
@@ -953,7 +953,7 @@ const DriverDetails = () => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors font-medium"
+            className="flex items-center gap-1.5 text-sm text-ink-subtle hover:text-ink transition-colors font-medium"
           >
             <ArrowLeft className="w-4 h-4" /> Back to Driver Requests
           </button>
@@ -1019,7 +1019,7 @@ const DriverDetails = () => {
 
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 ml-[116px]">
               <div>
-                <h1 className="text-[26px] font-bold text-gray-900 leading-none mb-2">
+                <h1 className="text-[26px] font-bold text-ink leading-none mb-2">
                   {[pInfo?.firstName, pInfo?.lastName].filter(Boolean).join(" ") || "Driver Application"}
                 </h1>
                 <div className="flex items-center gap-3">
@@ -1063,28 +1063,28 @@ const DriverDetails = () => {
             {/* Quick Contact & Info Pills */}
             <div className="mt-8 flex flex-wrap gap-2.5">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Mail className="w-3.5 h-3.5 text-gray-400" />{" "}
+                <Mail className="w-3.5 h-3.5 text-ink-faint" />{" "}
                 {hasPermission('seeSensitiveData') ? (pInfo?.email || "—") : maskEmail(pInfo?.email || "—")}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Phone className="w-3.5 h-3.5 text-gray-400" />{" "}
+                <Phone className="w-3.5 h-3.5 text-ink-faint" />{" "}
                 {hasPermission('seeSensitiveData') ? (pInfo?.phone || pInfo?.phoneNumber || "—") : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <CreditCard  className="w-3.5 h-3.5 text-gray-400" />{" "}
+                <CreditCard  className="w-3.5 h-3.5 text-ink-faint" />{" "}
                 {userDetails?.fullDetails?.ssn
                   ? userDetails.fullDetails.ssn.replace(/^(\d{3})(\d{2})(\d{4})$/, "$1-$2-$3")
                   : "—"}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />{" "}
+                <Calendar className="w-3.5 h-3.5 text-ink-faint" />{" "}
                 {userDetails?.fullDetails.createdAt
                   ? `Joined ${formatDate(userDetails?.fullDetails.createdAt)}`
                   : "Onboarding"}
               </div>
               {(pInfo?.address || userDetails?.fullDetails?.address) && (
                 <div className="flex items-start gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />{" "}
+                  <MapPin className="w-3.5 h-3.5 text-ink-faint shrink-0 mt-0.5" />{" "}
                   <span className="line-clamp-2">{pInfo?.address || userDetails?.fullDetails?.address}</span>
                 </div>
               )}
@@ -1096,8 +1096,8 @@ const DriverDetails = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Documents</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-lg font-bold text-ink">Documents</h2>
+              <p className="text-sm text-ink-subtle">
                 {latestDocs.length} latest · {oldDocs.length} historical
                 (collapsed)
               </p>
@@ -1128,7 +1128,7 @@ const DriverDetails = () => {
           {/* Old / Historical Documents */}
           {oldDocs.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-ink-subtle uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Clock className="w-4 h-4" /> Historical Submissions (collapsed)
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
@@ -1149,8 +1149,8 @@ const DriverDetails = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Vehicles</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-lg font-bold text-ink">Vehicles</h2>
+              <p className="text-sm text-ink-subtle">
                 {activeVehicles.length} vehicles registered
               </p>
             </div>
@@ -1190,8 +1190,8 @@ const DriverDetails = () => {
         title="Confirm Approve All"
         size="sm"
       >
-        <p className="text-sm text-gray-500 mb-6">
-          Are you sure you want to approve all <strong className="text-gray-900">{totalPending}</strong> pending document(s) and vehicle(s)? This action cannot be undone.
+        <p className="text-sm text-ink-subtle mb-6">
+          Are you sure you want to approve all <strong className="text-ink">{totalPending}</strong> pending document(s) and vehicle(s)? This action cannot be undone.
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="ghost" onClick={() => setApproveAllModalOpen(false)} disabled={bulkLoading}>
@@ -1216,7 +1216,7 @@ const DriverDetails = () => {
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-ink-subtle">
             This will reject all <strong>{totalPending}</strong> pending
             document(s) and vehicle(s). Please provide a mandatory rejection
             reason.

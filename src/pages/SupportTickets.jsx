@@ -102,7 +102,7 @@ const SupportTickets = () => {
       render: (submittedBy) => (
         <div>
           <p className="font-medium">{submittedBy.name}</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-ink-subtle">
             {submittedBy.type.toUpperCase()} — {submittedBy.contact}
           </p>
         </div>
@@ -115,12 +115,12 @@ const SupportTickets = () => {
         reportedAgainst ? (
           <div>
             <p className="font-medium">{reportedAgainst.name}</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-ink-subtle">
               {reportedAgainst.type.toUpperCase()}
             </p>
           </div>
         ) : (
-          <span className="text-gray-400">N/A</span>
+          <span className="text-ink-faint">N/A</span>
         ),
     },
     {
@@ -134,7 +134,7 @@ const SupportTickets = () => {
       render: (value) => (
         <div>
           <p>{new Date(value).toLocaleDateString()}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-subtle">
             {new Date(value).toLocaleTimeString()}
           </p>
         </div>
@@ -144,7 +144,7 @@ const SupportTickets = () => {
       key: "description",
       label: "Description",
       render: (value) => (
-        <p className="truncate max-w-xs text-gray-700">{value}</p>
+        <p className="truncate max-w-xs text-ink-muted">{value}</p>
       ),
     },
     {

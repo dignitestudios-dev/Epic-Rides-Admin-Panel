@@ -176,7 +176,7 @@ const Orders = () => {
           <p className="font-medium text-gray-900 dark:text-white">
             {value?.length} item{value?.length !== 1 ? "s" : ""}
           </p>
-          <p className="text-sm text-gray-500 truncate max-w-xs">
+          <p className="text-sm text-ink-subtle truncate max-w-xs">
             {value
               ?.map((item) => `${item?.product?.title} (${item.quantity})`)
               .join(", ")}
@@ -272,7 +272,7 @@ const Orders = () => {
       render: (value) => (
         <div>
           <p className="text-sm">{new Date(value).toLocaleDateString()}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-subtle">
             {new Date(value).toLocaleTimeString()}
           </p>
         </div>
@@ -523,7 +523,7 @@ const Orders = () => {
                 </h4>
                 <div className="space-y-2">
                   <div>
-                    <label className="text-sm font-medium text-gray-500">
+                    <label className="text-sm font-medium text-ink-subtle">
                       Name
                     </label>
                     <p className="text-gray-900 dark:text-white">
@@ -534,7 +534,7 @@ const Orders = () => {
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">
+                    <label className="text-sm font-medium text-ink-subtle">
                       Email
                     </label>
                     <p className="text-gray-900 dark:text-white">
@@ -544,7 +544,7 @@ const Orders = () => {
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">
+                    <label className="text-sm font-medium text-ink-subtle">
                       Phone Number
                     </label>
                     <p className="text-gray-900 dark:text-white">
@@ -564,25 +564,25 @@ const Orders = () => {
                 {selectedOrder?.orderType === "delivery" ? (
                   <div className="space-y-1 text-gray-900 dark:text-white">
                     <p>
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-ink-subtle">
                         Address:
                       </span>{" "}
                       {selectedOrder?.delivery?.address}
                     </p>
                     <p>
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-ink-subtle">
                         City:
                       </span>{" "}
                       {selectedOrder?.delivery?.city}
                     </p>
                     <p>
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-ink-subtle">
                         Country:
                       </span>{" "}
                       {selectedOrder?.delivery?.country}
                     </p>
                     <p>
-                      <span className="text-sm font-medium text-gray-500">
+                      <span className="text-sm font-medium text-ink-subtle">
                         Apartment:
                       </span>{" "}
                       {selectedOrder?.delivery?.apartment}
@@ -630,7 +630,7 @@ const Orders = () => {
                       <tr key={item.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                           {item.product.title}
-                          <p className="text-gray-400">
+                          <p className="text-ink-faint">
                             ID: {item.product._id}
                           </p>
                         </td>

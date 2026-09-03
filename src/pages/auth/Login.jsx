@@ -104,7 +104,7 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-ink-faint" />
                 </div>
                 <Input
                   id="email"
@@ -114,7 +114,7 @@ const Login = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  leftIcon={<Mail className="h-5 w-5 text-gray-400" />}
+                  leftIcon={<Mail className="h-5 w-5 text-ink-faint" />}
                   placeholder="Enter your email"
                   disabled={loading || isLockedOut}
                   className="pl-10"
@@ -128,7 +128,7 @@ const Login = () => {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-ink-faint" />
                 </div>
                 <Input
                   id="password"
@@ -139,7 +139,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleChange}
                   maxLength={64}
-                  leftIcon={<Lock className="h-5 w-5 text-gray-400" />}
+                  leftIcon={<Lock className="h-5 w-5 text-ink-faint" />}
                   rightIcon={
                     <button
                       type="button"
@@ -149,9 +149,9 @@ const Login = () => {
                       disabled={loading || isLockedOut}
                     >
                       {!showPassword ? (
-                        <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        <EyeOff className="h-5 w-5 text-ink-faint hover:text-ink-muted dark:hover:text-gray-300" />
                       ) : (
-                        <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                        <Eye className="h-5 w-5 text-ink-faint hover:text-ink-muted dark:hover:text-gray-300" />
                       )}
                     </button>
                   }
@@ -166,9 +166,9 @@ const Login = () => {
                   disabled={loading || isLockedOut}
                 >
                   {!showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    <EyeOff className="h-5 w-5 text-ink-faint hover:text-ink-muted dark:hover:text-gray-300" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
+                    <Eye className="h-5 w-5 text-ink-faint hover:text-ink-muted dark:hover:text-gray-300" />
                   )}
                 </button>
               </div>

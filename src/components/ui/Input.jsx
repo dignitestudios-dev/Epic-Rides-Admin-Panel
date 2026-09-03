@@ -1,57 +1,112 @@
-import { forwardRef } from 'react'
+import { forwardRef, useId } from "react";
 
-const Input = forwardRef(({ 
-  label, 
-  prefix,
-  error, 
-  helperText,
-  leftIcon,
-  rightIcon,
-  className = '',
-  ...props 
-}, ref) => {
-  const baseClasses = 'block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-black dark:text-gray-200 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm'
-  const errorClasses = error ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''
-  
-  return (
-    <div className="space-y-1">
-      {label && !prefix && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-400">
-          {label}
-        </label>
-      )}
-      <div className="relative flex items-center">
-        {prefix && (
-          <span className="absolute left-3 w-28 text-xs font-medium text-gray-500 dark:text-gray-400 pointer-events-none whitespace-nowrap overflow-hidden text-ellipsis">
-            {prefix}:
-          </span>
+export const fieldBase = [
+  "block w-full bg-surface text-ink placeholder:text-ink-faint",
+  "border border-line rounded",
+  "transition-colors duration-150",
+  "hover:border-line-strong",
+  "focus:outline-none focus:border-interactive focus:ring-2 focus:ring-interactive/25",
+  "disabled:bg-surface-sunken disabled:text-ink-faint disabled:cursor-not-allowed",
+].join(" ");
+
+const SIZES = {
+  sm: "h-7 px-2 text-caption",
+  md: "h-8 px-2.5 text-sm",
+  lg: "h-9 px-3 text-md",
+};
+
+const Input = forwardRef(
+  (
+    {
+      label,
+      prefix,
+      error,
+      helperText,
+      leftIcon,
+      rightIcon,
+      size = "md",
+      required = false,
+      className = "",
+      containerClassName = "",
+      id,
+      ...props
+    },
+    ref
+  ) => {
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const describedBy = error
+      ? `${inputId}-error`
+      : helperText
+      ? `${inputId}-help`
+      : undefined;
+
+    return (
+      <div className={`space-y-1.5 ${containerClassName}`}>
+        {label && !prefix && (
+          <label
+            htmlFor={inputId}
+            className="block text-caption font-medium text-ink-muted"
+          >
+            {label}
+            {required && <span className="text-danger ml-0.5">*</span>}
+          </label>
         )}
-        {leftIcon && !prefix && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            {leftIcon}
-          </div>
+
+        <div className="relative flex items-center">
+          {prefix && (
+            <span className="absolute left-2.5 max-w-[45%] truncate text-caption font-medium text-ink-subtle pointer-events-none">
+              {prefix}
+            </span>
+          )}
+          {leftIcon && !prefix && (
+            <span className="absolute left-2.5 flex items-center text-ink-faint pointer-events-none [&>svg]:w-4 [&>svg]:h-4">
+              {leftIcon}
+            </span>
+          )}
+
+          <input
+            ref={ref}
+            id={inputId}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={describedBy}
+            className={[
+              fieldBase,
+              SIZES[size] ?? SIZES.md,
+              prefix ? "pl-[46%]" : leftIcon ? "pl-8" : "",
+              rightIcon ? "pr-8" : "",
+              error
+                ? "border-danger focus:border-danger focus:ring-danger/25"
+                : "",
+              className,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+            {...props}
+          />
+
+          {rightIcon && (
+            <span className="absolute right-2.5 flex items-center text-ink-faint [&>svg]:w-4 [&>svg]:h-4">
+              {rightIcon}
+            </span>
+          )}
+        </div>
+
+        {error && (
+          <p id={`${inputId}-error`} className="text-caption text-danger">
+            {error}
+          </p>
         )}
-        <input
-          ref={ref}
-          className={`${baseClasses} ${errorClasses} ${prefix ? 'pl-32' : (leftIcon ? 'pl-10' : '')} ${rightIcon ? 'pr-10' : ''} ${className} bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600`}
-          {...props}
-        />
-        {rightIcon && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-            {rightIcon}
-          </div>
+        {helperText && !error && (
+          <p id={`${inputId}-help`} className="text-caption text-ink-subtle">
+            {helperText}
+          </p>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">{helperText}</p>
-      )}
-    </div>
-  )
-})
+    );
+  }
+);
 
-Input.displayName = 'Input'
+Input.displayName = "Input";
 
-export default Input
+export default Input;

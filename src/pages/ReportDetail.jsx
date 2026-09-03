@@ -98,7 +98,7 @@ const ReportDetail = () => {
 
   if (!report) return (
     <div className="p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow">
-      <p className="text-gray-500">Report not found</p>
+      <p className="text-ink-subtle">Report not found</p>
       <Button onClick={() => navigate("/reports")} className="mt-4">Back to Reports</Button>
     </div>
   );
@@ -150,7 +150,7 @@ const ReportDetail = () => {
           )}
 
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">
+            <p className="text-xs font-semibold text-ink-faint uppercase tracking-widest">
               {label}
             </p>
             <h4 className="text-lg font-bold text-gray-900 dark:text-white truncate">
@@ -229,7 +229,7 @@ const ReportDetail = () => {
                 {report.status?.toUpperCase() || "PENDING"}
               </Badge>
             </div>
-            <p className="text-sm text-gray-500 font-medium tracking-tight">ID: {report.reportId}</p>
+            <p className="text-sm text-ink-subtle font-medium tracking-tight">ID: {report.reportId}</p>
           </div>
         </div>
         
@@ -257,8 +257,8 @@ const ReportDetail = () => {
                 </p>
              </div>
              <div className="flex flex-wrap gap-6 pt-2">
-                <div className="flex items-center text-sm text-gray-500 font-medium">
-                  <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                <div className="flex items-center text-sm text-ink-subtle font-medium">
+                  <Calendar className="w-4 h-4 mr-2 text-ink-faint" />
                   Created: {formatDateTime(report.createdAt)}
                 </div>
                 {report.resolvedAt && (
@@ -307,13 +307,13 @@ const ReportDetail = () => {
                 {/* Status & ID */}
                 <div className="flex justify-between items-center pb-4 border-b border-gray-100 dark:border-gray-800">
                    <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Ride Status</p>
+                      <p className="text-[10px] font-bold text-ink-faint uppercase tracking-widest">Ride Status</p>
                       <Badge  variant={report.relatedDetails.rideStatus === "completed" ? "success" : "danger"} className="mt-1 capitalize">
                         {report.relatedDetails.rideStatus}
                       </Badge>
                    </div>
                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Type</p>
+                      <p className="text-[10px] font-bold text-ink-faint uppercase tracking-widest">Type</p>
                       <p className="text-sm font-bold text-gray-900 dark:text-white capitalize mt-1">{report.relatedDetails.rideType}</p>
                    </div>
                 </div>
@@ -326,7 +326,7 @@ const ReportDetail = () => {
                       <div className="w-0.5 h-full bg-gray-100 dark:bg-gray-800 my-1" />
                     </div>
                     <div className="pb-4">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Pickup</p>
+                      <p className="text-[10px] font-bold text-ink-faint uppercase tracking-widest">Pickup</p>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 line-clamp-2">
                         {report.relatedDetails.pickupPoint?.placeName || "N/A"}
                       </p>
@@ -335,7 +335,7 @@ const ReportDetail = () => {
                   <div className="flex gap-3">
                     <div className="w-2.5 h-2.5 rounded-full bg-rose-500 mt-1" />
                     <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Drop-off Requested</p>
+                      <p className="text-[10px] font-bold text-ink-faint uppercase tracking-widest">Drop-off Requested</p>
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 line-clamp-2">
                         {report.relatedDetails.dropOffPointRequested?.placeName || "N/A"}
                       </p>
@@ -346,14 +346,14 @@ const ReportDetail = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="flex items-center text-gray-400 mb-1">
+                    <div className="flex items-center text-ink-faint mb-1">
                       <DollarSign className="w-3.5 h-3.5 mr-1" />
                       <span className="text-[10px] font-black uppercase tracking-tighter">Fare</span>
                     </div>
                     <p className="text-sm font-black text-gray-900 dark:text-white">${report.relatedDetails.rideFare || "0.00"}</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <div className="flex items-center text-gray-400 mb-1">
+                    <div className="flex items-center text-ink-faint mb-1">
                       <Clock className="w-3.5 h-3.5 mr-1" />
                       <span className="text-[10px] font-black uppercase tracking-tighter">Distance</span>
                     </div>
@@ -364,7 +364,7 @@ const ReportDetail = () => {
                 </div>
 
                 <div className="pt-4">
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 text-center">Payment Info</p>
+                   <p className="text-[10px] font-bold text-ink-faint uppercase tracking-widest mb-2 text-center">Payment Info</p>
                    <div className="flex items-center justify-between p-3 border border-gray-100 dark:border-gray-800 rounded-lg">
                       <span className="text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-tight">
                         {report.relatedDetails.paymentMethod?.replace('_', ' ') || "N/A"}
@@ -376,13 +376,13 @@ const ReportDetail = () => {
                 </div>
 
                 <div className="flex justify-center pt-4">
-                  <span className="text-[10px] font-medium text-gray-400 italic">Created on {formatDate(report.relatedDetails.createdAt)}</span>
+                  <span className="text-[10px] font-medium text-ink-faint italic">Created on {formatDate(report.relatedDetails.createdAt)}</span>
                 </div>
               </div>
             ) : (
               <div className="py-12 text-center px-4">
                 <MapPin className="w-10 h-10 text-gray-200 mx-auto mb-3" />
-                <p className="text-sm text-gray-400 font-medium">No ride details associated with this report.</p>
+                <p className="text-sm text-ink-faint font-medium">No ride details associated with this report.</p>
               </div>
             )}
           </InfoSection>
@@ -397,7 +397,7 @@ const ReportDetail = () => {
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-sm text-ink-subtle font-medium">
             Please enter any internal notes or findings regarding this report resolution.
           </p>
           <textarea

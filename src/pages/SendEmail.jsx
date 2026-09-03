@@ -303,11 +303,11 @@ const SendEmail = () => {
                     <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
                       <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
                         <p className="font-medium text-purple-600">{email.openRate}%</p>
-                        <p className="text-gray-500">Open Rate</p>
+                        <p className="text-ink-subtle">Open Rate</p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
                         <p className="font-medium text-orange-600">{email.clickRate}%</p>
-                        <p className="text-gray-500">Click Rate</p>
+                        <p className="text-ink-subtle">Click Rate</p>
                       </div>
                     </div>
                   )}

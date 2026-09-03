@@ -358,7 +358,7 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
                 }}
               />
             ) : (
-              <User className="w-5 h-5 text-gray-400" />
+              <User className="w-5 h-5 text-ink-faint" />
             )}
           </div>
           {/* Status dot */}
@@ -370,8 +370,8 @@ const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+          <p className="text-sm font-semibold text-ink truncate">{name}</p>
+          <p className="text-xs text-ink-subtle truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
             {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
           </p>
@@ -446,7 +446,7 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
                 }}
               />
             ) : (
-              <User className="w-5 h-5 text-gray-400" />
+              <User className="w-5 h-5 text-ink-faint" />
             )}
           </div>
           {/* Status dot */}
@@ -457,8 +457,8 @@ const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+          <p className="text-sm font-semibold text-ink truncate">{name}</p>
+          <p className="text-xs text-ink-subtle truncate flex items-center gap-1 mt-0.5">
             <Phone className="w-3 h-3" />
             {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
           </p>
@@ -523,12 +523,12 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-8 h-8 text-gray-400" />
+              <User className="w-8 h-8 text-ink-faint" />
             )}
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">{name}</h3>
-            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+            <h3 className="text-base font-bold text-ink">{name}</h3>
+            <p className="text-sm text-ink-subtle flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
               {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
             </p>
@@ -546,23 +546,23 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
         {/* Vehicle details */}
         {vd && (
           <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+            <p className="font-semibold text-ink-muted flex items-center gap-1.5 text-xs uppercase tracking-wide">
               <Car className="w-4 h-4" /> Vehicle Details
             </p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-sm">
-              <span className="font-medium text-gray-500">Make</span>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-ink-muted text-sm">
+              <span className="font-medium text-ink-subtle">Make</span>
               <span>{vd?.make || "—"}</span>
-              <span className="font-medium text-gray-500">Model</span>
+              <span className="font-medium text-ink-subtle">Model</span>
               <span>{vd?.model || "—"}</span>
-              <span className="font-medium text-gray-500">Year</span>
+              <span className="font-medium text-ink-subtle">Year</span>
               <span>{vd?.yearOfManufacture || "—"}</span>
-              <span className="font-medium text-gray-500">Color</span>
+              <span className="font-medium text-ink-subtle">Color</span>
               <span className="capitalize">{vd?.color || "—"}</span>
-              <span className="font-medium text-gray-500">Plate</span>
+              <span className="font-medium text-ink-subtle">Plate</span>
               <span>{vd?.licensePlateNumber || "—"}</span>
-              <span className="font-medium text-gray-500">Reg. No.</span>
+              <span className="font-medium text-ink-subtle">Reg. No.</span>
               <span>{vd?.registrationNumber || "—"}</span>
-              <span className="font-medium text-gray-500">Doc Status</span>
+              <span className="font-medium text-ink-subtle">Doc Status</span>
               <span>
                 <Badge
                   variant={vd?.status === "approved" ? "success" : "warning"}
@@ -577,10 +577,10 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
 
         {/* Location */}
         <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <p className="font-semibold text-ink-subtle text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5" /> Current Location
           </p>
-          <p className="text-gray-700 font-mono text-xs">
+          <p className="text-ink-muted font-mono text-xs">
             {driver?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
             {driver?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
@@ -629,12 +629,12 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <User className="w-8 h-8 text-gray-400" />
+              <User className="w-8 h-8 text-ink-faint" />
             )}
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">{name}</h3>
-            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+            <h3 className="text-base font-bold text-ink">{name}</h3>
+            <p className="text-sm text-ink-subtle flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
               {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
             </p>
@@ -648,12 +648,12 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
 
         {/* Pickup Info */}
         <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+          <p className="font-semibold text-ink-muted flex items-center gap-1.5 text-xs uppercase tracking-wide">
             <MapPin className="w-4 h-4" /> Pickup Details
           </p>
-          <div className="text-gray-600 text-sm">
+          <div className="text-ink-muted text-sm">
             <p>
-              <span className="font-medium text-gray-500 mr-2">Place: </span>
+              <span className="font-medium text-ink-subtle mr-2">Place: </span>
               {rider?.pickupPlaceName || "—"}
             </p>
           </div>
@@ -661,10 +661,10 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
 
         {/* Location */}
         <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+          <p className="font-semibold text-ink-subtle text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5" /> Current Location
           </p>
-          <p className="text-gray-700 font-mono text-xs">
+          <p className="text-ink-muted font-mono text-xs">
             {rider?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
             {rider?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
@@ -867,7 +867,7 @@ const BirdsEyeView = () => {
         <div className="text-center text-red-500 space-y-2">
           <MapPin className="w-10 h-10 mx-auto opacity-50" />
           <p className="font-semibold">Failed to load Google Maps</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-ink-subtle">
             Please check your <code>VITE_GOOGLE_MAPS_API_KEY</code> environment
             variable.
           </p>
@@ -886,7 +886,7 @@ const BirdsEyeView = () => {
         {!isLoaded ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-100 gap-3">
             <div className="w-9 h-9 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm font-medium text-gray-500">Loading map…</p>
+            <p className="text-sm font-medium text-ink-subtle">Loading map…</p>
           </div>
         ) : (
           <GoogleMap
@@ -941,7 +941,7 @@ const BirdsEyeView = () => {
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
             Live
-            <span className="text-gray-400">
+            <span className="text-ink-faint">
               · {liveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           </div>
@@ -968,7 +968,7 @@ const BirdsEyeView = () => {
           onClick={fetchData}
           title="Refresh now"
         >
-          <RefreshCw className="w-4 h-4 text-gray-600" />
+          <RefreshCw className="w-4 h-4 text-ink-muted" />
         </button>
       </div>
 
@@ -977,7 +977,7 @@ const BirdsEyeView = () => {
         {/* Header */}
         <div className="px-4 pt-4 pb-3 border-b border-gray-100">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900">Birds Eye View</h2>
+            <h2 className="text-base font-bold text-ink">Birds Eye View</h2>
             <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
               Auto-refresh 10s
             </span>
@@ -1034,8 +1034,8 @@ const BirdsEyeView = () => {
           ) : (
             <div className="grid grid-cols-4 gap-1 mt-2.5">
               <div className="bg-gray-50 rounded-lg p-1.5 text-center border border-gray-200">
-                <p className="text-[10px] text-gray-500 font-medium truncate">Idle</p>
-                <p className="text-sm font-bold text-gray-700">{riderStats.idle}</p>
+                <p className="text-[10px] text-ink-subtle font-medium truncate">Idle</p>
+                <p className="text-sm font-bold text-ink-muted">{riderStats.idle}</p>
               </div>
               <div className="bg-amber-50 rounded-lg p-1.5 text-center border border-amber-100">
                 <p className="text-[10px] text-amber-600 font-medium truncate">Req.</p>
@@ -1058,7 +1058,7 @@ const BirdsEyeView = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, phone or status…"
-            className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+            className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-ink-muted placeholder:text-ink-faint focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
           />
         </div>
 
@@ -1128,9 +1128,9 @@ const BirdsEyeView = () => {
               </div>
             ))
           ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 text-center">
+            <div className="flex flex-col items-center justify-center py-16 text-ink-faint text-center">
               <Car className="w-12 h-12 mb-3 opacity-30" />
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-sm font-medium text-ink-subtle">
                 {search ? "No matches found" : `No active ${activeTab}`}
               </p>
               {search && (

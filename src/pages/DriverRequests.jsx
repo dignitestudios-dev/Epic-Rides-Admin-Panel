@@ -111,22 +111,22 @@ const DriverRequests = () => {
     {
       key: "email",
       label: "Email",
-      render: (val) => <span className="text-gray-600 truncate max-w-[220px] block">{val}</span>,
+      render: (val) => <span className="text-ink-muted truncate max-w-[220px] block">{val}</span>,
     },
     {
       key: "ssn",
       label: "SSN Number",
-      render: (val) => <span className="text-gray-600 truncate max-w-[220px] block">{val}</span>,
+      render: (val) => <span className="text-ink-muted truncate max-w-[220px] block">{val}</span>,
     },
     {
       key: "phone",
       label: "Phone Number",
-      render: (val) => <span className="text-gray-600">{val || "—"}</span>,
+      render: (val) => <span className="text-ink-muted">{val || "—"}</span>,
     },
     // {
     //   key: "createdAt",
     //   label: "Registration Date",
-    //   render: (val) => <span className="text-gray-600">{formatDate(val)}</span>,
+    //   render: (val) => <span className="text-ink-muted">{formatDate(val)}</span>,
     // },
     {
       key: "requiresApproval",
@@ -162,8 +162,8 @@ const DriverRequests = () => {
     <div className="space-y-6 max-w-[1600px] mx-auto overflow-hidden">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Driver Requests</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">Driver Requests</h1>
+          <p className="text-sm text-ink-subtle mt-1">
             Review and manage driver registration requests and document verification.
           </p>
         </div>

@@ -58,7 +58,7 @@ const RideDetailDialog = ({ ride, onClose }) => {
 
   const Section = ({ title, children }) => (
     <div className="mb-4">
-      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{title}</h4>
+      <h4 className="text-xs font-semibold text-ink-faint uppercase tracking-wider mb-2">{title}</h4>
       {children}
     </div>
   );
@@ -191,7 +191,7 @@ const PrivateRides = () => {
       label: "Pickup Location",
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
-          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <MapPin className="w-3.5 h-3.5 text-ink-faint shrink-0" />
           <span className="truncate text-sm text-gray-700 dark:text-gray-300">
             {typeof val === 'string' ? val : val?.placeName || "—"}
           </span>
@@ -203,7 +203,7 @@ const PrivateRides = () => {
       label: "Dropoff Location",
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
-          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <MapPin className="w-3.5 h-3.5 text-ink-faint shrink-0" />
           <span className="truncate text-sm text-gray-700 dark:text-gray-300">
             {typeof val === 'string' ? val : val?.placeName || "—"}
           </span>
@@ -222,7 +222,7 @@ const PrivateRides = () => {
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
+            <p className="text-xs text-ink-faint">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
           </div>
         </div>
       ),
@@ -233,13 +233,13 @@ const PrivateRides = () => {
       render: (val) => (
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-            <Car className="w-3.5 h-3.5 text-gray-500" />
+            <Car className="w-3.5 h-3.5 text-ink-subtle" />
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
+            <p className="text-xs text-ink-faint">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
           </div>
         </div>
       ),

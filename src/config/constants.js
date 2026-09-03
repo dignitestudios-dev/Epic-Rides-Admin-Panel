@@ -9,20 +9,23 @@ export const APP_CONFIG = {
   companyUrl: "https://example.com",
 };
 
-// Global Color Configuration - Dynamic Theme System
+// Brand Colors — reference values only.
+// The palettes the UI actually renders live as CSS custom properties in
+// src/App.css (--brand-* and --accent-*). Change them there, not here.
 export const COLOR_CONFIG = {
-  // Primary color (required) - Main brand color
+  // Primary — the Epic Rides logo green.
   primary: {
-    name: "Pink",
+    name: "Epic Green",
     hex: "#61CB08",
-    rgb: "198, 13, 249",
-    enabled: true, // Set to false to disable secondary color
+    rgb: "97, 203, 8",
+    enabled: true,
   },
-  // Secondary color (optional) - Accent color
+  // Secondary — the Epic Rides yellow. Reserved for attention states
+  // (peak windows, rewards, "needs review"), never for primary actions.
   secondary: {
-    name: "Yellow",
-    hex: "#ebc501",
-    rgb: "97, 50, 234",
+    name: "Epic Yellow",
+    hex: "#EBC501",
+    rgb: "235, 197, 1",
     enabled: true,
   },
 };
@@ -30,12 +33,11 @@ export const COLOR_CONFIG = {
 // Theme Options Configuration
 export const THEME_OPTIONS = {
   enableThemeToggle: true, // Set to false to disable theme switching
-  defaultTheme: "light", // 'light' or 'dark'
-  forceTheme: "light", // Set to 'light' or 'dark' to force a single theme (disables toggle)
+  defaultPreference: "system", // 'system' | 'light' | 'dark' — first-visit default
+  forceTheme: null, // Set to 'light' or 'dark' to pin a single theme (disables the toggle)
   enableSecondaryColor: COLOR_CONFIG.secondary.enabled,
-  // Theme persistence
-  persistTheme: true, // Save theme preference to localStorage
-  respectSystemTheme: true, // Respect system dark/light mode preference
+  persistTheme: true, // Remember the admin's choice in localStorage
+  respectSystemTheme: true, // Follow the OS while the preference is 'system'
 };
 
 // API Configuration
@@ -104,108 +106,37 @@ export const DATE_CONFIG = {
   timezone: "UTC",
 };
 
+// Navigation Sections
+// The sidebar groups items by `section`. Order here is the order rendered.
+export const MENU_SECTIONS = [
+  { id: "overview", label: null }, // ungrouped, sits above the first divider
+  { id: "operations", label: "Operations" },
+  { id: "people", label: "People" },
+  { id: "pricing", label: "Pricing" },
+  { id: "growth", label: "Growth" },
+  { id: "system", label: "System" },
+];
+
 // Navigation Menu Items
+// `icon` must name a real lucide-react export — Sidebar resolves it via Icons[icon].
+// Permission-gated items must also be handled in AppContext.getFilteredMenuItems().
 export const MENU_ITEMS = [
   {
     id: "dashboard",
     label: "Dashboard",
     icon: "LayoutDashboard",
     path: "/dashboard",
+    section: "overview",
     children: [],
   },
-  {
-    id: "user-management",
-    label: "User Management",
-    icon: "User",
-    path: "/user-management",
-    children: [
-      // {
-      //   id: "riders",
-      //   label: "Riders",
-      //   path: "/riders",
-      // },
-      // {
-      //   id: "drivers",
-      //   label: "Drivers",
-      //   path: "/drivers",
-      // },
-    ],
-  },
-  {
-    id: "driver-management",
-    label: "Driver Requests ",
-    icon: "User",
-    path: "/driver-requests",
-    children: [],
-  },
-  {
-    id: "suspended-drivers",
-    label: "Suspended Drivers",
-    icon: "UserX",
-    path: "/suspended-drivers",
-    children: [],
-  },
-  {
-    id: "rewarded-balance-history",
-    label: "Rewarded Balance",
-    icon: "Coins",
-    path: "/rewarded-balance-history",
-    children: [],
-  },
-  {
-    id: "admin-management",
-    label: "Admin Management",
-    icon: "ShieldAlert",
-    path: "/admin-users",
-    children: [],
-  },
-  {
-    id: "vehicle-category",
-    label: "Vehicle Category",
-    icon: "Car",
-    path: "/vehicle-category",
-    children: [],
-  },
-  // {
-  //   id: "content-management",
-  //   label: "Content Management",
-  //   icon: "FileText",
-  //   path: "/content-management",
-  //   children: [],
-  // },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: "Info",
-    path: "/reports",
-    children: [],
-  },
-  // {
-  //   id: "reports",
-  //   label: "Reports Management",
-  //   icon: "FileSpreadsheet",
-  //   path: "/reports-management",
-  //   children: [],
-  // },
-  {
-    id: "notifications",
-    label: "Notifications",
-    icon: "Bell",
-    path: "/notifications",
-    children: [],
-  },
-  {
-    id: "revenue",
-    label: "Revenue",
-    icon: "BadgeDollarSign",
-    path: "/revenue",
-    children: [],
-  },
+
+  // ── Operations ────────────────────────────────────────────────────────
   {
     id: "private-rides",
     label: "Private Rides",
     icon: "Car",
     path: "/private-rides",
+    section: "operations",
     children: [],
   },
   {
@@ -213,27 +144,7 @@ export const MENU_ITEMS = [
     label: "Carpool Rides",
     icon: "Users",
     path: "/carpool-rides",
-    children: [],
-  },
-  {
-    id: "campaigns",
-    label: "Campaigns",
-    icon: "Tag",
-    path: "/campaigns",
-    children: [],
-  },
-  {
-    id: "ride-rates",
-    label: "Ride Rates",
-    icon: "Gauge",
-    path: "/ride-rates",
-    children: [],
-  },
-  {
-    id: "peak-windows",
-    label: "Peak Windows",
-    icon: "Clock3",
-    path: "/peak-windows",
+    section: "operations",
     children: [],
   },
   {
@@ -241,50 +152,114 @@ export const MENU_ITEMS = [
     label: "Bird's Eye View",
     icon: "Map",
     path: "/birds-eye-view",
+    section: "operations",
     children: [],
   },
-  // {
-  //   id: "history",
-  //   label: "History",
-  //   icon: "ShieldAlert",
-  //   path: "/history",
-  //   children: [],
-  // },
-  // {
-  //   id: "products",
-  //   label: "Products",
-  //   icon: "Package",
-  //   path: "/products",
-  //   children: [
-  //     { id: "products-list", label: "All Products", path: "/products" },
-  //     { id: "categories", label: "Categories", path: "/products/categories" },
-  //   ],
-  // },
-  // {
-  //   id: "orders",
-  //   label: "Orders",
-  //   icon: "ShoppingCart",
-  //   path: "/orders",
-  //   children: [],
-  // },
-  // {
-  //   id: "settings",
-  //   label: "Settings",
-  //   icon: "Settings",
-  //   path: "/settings",
-  //   children: [
-  //     // {
-  //     //   id: "configs",
-  //     //   label: "Configurations",
-  //     //   path: "/settings/configs",
-  //     // },
-  //     {
-  //       id: "change-password",
-  //       label: "Change Password",
-  //       path: "/settings/change-password",
-  //     },
-  //   ],
-  // },
+  {
+    id: "reports",
+    label: "Reports",
+    icon: "Flag",
+    path: "/reports",
+    section: "operations",
+    children: [],
+  },
+
+  // ── People ────────────────────────────────────────────────────────────
+  {
+    id: "user-management",
+    label: "Riders & Drivers",
+    icon: "Users",
+    path: "/user-management",
+    section: "people",
+    children: [],
+  },
+  {
+    id: "driver-management",
+    label: "Driver Requests",
+    icon: "UserCheck",
+    path: "/driver-requests",
+    section: "people",
+    badge: "pendingRequests", // Sidebar renders the live pending count here
+    children: [],
+  },
+  {
+    id: "suspended-drivers",
+    label: "Suspended Drivers",
+    icon: "UserX",
+    path: "/suspended-drivers",
+    section: "people",
+    children: [],
+  },
+  {
+    id: "rewarded-balance-history",
+    label: "Rewarded Balance",
+    icon: "Coins",
+    path: "/rewarded-balance-history",
+    section: "people",
+    children: [],
+  },
+
+  // ── Pricing ───────────────────────────────────────────────────────────
+  {
+    id: "ride-rates",
+    label: "Ride Rates",
+    icon: "Gauge",
+    path: "/ride-rates",
+    section: "pricing",
+    children: [],
+  },
+  {
+    id: "peak-windows",
+    label: "Peak Windows",
+    icon: "Clock3",
+    path: "/peak-windows",
+    section: "pricing",
+    children: [],
+  },
+  {
+    id: "revenue",
+    label: "Revenue",
+    icon: "BadgeDollarSign",
+    path: "/revenue",
+    section: "pricing",
+    children: [],
+  },
+
+  // ── Growth ────────────────────────────────────────────────────────────
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: "Tag",
+    path: "/campaigns",
+    section: "growth",
+    children: [],
+  },
+  {
+    id: "notifications",
+    label: "Notifications",
+    icon: "Bell",
+    path: "/notifications",
+    section: "growth",
+    children: [],
+  },
+
+  // ── System ────────────────────────────────────────────────────────────
+  {
+    id: "vehicle-category",
+    label: "Vehicle Category",
+    icon: "CarFront",
+    path: "/vehicle-category",
+    section: "system",
+    children: [],
+  },
+  {
+    id: "admin-management",
+    label: "Admin Users",
+    icon: "ShieldCheck",
+    path: "/admin-users",
+    section: "system",
+    children: [],
+  },
 ];
 
 // User Roles

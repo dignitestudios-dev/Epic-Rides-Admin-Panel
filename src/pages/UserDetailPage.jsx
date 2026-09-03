@@ -43,8 +43,8 @@ const UserDetailPage = () => {
 
   const InfoRow = ({ label, value }) => (
     <div className="flex justify-between py-1">
-      <span className="text-gray-600 font-medium">{label}</span>
-      <span className="text-gray-800">{value}</span>
+      <span className="text-ink-muted font-medium">{label}</span>
+      <span className="text-ink">{value}</span>
     </div>
   );
 
@@ -82,16 +82,16 @@ const UserDetailPage = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-4xl font-bold text-gray-500">
+                <span className="text-4xl font-bold text-ink-subtle">
                   {userData.name.charAt(0).toUpperCase()}
                 </span>
               )}
             </div>
             <div className="space-y-2">
-              <h2 className="text-3xl font-bold text-gray-900">
+              <h2 className="text-3xl font-bold text-ink">
                 {userData.name}
               </h2>
-              <span className="text-gray-600">{userData.email}</span>
+              <span className="text-ink-muted">{userData.email}</span>
             </div>
           </div>
 
@@ -160,7 +160,7 @@ const UserDetailPage = () => {
             Payment Methods
           </h3>
           {userData.paymentMethods?.length ? (
-            <ul className="list-disc pl-5 space-y-1 text-gray-700">
+            <ul className="list-disc pl-5 space-y-1 text-ink-muted">
               {userData.paymentMethods.map((pm, i) => (
                 <li key={i}>
                   {pm.type} • **** **** **** {pm.last4}
@@ -168,7 +168,7 @@ const UserDetailPage = () => {
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500">No payment methods</p>
+            <p className="text-ink-subtle">No payment methods</p>
           )}
         </Card>
 
@@ -194,7 +194,7 @@ const UserDetailPage = () => {
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <span className="text-gray-500">No Image</span>
+                          <span className="text-ink-subtle">No Image</span>
                         )}
                       </div>
                       <InfoRow label="Type" value={doc.type} />
@@ -204,7 +204,7 @@ const UserDetailPage = () => {
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500">No documents uploaded</p>
+                <p className="text-ink-subtle">No documents uploaded</p>
               )}
             </Card>
           )}
@@ -220,14 +220,14 @@ const UserDetailPage = () => {
                   label="Average"
                   value={`${userData.ratings.average} ⭐ (${userData.ratings.count})`}
                 />
-                <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-700">
+                <ul className="list-disc pl-5 mt-2 space-y-1 text-ink-muted">
                   {userData.ratings.comments.map((c, i) => (
                     <li key={i}>{c}</li>
                   ))}
                 </ul>
               </>
             ) : (
-              <p className="text-gray-500">No feedback</p>
+              <p className="text-ink-subtle">No feedback</p>
             )}
           </Card>
         </div>
@@ -274,7 +274,7 @@ const UserDetailPage = () => {
               </tbody>
             </table>
           ) : (
-            <p className="text-gray-500">No trips found</p>
+            <p className="text-ink-subtle">No trips found</p>
           )}
         </Card>
 
@@ -310,7 +310,7 @@ const UserDetailPage = () => {
               </tbody>
             </table>
           ) : (
-            <p className="text-gray-500">No recent payments</p>
+            <p className="text-ink-subtle">No recent payments</p>
           )}
         </Card>
 
@@ -342,7 +342,7 @@ const UserDetailPage = () => {
       </tbody>
     </table>
   ) : (
-    <p className="text-gray-500">No reported issues</p>
+    <p className="text-ink-subtle">No reported issues</p>
   )}
 </Card>
 
@@ -358,7 +358,7 @@ const UserDetailPage = () => {
             <div className="space-y-3 mb-4">
               {["name", "phone", "address", "city", "state"].map((f) => (
                 <div key={f}>
-                  <label className="block font-medium text-gray-700">
+                  <label className="block font-medium text-ink-muted">
                     {f.charAt(0).toUpperCase() + f.slice(1)}
                   </label>
                   <input
@@ -371,7 +371,7 @@ const UserDetailPage = () => {
               ))}
 
               {/* Profile Picture */}
-              <label className="block font-medium text-gray-700">
+              <label className="block font-medium text-ink-muted">
                 Profile Picture
               </label>
               <input
@@ -401,7 +401,7 @@ const UserDetailPage = () => {
                   >
                     {["type", "vehicle"].map((f) => (
                       <div key={f}>
-                        <label className="block font-medium text-gray-700">
+                        <label className="block font-medium text-ink-muted">
                           {f.charAt(0).toUpperCase() + f.slice(1)}
                         </label>
                         <input
@@ -414,7 +414,7 @@ const UserDetailPage = () => {
                         />
                       </div>
                     ))}
-                    <label className="block font-medium text-gray-700">
+                    <label className="block font-medium text-ink-muted">
                       Expiry Date
                     </label>
                     <input
@@ -425,7 +425,7 @@ const UserDetailPage = () => {
                       }
                       className="border rounded px-2 py-1 w-full"
                     />
-                    <label className="block font-medium text-gray-700">
+                    <label className="block font-medium text-ink-muted">
                       Upload Image
                     </label>
                     <input

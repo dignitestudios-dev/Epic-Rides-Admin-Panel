@@ -15,7 +15,7 @@
 
                 {/* Start */}
                 <div className="mb-3">
-                    <label className="text-xs text-gray-500">Start Date</label>
+                    <label className="text-xs text-ink-subtle">Start Date</label>
                     <input
                         type="date"
                         className="border rounded-lg px-3 py-2 w-full"
@@ -28,7 +28,7 @@
 
                 {/* End */}
                 <div className="mb-4">
-                    <label className="text-xs text-gray-500">End Date</label>
+                    <label className="text-xs text-ink-subtle">End Date</label>
                     <input
                         type="date"
                         className="border rounded-lg px-3 py-2 w-full"

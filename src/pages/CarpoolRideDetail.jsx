@@ -107,7 +107,7 @@ const CarpoolRideDetail = () => {
           variant="ghost" 
           onClick={() => navigate("/carpool-rides")}
           icon={<ArrowLeft className="w-4 h-4" />}
-          className="text-gray-500"
+          className="text-ink-subtle"
         >
           Back
         </Button>
@@ -183,14 +183,14 @@ const CarpoolRideDetail = () => {
                           {booking.passenger?.profilePicture ? (
                             <img src={booking.passenger.profilePicture} alt="Passenger" className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-5 h-5 text-gray-400 m-2.5" />
+                            <User className="w-5 h-5 text-ink-faint m-2.5" />
                           )}
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900 dark:text-white">
                             {fullName(booking.passenger)}
                           </p>
-                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                          <p className="text-xs text-ink-subtle flex items-center gap-1">
                             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                             {booking.passenger?.rating || "New"}
                           </p>
@@ -203,7 +203,7 @@ const CarpoolRideDetail = () => {
                           <span className="font-semibold text-green-600 dark:text-green-400">
                             ${booking.fareCharged?.toFixed(2)}
                           </span>
-                          <span className="text-[11px] text-gray-500">
+                          <span className="text-[11px] text-ink-subtle">
                             ${(booking.fareCharged / (booking.requiredSeats || 1)).toFixed(2)} / seat
                           </span>
                         </div>
@@ -211,25 +211,25 @@ const CarpoolRideDetail = () => {
                     </div>
                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Pickup Stop</p>
+                        <p className="text-xs text-ink-subtle mb-1">Pickup Stop</p>
                         <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
                           {booking.pickupStop?.placeName || "—"}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Dropoff Stop</p>
+                        <p className="text-xs text-ink-subtle mb-1">Dropoff Stop</p>
                         <p className="text-sm text-gray-800 dark:text-gray-200 line-clamp-2">
                           {booking.dropOffStop?.placeName || "—"}
                         </p>
                       </div>
                       <div className="md:col-span-2 flex flex-wrap gap-x-6 gap-y-2 mt-2 pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span className="text-xs text-ink-subtle flex items-center gap-1.5">
                           <DollarSign className="w-3.5 h-3.5" /> {booking.paymentMethod?.toUpperCase()}
                         </span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span className="text-xs text-ink-subtle flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5" /> {booking.paymentStatus?.toUpperCase()}
                         </span>
-                        <span className="text-xs text-gray-500 flex items-center gap-1.5">
+                        <span className="text-xs text-ink-subtle flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5" /> Booked: {formatDateTime(booking.createdAt)}
                         </span>
                       </div>
@@ -254,11 +254,11 @@ const CarpoolRideDetail = () => {
                 {driver?.profilePicture ? (
                   <img src={driver.profilePicture} alt="Driver" className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-8 h-8 text-gray-400" />
+                  <User className="w-8 h-8 text-ink-faint" />
                 )}
               </div>
               <h4 className="font-semibold text-lg text-gray-900 dark:text-white">{fullName(driver)}</h4>
-              <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
+              <div className="flex items-center gap-1 mt-1 text-sm text-ink-subtle">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                 <span>{driver?.rating || "No rating"}</span>
               </div>
@@ -266,11 +266,11 @@ const CarpoolRideDetail = () => {
             
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-sm">
-                <Mail className="w-4 h-4 text-gray-400 shrink-0" />
+                <Mail className="w-4 h-4 text-ink-faint shrink-0" />
                 <span className="text-gray-700 dark:text-gray-300 break-all">{driver?.email || "—"}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
-                <Phone className="w-4 h-4 text-gray-400 shrink-0" />
+                <Phone className="w-4 h-4 text-ink-faint shrink-0" />
                 <span className="text-gray-700 dark:text-gray-300">{driver?.phone ? formatPhoneNumber(driver.phone) : "—"}</span>
               </div>
             </div>
@@ -281,23 +281,23 @@ const CarpoolRideDetail = () => {
             {ride?.driver?.vehicleDetails ? (
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500">Make & Model</span>
+                  <span className="text-sm text-ink-subtle">Make & Model</span>
                   <span className="font-medium text-gray-900 dark:text-white text-right">
                     {ride.driver.vehicleDetails.make} {ride.driver.vehicleDetails.model}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500">License Plate</span>
+                  <span className="text-sm text-ink-subtle">License Plate</span>
                   <Badge variant="outline" className="font-mono">{ride.driver.vehicleDetails.licensePlateNumber}</Badge>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-500">Color / Year</span>
+                  <span className="text-sm text-ink-subtle">Color / Year</span>
                   <span className="font-medium text-gray-900 dark:text-white text-right">
                     {ride.driver.vehicleDetails.color} / {ride.driver.vehicleDetails.yearOfManufacture}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Class</span>
+                  <span className="text-sm text-ink-subtle">Class</span>
                   <span className="font-medium capitalize text-gray-900 dark:text-white">
                     {ride.driver.vehicleDetails.vehicleType}
                   </span>

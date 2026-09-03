@@ -111,7 +111,7 @@ const ForgotPassword = () => {
                   validateEmail(value) || "Please enter a valid email address",
               })}
               error={errors.email?.message}
-              leftIcon={<Mail className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Mail className="w-4 h-4 text-ink-faint" />}
             />
 
             <Button

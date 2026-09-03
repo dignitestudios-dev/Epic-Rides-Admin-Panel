@@ -147,12 +147,12 @@ const ResetPassword = () => {
               })}
               error={errors.password?.message}
               maxLength={64}
-              leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
               rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -179,12 +179,12 @@ const ResetPassword = () => {
               })}
               error={errors.confirmPassword?.message}
               maxLength={64}
-              leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
               rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />

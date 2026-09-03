@@ -599,13 +599,13 @@ const RideRates = () => {
                 placeholder="Search by city name (e.g. Orlando, Miami)..."
                 value={searchCity}
                 onChange={(e) => setSearchCity(e.target.value)}
-                leftIcon={<Search className="h-4 w-4 text-gray-400" />}
+                leftIcon={<Search className="h-4 w-4 text-ink-faint" />}
                 rightIcon={
                   searchCity ? (
                     <button
                       type="button"
                       onClick={() => setSearchCity("")}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                      className="text-ink-faint hover:text-ink-muted dark:hover:text-gray-200"
                     >
                       <XIcon className="h-4 w-4" />
                     </button>
@@ -938,7 +938,7 @@ const RideRates = () => {
               <h3 className="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">
                 Required Mileage Brackets (Fixed Price)
               </h3>
-              <span className="text-xs text-gray-500">5 standard proposal brackets</span>
+              <span className="text-xs text-ink-subtle">5 standard proposal brackets</span>
             </div>
 
             <div className="grid grid-cols-1 gap-3">

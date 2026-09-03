@@ -1,18 +1,12 @@
-import React, { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  User,
-  Mail,
-  Phone,
   Calendar,
-  Star,
+  Mail,
   MapPin,
-  Hash,
-  Wallet,
-  TrendingUp,
-  XCircle,
   Pencil,
+  Phone,
   Trash2,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
@@ -20,18 +14,57 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
-import { formatDate, handleError, handleSuccess, maskEmail, maskPhone } from "../utils/helpers";
 import Table from "../components/ui/Table";
-import StatsCard from "../components/common/StatsCard";
+import Avatar from "../components/ui/Avatar";
+import PageHeader from "../components/common/PageHeader";
+import MetricStrip from "../components/common/MetricStrip";
+import DetailList from "../components/common/DetailList";
 import EditProfileModal from "../components/common/EditProfileModal";
+import {
+  formatDate,
+  handleError,
+  handleSuccess,
+  maskEmail,
+  maskPhone,
+} from "../utils/helpers";
 import { api } from "../lib/services";
 import { useAuth } from "../contexts/AuthContext";
+
+const money = (value) => `$${Number(value || 0).toFixed(2)}`;
+
+const placeCell = (point) => (
+  <span className="block max-w-[180px] truncate" title={point?.placeName}>
+    {point?.placeName || "—"}
+  </span>
+);
+
+const statusBadge = (value) => (
+  <Badge
+    className="capitalize"
+    variant={value?.toLowerCase() === "completed" ? "success" : "danger"}
+  >
+    {value || "—"}
+  </Badge>
+);
+
+const Panel = ({ title, count, children }) => (
+  <Card padding="p-0" className="overflow-hidden">
+    <div className="flex items-baseline justify-between gap-3 px-4 py-3 border-b border-line">
+      <h2 className="text-lg font-semibold text-ink">{title}</h2>
+      {count != null && (
+        <span className="tnum text-caption text-ink-subtle">{count}</span>
+      )}
+    </div>
+    {children}
+  </Card>
+);
 
 const RiderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const { details, loading, refresh } = useGetUserDetails(id, "rider");
+
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -44,14 +77,14 @@ const RiderDetail = () => {
       subscriptionStatus: details?.fullDetails?.subscriptionStatus || "",
       balance: 0,
     }),
-    [details],
+    [details]
   );
 
   const handleDelete = async () => {
     setDeleteLoading(true);
     try {
       const response = await api.deleteUser(id, "rider");
-      handleSuccess(response?.message, "Rider deleted successfully");
+      handleSuccess(response?.message, "Rider deleted");
       setDeleteModalOpen(false);
       navigate("/user-management");
     } catch (error) {
@@ -63,402 +96,287 @@ const RiderDetail = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      <div className="space-y-4">
+        <div className="skeleton h-8 w-56" />
+        <div className="skeleton h-24 w-full" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="skeleton h-72 w-full" />
+          <div className="skeleton h-72 w-full lg:col-span-2" />
+        </div>
       </div>
     );
   }
 
   if (!details) {
     return (
-      <div className="p-6 text-center">
-        <h2 className="text-xl font-semibold text-gray-900">Rider not found</h2>
+      <Card className="text-center py-14">
+        <h2 className="text-xl font-semibold text-ink">Rider not found</h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          This account may have been deleted.
+        </p>
         <Button
-          variant="ghost"
-          onClick={() => navigate("/user-management")}
+          variant="secondary"
           className="mt-4"
+          icon={<ArrowLeft />}
+          onClick={() => navigate("/user-management")}
         >
-          Back to Users
+          Back to riders
         </Button>
-      </div>
+      </Card>
     );
   }
 
   const {
     personalInfo,
     rideStats,
-    rideHistory,
+    rideHistory = [],
     activityLogs,
-    ratingAndFeedback,
-    transactionHistory,
+    transactionHistory = [],
     walletBalance,
-    carpoolHistory,
+    carpoolHistory = [],
   } = details;
 
-  const historyColumns = [
+  const fullName =
+    [personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") ||
+    "Unnamed rider";
+  const isActive = personalInfo?.status?.toLowerCase() === "active";
+  const canSeeSensitive = hasPermission("seeSensitiveData");
+  const email = personalInfo?.email;
+  const phone = personalInfo?.phone || personalInfo?.phoneNumber;
+
+  const metrics = [
+    { label: "Wallet balance", value: money(walletBalance) },
+    ...(details?.rewardedBalance != null
+      ? [{ label: "Rewarded balance", value: money(details.rewardedBalance) }]
+      : []),
+    { label: "Rides completed", value: rideStats?.totalCompleted ?? 0 },
+    { label: "Rides cancelled", value: rideStats?.totalCancelled ?? 0 },
     {
-      key: "createdAt",
-      label: "Date",
-      render: (val) => formatDate(val),
-    },
-    {
-      key: "driver",
-      label: "Driver",
-      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
-    },
-    {
-      key: "pickupPoint",
-      label: "Pickup",
-      render: (point) => (
-        <span
-          className="text-xs max-w-[150px] block truncate"
-          title={point?.placeName}
-        >
-          {point?.placeName || "N/A"}
-        </span>
-      ),
-    },
-    {
-      key: "dropOffPointRequested",
-      label: "Drop-off",
-      render: (point) => (
-        <span
-          className="text-xs max-w-[150px] block truncate"
-          title={point?.placeName}
-        >
-          {point?.placeName || "N/A"}
-        </span>
-      ),
-    },
-    {
-      key: "rideFare",
-      label: "Fare",
-      render: (val) => `$${val || 0}`,
-    },
-    {
-      key: "rideStatus",
-      label: "Status",
-      render: (val) => (
-        <Badge
-        className="capitalize"
-          variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
-        >
-          {val}
-        </Badge>
-      ),
+      label: "Average rating",
+      value: Number.isFinite(Number(details?.averageRating))
+        ? Number(details.averageRating).toFixed(1)
+        : "—",
     },
   ];
 
-  const carpoolHistoryColumns = [
-    {
-      key: "createdAt",
-      label: "Date",
-      render: (val) => formatDate(val),
-    },
+  const rideColumns = [
+    { key: "createdAt", label: "Date", render: (value) => formatDate(value) },
     {
       key: "driver",
       label: "Driver",
-      render: (driver) => [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "N/A",
+      render: (driver) =>
+        [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "—",
     },
+    { key: "pickupPoint", label: "Pickup", render: placeCell },
+    { key: "dropOffPointRequested", label: "Drop-off", render: placeCell },
     {
-      key: "startingPoint",
-      label: "Pickup",
-      render: (point) => (
-        <span
-          className="text-xs max-w-[150px] block truncate"
-          title={point?.placeName}
-        >
-          {point?.placeName || "N/A"}
-        </span>
-      ),
+      key: "rideFare",
+      label: "Fare",
+      numeric: true,
+      render: (value) => money(value),
     },
+    { key: "rideStatus", label: "Status", render: statusBadge },
+  ];
+
+  const carpoolColumns = [
+    { key: "createdAt", label: "Date", render: (value) => formatDate(value) },
     {
-      key: "destination",
-      label: "Drop-off",
-      render: (point) => (
-        <span
-          className="text-xs max-w-[150px] block truncate"
-          title={point?.placeName}
-        >
-          {point?.placeName || "N/A"}
-        </span>
-      ),
+      key: "driver",
+      label: "Driver",
+      render: (driver) =>
+        [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "—",
     },
+    { key: "startingPoint", label: "Pickup", render: placeCell },
+    { key: "destination", label: "Drop-off", render: placeCell },
     {
       key: "fareCharged",
       label: "Fare",
-      render: (val) => `$${val != null ? Number(val).toFixed(2) : "0.0000"}`,
+      numeric: true,
+      render: (value) => money(value),
     },
+    { key: "status", label: "Status", render: statusBadge },
+  ];
+
+  const transactionColumns = [
+    {
+      key: "createdAt",
+      label: "Date",
+      render: (value, row) => formatDate(value || row.date),
+    },
+    { key: "description", label: "Description" },
     {
       key: "status",
       label: "Status",
-      render: (val) => (
-        <Badge
-          className="capitalize"
-          variant={val?.toLowerCase() === "completed" ? "success" : "danger"}
-        >
-          {val}
-        </Badge>
+      render: (value) => {
+        const state = value?.toLowerCase();
+        return (
+          <Badge
+            className="capitalize"
+            variant={
+              state === "success"
+                ? "success"
+                : state === "failed"
+                ? "danger"
+                : "warning"
+            }
+          >
+            {value || "—"}
+          </Badge>
+        );
+      },
+    },
+    {
+      key: "amount",
+      label: "Amount",
+      numeric: true,
+      render: (value, row) => (
+        <span className={row.type === "credit" ? "text-success" : "text-ink"}>
+          {row.type === "credit" ? "+" : "−"}
+          {money(Math.abs(value))}
+        </span>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/user-management")}
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Rider Details</h1>
-      </div>
+    <div className="space-y-4">
+      <Button
+        variant="ghost"
+        size="sm"
+        icon={<ArrowLeft />}
+        onClick={() => navigate("/user-management")}
+        className="-ml-2"
+      >
+        Riders
+      </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Personal Info */}
-        <Card className="lg:col-span-1">
-          <div className="p-6 space-y-6">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-4 overflow-hidden shadow-inner">
-                {personalInfo?.profilePicture ? (
-                  <img
-                    src={personalInfo.profilePicture}
-                   alt={[personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "Profile"}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src = "";
-                      e.target.style.display = "none";
-                    }}
-                  />
-                ) : (
-                  <User className="w-12 h-12 text-blue-600" />
-                )}
-              </div>
-              <h2 className="text-xl font-bold text-gray-900">
-               {[personalInfo?.firstName, personalInfo?.lastName].filter(Boolean).join(" ") || "N/A"}
-              </h2>
-              <Badge
-                variant={
-                  personalInfo.status === "Active" ? "success" : "danger"
-                }
-                className="mt-2"
+      <PageHeader
+        title={fullName}
+        summary={`Rider · joined ${formatDate(details.fullDetails?.createdAt)}`}
+        actions={
+          hasPermission("manageUsers") && (
+            <>
+              <Button
+                variant="secondary"
+                icon={<Pencil />}
+                onClick={() => setEditModalOpen(true)}
               >
-                {personalInfo.status}
+                Edit profile
+              </Button>
+              <Button
+                variant="danger-ghost"
+                icon={<Trash2 />}
+                onClick={() => setDeleteModalOpen(true)}
+              >
+                Delete
+              </Button>
+            </>
+          )
+        }
+      />
+
+      <MetricStrip metrics={metrics} columns={metrics.length} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+        {/* Identity */}
+        <Card className="lg:col-span-1">
+          <div className="flex items-center gap-3 pb-4 mb-4 border-b border-line">
+            <Avatar
+              name={fullName}
+              src={personalInfo?.profilePicture}
+              size="xl"
+            />
+            <div className="min-w-0">
+              <p className="font-semibold text-ink truncate">{fullName}</p>
+              <Badge
+                variant={isActive ? "success" : "neutral"}
+                className="mt-1.5"
+              >
+                {isActive ? "Active" : personalInfo?.status || "Disabled"}
               </Badge>
-              {hasPermission('manageUsers') && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => setEditModalOpen(true)}
-                    icon={<Pencil className="w-3.5 h-3.5" />}
-                  >
-                    Edit Profile
-                  </Button>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() => setDeleteModalOpen(true)}
-                    icon={<Trash2 className="w-3.5 h-3.5" />}
-                  >
-                    Delete Rider
-                  </Button>
-                </>
-              )}
             </div>
+          </div>
 
-            <div className="space-y-4 pt-6 border-t border-gray-100 text-sm font-medium text-gray-700">
-              <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span>{hasPermission('seeSensitiveData') ? personalInfo.email : maskEmail(personalInfo.email)}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span>{hasPermission('seeSensitiveData') ? (personalInfo.phone || personalInfo.phoneNumber) : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
-              </div>
-              {(personalInfo?.address || details?.fullDetails?.address) && (
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 mt-0.5 text-gray-400 shrink-0" />
-                  <span>{personalInfo?.address || details?.fullDetails?.address}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>
-                  Account Created: {formatDate(details.fullDetails.createdAt)}
-                </span>
-              </div>
-            </div>
+          <DetailList
+            items={[
+              {
+                label: "Email",
+                icon: Mail,
+                value: canSeeSensitive ? email : maskEmail(email),
+              },
+              {
+                label: "Phone",
+                icon: Phone,
+                mono: true,
+                value: canSeeSensitive ? phone : maskPhone(phone),
+              },
+              {
+                label: "Address",
+                icon: MapPin,
+                value: personalInfo?.address || details?.fullDetails?.address,
+              },
+              {
+                label: "Joined",
+                icon: Calendar,
+                mono: true,
+                value: formatDate(details.fullDetails?.createdAt),
+              },
+            ]}
+          />
 
-            {/* Activity Logs */}
-            <div className="space-y-4 pt-6 border-t border-gray-100">
-              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
-                Activity Logs
-              </h3>
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between items-center text-gray-600">
-                  <span>Last Login</span>
-                  <span className="text-gray-900 font-medium">
-                    {activityLogs?.lastLogin
-                      ? formatDate(activityLogs.lastLogin)
-                      : "Never"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-gray-600">
-                  <span>Last Ride</span>
-                  <span className="text-gray-900 font-medium">
-                    {activityLogs?.lastRideTaken
-                      ? formatDate(activityLogs.lastRideTaken)
-                      : "No rides yet"}
-                  </span>
-                </div>
+          <div className="mt-4 pt-4 border-t border-line">
+            <h3 className="eyebrow mb-2.5">Activity</h3>
+            <dl className="space-y-2 text-sm">
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-muted">Last login</dt>
+                <dd className="tnum text-ink">
+                  {activityLogs?.lastLogin
+                    ? formatDate(activityLogs.lastLogin)
+                    : "Never"}
+                </dd>
               </div>
-            </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-muted">Last ride</dt>
+                <dd className="tnum text-ink">
+                  {activityLogs?.lastRideTaken
+                    ? formatDate(activityLogs.lastRideTaken)
+                    : "No rides yet"}
+                </dd>
+              </div>
+            </dl>
           </div>
         </Card>
 
-        {/* Right Column: Stats & History */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Stats Cards */}
-          <div className={`mb-4 grid gap-4 ${details?.rewardedBalance != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <StatsCard
-              title="Wallet Balance"
-              value={`$${(walletBalance || 0).toFixed(2)}`}
-              icon={<Wallet />}
-              colored
-              index={3}
+        {/* History */}
+        <div className="lg:col-span-2 space-y-4">
+          <Panel title="Ride history" count={rideHistory.length}>
+            <Table
+              data={rideHistory}
+              columns={rideColumns}
+              maxHeight="360px"
+              emptyMessage="No rides yet"
+              emptyHint="Completed and cancelled rides will appear here."
             />
-            {details?.rewardedBalance != null && (
-              <StatsCard
-                title="Rewarded Balance"
-                value={`$${(details?.rewardedBalance || 0).toFixed(2)}`}
-                icon={<Wallet />}
-                colored
-                index={4}
-              />
-            )}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <StatsCard
-              title="Total Rides"
-              value={rideStats?.totalCompleted || 0}
-              icon={<TrendingUp />}
-              colored
-              index={3}
-            />
-            <StatsCard
-              title="Cancelled Rides"
-              value={rideStats?.totalCancelled || 0}
-              icon={<XCircle />}
-              colored
-              index={5}
-            />
-            <StatsCard
-              title="Average Rating"
-              value={parseFloat(
-                details?.averageRating,
-              ).toFixed(1)}
-              icon={<Star />}
-              colored
-              index={4}
-            />
-          </div>
+          </Panel>
 
-          {/* Ride History */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Ride History
-              </h3>
-              {rideHistory && rideHistory.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table data={rideHistory} columns={historyColumns} />
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No ride history available
-                </p>
-              )}
-            </div>
-          </Card>
+          <Panel title="Carpool history" count={carpoolHistory.length}>
+            <Table
+              data={carpoolHistory}
+              columns={carpoolColumns}
+              maxHeight="360px"
+              emptyMessage="No carpool rides yet"
+            />
+          </Panel>
 
-          {/* Carpool History */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Carpool History
-              </h3>
-              {carpoolHistory && carpoolHistory.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table data={carpoolHistory} columns={carpoolHistoryColumns} />
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No carpool history available
-                </p>
-              )}
-            </div>
-          </Card>
-
-          {/* Transaction History */}
-          <Card>
-            <div className="p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">
-                Transaction History
-              </h3>
-              {transactionHistory && transactionHistory.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table
-                    data={transactionHistory}
-                    columns={[
-                      {
-                        key: "createdAt",
-                        label: "Date",
-                        render: (val, row) => formatDate(val || row.date),
-                      },
-                      { key: "description", label: "Description" },
-                      {
-                        key: "status",
-                        label: "Status",
-                        render: (val) => (
-                          <Badge
-                            className="capitalize"
-                            variant={val?.toLowerCase() === "success" ? "success" : val?.toLowerCase() === "failed" ? "danger" : "warning"}
-                          >
-                            {val || "N/A"}
-                          </Badge>
-                        ),
-                      },
-                      {
-                        key: "amount",
-                        label: "Amount",
-                        render: (val, row) => (
-                          <span
-                            className={
-                              row.type === "credit"
-                                ? "text-green-600"
-                                : "text-red-600"
-                            }
-                          >
-                            {row.type === "credit" ? "+" : "-"}${Math.abs(val)}
-                          </span>
-                        ),
-                      },
-                    ]}
-                  />
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">
-                  No transactions found
-                </p>
-              )}
-            </div>
-          </Card>
+          <Panel title="Transactions" count={transactionHistory.length}>
+            <Table
+              data={transactionHistory}
+              columns={transactionColumns}
+              maxHeight="360px"
+              emptyMessage="No transactions yet"
+              emptyHint="Top-ups and ride payments will appear here."
+            />
+          </Panel>
         </div>
       </div>
 
@@ -471,34 +389,33 @@ const RiderDetail = () => {
         onSuccess={refresh}
       />
 
-      {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
-        title="Delete Rider"
+        title="Delete this rider?"
         size="sm"
-      >
-        <div className="space-y-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-              <Trash2 className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900">Are you sure you want to delete this rider?</p>
-              <p className="text-sm text-gray-500 mt-1">
-                This action is permanent and cannot be undone. All data associated with this rider will be removed.
-              </p>
-            </div>
-          </div>
-          <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
-            <Button variant="ghost" onClick={() => setDeleteModalOpen(false)} disabled={deleteLoading}>
+        footer={
+          <>
+            <Button
+              variant="ghost"
+              onClick={() => setDeleteModalOpen(false)}
+              disabled={deleteLoading}
+            >
               Cancel
             </Button>
             <Button variant="danger" onClick={handleDelete} loading={deleteLoading}>
-              Yes, Delete
+              Delete rider
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      >
+        <p className="text-sm text-ink">
+          <span className="font-medium">{fullName}</span> and all associated ride
+          and transaction data will be permanently removed.
+        </p>
+        <p className="mt-2 text-caption text-ink-muted">
+          This can&rsquo;t be undone.
+        </p>
       </Modal>
     </div>
   );

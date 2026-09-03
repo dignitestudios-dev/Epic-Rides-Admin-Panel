@@ -1,11 +1,11 @@
-import React from "react";
+import { Calendar, Search, X as XIcon } from "lucide-react";
 import Button from "./Button";
 import Input from "./Input";
 import Select from "./Select";
-import { X as XIcon, Search, Calendar } from "lucide-react";
 
 /**
- * FilterBar - A highly reusable, professional filter bar for any page.
+ * Row of filter controls that sits above a table. Controls line up on one
+ * baseline; the clear action only appears once something is actually filtered.
  */
 const FilterBar = ({
   filters = [],
@@ -17,27 +17,30 @@ const FilterBar = ({
   onSearchChange,
   searchPlaceholder = "Search...",
 }) => {
+  const hasActiveFilter =
+    Boolean(searchValue) || filters.some((filter) => Boolean(filter.value));
+
   return (
-    <div className={`flex items-center flex-wrap gap-4 ${className}`}>
+    <div className={`flex flex-wrap items-end gap-2 ${className}`}>
       {searchable && (
-        <div className="flex-1 min-w-[200px] max-w-md">
+        <div className="w-full sm:w-64">
           <Input
             placeholder={searchPlaceholder}
             value={searchValue}
-            onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-            leftIcon={<Search className="w-4 h-4 text-gray-400" />}
+            onChange={(event) => onSearchChange?.(event.target.value)}
+            leftIcon={<Search />}
             rightIcon={
               searchValue ? (
                 <button
                   type="button"
-                  onClick={() => onSearchChange && onSearchChange("")}
-                  className="text-gray-400 hover:text-gray-600 focus:outline-none flex items-center justify-center"
+                  onClick={() => onSearchChange?.("")}
+                  aria-label="Clear search"
+                  className="pointer-events-auto text-ink-faint hover:text-ink transition-colors"
                 >
-                  <XIcon className="w-4 h-4" />
+                  <XIcon className="w-3.5 h-3.5" />
                 </button>
               ) : null
             }
-            className="bg-white dark:bg-gray-800"
           />
         </div>
       )}
@@ -45,56 +48,51 @@ const FilterBar = ({
       {filters.map((filter) => {
         if (filter.type === "select") {
           return (
-            <div key={filter.key} className="min-w-[140px]">
+            <div key={filter.key} className="w-[180px]">
               <Select
                 value={filter.value}
                 onChange={filter.onChange}
                 options={[...(filter.options || [])]}
-                className={`py-1 px-3 text-sm ${filter.className || ""}`}
+                className={filter.className || ""}
                 placeholder={filter.placeholder || filter.label}
                 prefix={filter.label}
               />
             </div>
           );
         }
+
         if (filter.type === "date") {
           return (
-            <div key={filter.key} className="min-w-[140px]">
+            <div key={filter.key} className="w-[176px]">
               <Input
                 type="date"
                 value={filter.value}
-                onChange={(e) => filter.onChange(e.target.value)}
-                placeholder={filter.placeholder || filter.label}
-                className={`${filter.className || ""}`}
-                leftIcon={<Calendar className="w-4 h-4 text-gray-400" />}
-                prefix={filter.label}
+                onChange={(event) => filter.onChange(event.target.value)}
+                className={filter.className || ""}
+                leftIcon={<Calendar />}
+                aria-label={filter.label}
               />
             </div>
           );
         }
-        // Default to text input
+
         return (
-          <div key={filter.key} className="min-w-[140px]">
+          <div key={filter.key} className="w-[180px]">
             <Input
               type="text"
               value={filter.value}
-              onChange={(e) => filter.onChange(e.target.value)}
+              onChange={(event) => filter.onChange(event.target.value)}
               placeholder={filter.placeholder || filter.label}
-              className={`${filter.className || ""}`}
+              className={filter.className || ""}
               prefix={filter.label}
             />
           </div>
         );
       })}
-      {showClear && filters.length > 0 && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onClear}
-          className="flex items-center gap-1"
-        >
-          <XIcon className="w-4 h-4" />
-          Clear Filters
+
+      {showClear && hasActiveFilter && (
+        <Button variant="ghost" icon={<XIcon />} onClick={onClear}>
+          Clear
         </Button>
       )}
     </div>

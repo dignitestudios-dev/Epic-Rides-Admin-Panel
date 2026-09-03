@@ -144,12 +144,12 @@ const ChangePassword = () => {
               })}
               maxLength={64}
               error={errors.currentPassword?.message}
-              leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
               rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   {showCurrentPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -178,12 +178,12 @@ const ChangePassword = () => {
               })}
               maxLength={64}
               error={errors.newPassword?.message}
-              leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
               rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowNewPassword(!showNewPassword)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   {showNewPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -208,12 +208,12 @@ const ChangePassword = () => {
               })}
               maxLength={64}
               error={errors.confirmPassword?.message}
-              leftIcon={<Lock className="w-4 h-4 text-gray-400" />}
+              leftIcon={<Lock className="w-4 h-4 text-ink-faint" />}
               rightIcon={
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-ink-faint hover:text-ink-muted"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />

@@ -813,7 +813,7 @@ const Products = () => {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-ink-faint">
                     Shipping Cost:{" "}
                     <span className="text-black dark:text-white">
                       {formatCurrency(viewingProduct?.shippingCost)}

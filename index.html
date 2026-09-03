@@ -2,13 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- <link rel="shortcut icon" href="favicon.ico" type="image/x-icon"> -->
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Epic Rides - Admin</title>
-    <meta name="description" content=" Admin Dashboard" />
-    <meta name="keywords" content="admin panel, dashboard, react, tailwind css, template" />
-    <meta name="author" content="Your Company" />
+    <title>Epic Rides — Admin</title>
+    <meta name="description" content="Epic Rides operations console" />
+    <meta name="author" content="Epic Rides" />
+    <meta name="theme-color" content="#f6f7f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#080907" media="(prefers-color-scheme: dark)" />
+
+    <link rel="preload" href="/fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/GeistMono-Variable.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!--
+      Resolve the theme before first paint so the app never flashes the wrong
+      one. Mirrors the logic in src/contexts/ThemeContext.jsx.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var pref = stored === "light" || stored === "dark" || stored === "system" ? stored : "system";
+          var dark =
+            pref === "dark" ||
+            (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          var root = document.documentElement;
+          root.classList.add(dark ? "dark" : "light");
+          root.style.colorScheme = dark ? "dark" : "light";
+        } catch (e) {
+          document.documentElement.classList.add("light");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

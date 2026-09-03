@@ -32,7 +32,7 @@ const ImagesGallery = ({ images = [], className = "" }) => {
       <div
         className={`bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center ${className}`}
       >
-        <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+        <Package className="w-16 h-16 mx-auto mb-4 text-ink-faint" />
         <p className="text-gray-500 dark:text-gray-400">No images available</p>
       </div>
     );

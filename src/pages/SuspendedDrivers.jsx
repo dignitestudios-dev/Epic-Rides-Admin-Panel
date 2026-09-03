@@ -103,13 +103,13 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
     <Modal isOpen={!!selectedData} onClose={onClose} title="Suspension Details" size="md">
       <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
         {loading ? (
-          <div className="py-8 text-center text-sm text-gray-500">Loading details...</div>
+          <div className="py-8 text-center text-sm text-ink-subtle">Loading details...</div>
         ) : !details ? (
           <div className="py-8 text-center text-sm text-red-500">Could not load details.</div>
         ) : (
           <>
             <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Driver Info</h4>
+              <h4 className="text-xs font-semibold text-ink-faint uppercase tracking-wider mb-2">Driver Info</h4>
               <Row label="Name" value={fullName(details.driver)} />
               <Row label="Email" value={details.driver?.email} />
               <Row label="Status" value={details.isSuspended ? <Badge variant="danger">Suspended</Badge> : <Badge variant="success">Active</Badge>} />
@@ -117,7 +117,7 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
 
             {details.suspensions?.map((suspension, idx) => (
               <div key={idx} className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                <h4 className="text-xs font-semibold text-ink-subtle uppercase tracking-wider mb-2">
                   Record #{idx + 1}
                 </h4>
                 <Row label="Type" value={typeBadge(suspension.suspensionType)} />
@@ -159,7 +159,7 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
         title="Confirm Unsuspend"
         size="sm"
       >
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-ink-subtle mb-6">
           Are you sure you want to unsuspend this driver? This clears all active suspensions.
         </p>
         <div className="flex justify-end gap-3">
@@ -254,7 +254,7 @@ const SuspendedDrivers = () => {
             <p className="text-sm font-medium text-gray-900 dark:text-white">
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.email}</p>
+            <p className="text-xs text-ink-faint">{val?.email}</p>
           </div>
         </div>
       ),
@@ -278,7 +278,7 @@ const SuspendedDrivers = () => {
       label: "Time Left",
       render: (val) => (
         <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-          <Clock className="w-3.5 h-3.5 text-gray-400" />
+          <Clock className="w-3.5 h-3.5 text-ink-faint" />
           {formatRemainingTime(val)}
         </div>
       ),
@@ -303,7 +303,7 @@ const SuspendedDrivers = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            className="text-gray-600 hover:text-green-600 hover:border-green-600 border-gray-200"
+            className="text-ink-muted hover:text-green-600 hover:border-green-600 border-gray-200"
             icon={<RotateCcw className="w-3.5 h-3.5" />} 
             onClick={() => handleUnsuspendQuick(row.driverId)}
             disabled={unsuspendLoading}
@@ -412,7 +412,7 @@ const SuspendedDrivers = () => {
         title="Confirm Unsuspend"
         size="sm"
       >
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-ink-subtle mb-6">
           Are you sure you want to unsuspend this driver?
         </p>
         <div className="flex justify-end gap-3">

@@ -1,324 +1,465 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+/* ============================================================================
+   Epic Rides Admin — design foundation
+   Precision-SaaS token layer. Every color in the app resolves through a
+   semantic token defined here. Never hardcode a hex in a component.
+   ========================================================================= */
+
+@font-face {
+  font-family: "Geist";
+  src: url("/fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* CSS Variables for Dynamic Colors */
+/* ---------------------------------------------------------------------------
+   Tokens — light (default)
+   Values are space-separated RGB triples so Tailwind's <alpha-value> works.
+   ------------------------------------------------------------------------ */
 :root {
-  /* Primary Color - Orange Theme */
-  --color-primary-50: 255 247 237;
-  --color-primary-100: 255 237 213;
-  --color-primary-200: 254 215 170;
-  --color-primary-300: 253 186 116;
-  --color-primary-400: 251 146 60;
-  --color-primary-500: 241 99 33; /* Main primary color #F16321 */
-  --color-primary-600: 234 88 12;
-  --color-primary-700: 194 65 12;
-  --color-primary-800: 154 52 18;
-  --color-primary-900: 124 45 18;
-  --color-primary-950: 67 20 7;
+  color-scheme: light;
 
-  /* Secondary Color - Light Orange Theme */
-  --color-secondary-50: 255 251 235;
-  --color-secondary-100: 254 243 199;
-  --color-secondary-200: 253 230 138;
-  --color-secondary-300: 252 211 77;
-  --color-secondary-400: 251 191 36;
-  --color-secondary-500: 245 139 50; /* Main secondary color #F58B32 */
-  --color-secondary-600: 217 119 6;
-  --color-secondary-700: 180 83 9;
-  --color-secondary-800: 146 64 14;
-  --color-secondary-900: 120 53 15;
-  --color-secondary-950: 69 26 3;
+  /* Brand — Epic Rides green. 500 is the logo green (#61CB08). */
+  --brand-50: 242 252 230;
+  --brand-100: 226 248 200;
+  --brand-200: 199 240 150;
+  --brand-300: 165 228 92;
+  --brand-400: 130 214 44;
+  --brand-500: 97 203 8;
+  --brand-600: 78 164 6;
+  --brand-700: 60 125 7;
+  --brand-800: 49 99 11;
+  --brand-900: 42 83 14;
+  --brand-950: 20 46 2;
+
+  /* Accent — Epic Rides yellow (#EBC501). Reserved for attention states:
+     peak windows, rewards, "needs review". Never a primary action. */
+  --accent-50: 254 250 231;
+  --accent-100: 253 243 191;
+  --accent-200: 250 231 128;
+  --accent-300: 245 213 58;
+  --accent-400: 235 197 1;
+  --accent-500: 202 168 2;
+  --accent-600: 163 132 4;
+  --accent-700: 130 102 10;
+  --accent-800: 108 83 16;
+  --accent-900: 92 70 19;
+  --accent-950: 53 38 6;
+
+  /* Neutrals — a whisper of warmth so they sit under the green without
+     reading as blue-gray. This scale is ABSOLUTE: 0 is always lightest and
+     950 always darkest, in both themes. Only the semantic tokens below flip.
+     (Tailwind's `gray-*` is remapped onto this scale, so existing pages that
+     write `bg-gray-50 dark:bg-gray-900` keep behaving exactly as authored.) */
+  --neutral-0: 255 255 255;
+  --neutral-25: 250 250 249;
+  --neutral-50: 246 247 244;
+  --neutral-100: 240 241 237;
+  --neutral-200: 227 230 223;
+  --neutral-300: 207 212 201;
+  --neutral-400: 158 165 150;
+  --neutral-500: 122 129 114;
+  --neutral-600: 94 100 88;
+  --neutral-700: 68 73 63;
+  --neutral-800: 42 46 38;
+  --neutral-900: 26 29 22;
+  --neutral-950: 14 16 11;
+
+  /* Semantic status. Success is a deliberately cooler emerald so an
+     "Active" chip never reads as the brand accent. */
+  --success: 5 150 105;
+  --success-fg: 4 108 78;
+  --success-bg: 209 250 229;
+  --success-border: 167 243 208;
+
+  --warning: 217 119 6;
+  --warning-fg: 146 64 14;
+  --warning-bg: 254 243 199;
+  --warning-border: 253 230 138;
+
+  --danger: 220 38 38;
+  --danger-fg: 153 27 27;
+  --danger-bg: 254 226 226;
+  --danger-border: 254 202 202;
+
+  --info: 37 99 235;
+  --info-fg: 30 64 175;
+  --info-bg: 219 234 254;
+  --info-border: 191 219 254;
+
+  /* Surfaces */
+  --canvas: var(--neutral-50);
+  --surface: var(--neutral-0);
+  --surface-raised: var(--neutral-0);
+  --surface-sunken: var(--neutral-25);
+  --surface-hover: var(--neutral-50);
+  --surface-active: var(--neutral-100);
+
+  /* Lines */
+  --line: var(--neutral-200);
+  --line-strong: var(--neutral-300);
+  --line-subtle: var(--neutral-100);
+
+  /* Ink */
+  --ink: var(--neutral-950);
+  --ink-muted: var(--neutral-600);
+  --ink-subtle: var(--neutral-500);
+  --ink-faint: var(--neutral-400);
+  --ink-inverted: var(--neutral-0);
+
+  /* Interactive — brand green is bright, so it always carries dark ink
+     rather than white. That holds in both themes and keeps AA contrast. */
+  --interactive: var(--brand-500);
+  --interactive-hover: var(--brand-400);
+  --interactive-active: var(--brand-600);
+  --interactive-ink: 12 20 4;
+  --interactive-subtle: var(--brand-50);
+  --interactive-subtle-ink: var(--brand-700);
+
+  --focus-ring: var(--brand-500);
+
+  /* Categorical chart series — fixed order, never cycled.
+     Validated for the light surface: deuteranope ΔE 24.4, normal-vision ΔE 24.8.
+     Deliberately avoids brand green, success emerald, warning amber and danger
+     red so a series is never mistaken for a status. */
+  --chart-1: 29 78 216; /* #1D4ED8 blue   */
+  --chart-2: 194 65 12; /* #C2410C orange */
+  --chart-3: 162 28 175; /* #A21CAF fuchsia */
+
+  /* Elevation — precision SaaS keeps shadow nearly absent. */
+  --shadow-sm: 0 1px 2px 0 rgb(20 23 15 / 0.05);
+  --shadow-md: 0 2px 4px -1px rgb(20 23 15 / 0.06), 0 1px 2px -1px rgb(20 23 15 / 0.04);
+  --shadow-lg: 0 8px 24px -6px rgb(20 23 15 / 0.12), 0 2px 6px -2px rgb(20 23 15 / 0.06);
+  --shadow-overlay: 0 16px 48px -12px rgb(20 23 15 / 0.22);
 }
 
-/* Base Styles */
-* {
-  box-sizing: border-box;
+/* ---------------------------------------------------------------------------
+   Tokens — dark
+   Only the token values change; no component knows which theme is active.
+   ------------------------------------------------------------------------ */
+.dark {
+  color-scheme: dark;
+
+  /* The neutral scale is deliberately NOT redefined here — it stays absolute
+     so `dark:bg-gray-900` means what it says. Everything below is semantic. */
+
+  --success: 52 211 153;
+  --success-fg: 110 231 183;
+  --success-bg: 6 46 36;
+  --success-border: 6 78 59;
+
+  --warning: 251 191 36;
+  --warning-fg: 253 224 71;
+  --warning-bg: 55 36 4;
+  --warning-border: 92 61 8;
+
+  --danger: 248 113 113;
+  --danger-fg: 252 165 165;
+  --danger-bg: 60 18 18;
+  --danger-border: 94 27 27;
+
+  --info: 96 165 250;
+  --info-fg: 147 197 253;
+  --info-bg: 17 34 68;
+  --info-border: 30 58 110;
+
+  --canvas: 8 9 7;
+  --surface: 17 19 15;
+  --surface-raised: 23 26 20;
+  --surface-sunken: 12 14 10;
+  --surface-hover: 30 34 26;
+  --surface-active: 38 43 33;
+
+  --line: 38 42 34;
+  --line-strong: 55 61 48;
+  --line-subtle: 28 31 24;
+
+  --ink: 244 246 241;
+  --ink-muted: 160 168 150;
+  --ink-subtle: 128 136 118;
+  --ink-faint: 96 103 87;
+  --ink-inverted: 10 11 9;
+
+  --interactive: var(--brand-400);
+  --interactive-hover: var(--brand-300);
+  --interactive-active: var(--brand-500);
+  --interactive-ink: 12 20 4;
+  --interactive-subtle: 30 52 8;
+  --interactive-subtle-ink: var(--brand-300);
+
+  --focus-ring: var(--brand-400);
+
+  /* Re-stepped for the dark surface rather than flipped — validated there:
+     deuteranope ΔE 28.1, normal-vision ΔE 29.3. */
+  --chart-1: 59 130 246; /* #3B82F6 blue    */
+  --chart-2: 234 88 12; /* #EA580C orange  */
+  --chart-3: 217 70 239; /* #D946EF fuchsia */
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 8px 24px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-overlay: 0 16px 48px -12px rgb(0 0 0 / 0.75);
 }
 
-body {
-  margin: 0;
-  font-family: "Inter", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.3);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Loading Spinner */
-.spinner {
-  width: 20px;
-  height: 20px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Utility Classes */
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.slide-in {
-  animation: slideIn 0.3s ease-out;
-}
-
-.scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-.card-hover {
-  transition: all 0.2s ease-in-out;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-/* Form Styles */
-.form-input {
-  @apply block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors duration-200;
-}
-
-.form-label {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2;
-}
-
-.btn-primary {
-  @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
-}
-
-.btn-secondary {
-  @apply bg-secondary-600 hover:bg-secondary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-secondary-500 focus:ring-offset-2;
-}
-
-.btn-outline {
-  @apply border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
-}
-
-/* Table Styles */
-.table-container {
-  @apply overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700;
-}
-
-.table {
-  @apply w-full divide-y divide-gray-200 dark:divide-gray-700;
-}
-
-.table-header {
-  @apply bg-gray-50 dark:bg-gray-900;
-}
-
-.table-header-cell {
-  @apply px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider;
-}
-
-.table-row {
-  @apply hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200;
-}
-
-.table-cell {
-  @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white;
-}
-
-/* Badge Styles */
-.badge {
-  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-}
-
-.badge-success {
-  @apply bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400;
-}
-
-.badge-warning {
-  @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400;
-}
-
-.badge-error {
-  @apply bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400;
-}
-
-.badge-info {
-  @apply bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400;
-}
-
-.badge-primary {
-  @apply bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-400;
-}
-
-.badge-secondary {
-  @apply bg-secondary-100 text-secondary-800 dark:bg-secondary-900/20 dark:text-secondary-400;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50;
-}
-
-.modal-content {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto;
-}
-
-.modal-header {
-  @apply px-6 py-4 border-b border-gray-200 dark:border-gray-700;
-}
-
-.modal-body {
-  @apply px-6 py-4;
-}
-
-.modal-footer {
-  @apply px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3;
-}
-
-/* Chart Container */
-.chart-container {
-  @apply w-full h-64 md:h-80;
-}
-
-/* Responsive Text */
-.text-responsive {
-  @apply text-sm md:text-base;
-}
-
-/* Custom Focus Styles */
-.focus-primary:focus {
-  @apply outline-none ring-2 ring-primary-500 ring-offset-2;
-}
-
-.focus-secondary:focus {
-  @apply outline-none ring-2 ring-secondary-500 ring-offset-2;
-}
-
-/* Transition Classes */
-.transition-smooth {
-  @apply transition-all duration-200 ease-in-out;
-}
-
-.transition-fast {
-  @apply transition-all duration-150 ease-in-out;
-}
-
-.transition-slow {
-  @apply transition-all duration-300 ease-in-out;
-}
-
-/* Page Loader Styles Start */
-
-.card-page-loader {
-  /* color used to softly clip top and bottom of the .words container */
-  background-color: var(--bg-color);
-  padding: 1rem 2rem;
-  border-radius: 1.25rem;
-}
-.loader {
-  color: rgb(124, 124, 124);
-  font-family: "Poppins", sans-serif;
-  font-weight: 500;
-  font-size: 25px;
-  -webkit-box-sizing: content-box;
-  box-sizing: content-box;
-  height: 40px;
-  padding: 10px 10px;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  border-radius: 8px;
-}
-
-.words {
-  overflow: hidden;
-  position: relative;
-}
-.words::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    var(--bg-color) 10%,
-    transparent 30%,
-    transparent 70%,
-    var(--bg-color) 90%
-  );
-  z-index: 20;
-}
-
-.word {
-  display: block;
-  height: 100%;
-  padding-left: 6px;
-  animation: spin_4991 4s infinite;
-}
-
-@keyframes spin_4991 {
-  10% {
-    -webkit-transform: translateY(-102%);
-    transform: translateY(-102%);
+/* ---------------------------------------------------------------------------
+   Base
+   ------------------------------------------------------------------------ */
+@layer base {
+  * {
+    border-color: rgb(var(--line));
   }
 
-  25% {
-    -webkit-transform: translateY(-100%);
-    transform: translateY(-100%);
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
-  35% {
-    -webkit-transform: translateY(-202%);
-    transform: translateY(-202%);
+  body {
+    margin: 0;
+    background-color: rgb(var(--canvas));
+    color: rgb(var(--ink));
+    font-family: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  50% {
-    -webkit-transform: translateY(-200%);
-    transform: translateY(-200%);
+  /* Numbers are data. They get the mono face and tabular figures everywhere
+     so columns align and digits never reflow as values update. */
+  .tnum,
+  th[data-numeric],
+  td[data-numeric] {
+    font-family: "Geist Mono", ui-monospace, "SF Mono", monospace;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
-  60% {
-    -webkit-transform: translateY(-302%);
-    transform: translateY(-302%);
+  :focus-visible {
+    outline: 2px solid rgb(var(--focus-ring));
+    outline-offset: 2px;
+    border-radius: 3px;
   }
 
-  75% {
-    -webkit-transform: translateY(-300%);
-    transform: translateY(-300%);
+  ::selection {
+    background-color: rgb(var(--brand-500) / 0.25);
   }
 
-  85% {
-    -webkit-transform: translateY(-402%);
-    transform: translateY(-402%);
+  h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.011em;
+    color: rgb(var(--ink));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars — thin, themed, out of the way
+   ------------------------------------------------------------------------ */
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
   }
 
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--line-strong));
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(var(--ink-faint));
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Utilities
+   ------------------------------------------------------------------------ */
+@layer components {
+  /* Hairline rule — the only ornament in the system. */
+  .hairline {
+    border-bottom: 1px solid rgb(var(--line));
+  }
+
+  /* The eyebrow label used above metric groups and nav sections. */
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgb(var(--ink-subtle));
+  }
+
+  .spinner {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+
+  /* ---- Compatibility layer -------------------------------------------
+     Utility classes still referenced by pages that haven't been reworked
+     yet, re-pointed at the new tokens so they theme correctly. Prefer the
+     <Button> / <Input> components in new code; these will be retired as the
+     remaining pages are revamped. */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded
+           bg-interactive text-interactive-ink font-semibold text-sm
+           transition-colors duration-150 hover:bg-interactive-hover
+           active:bg-interactive-active
+           disabled:opacity-45 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded
+           bg-surface text-ink border border-line font-medium text-sm
+           transition-colors duration-150 hover:bg-surface-hover
+           active:bg-surface-active
+           disabled:opacity-45 disabled:pointer-events-none;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded
+           bg-transparent text-ink border border-line font-medium text-sm
+           transition-colors duration-150 hover:bg-surface-hover;
+  }
+
+  .form-label {
+    @apply block text-caption font-medium text-ink-muted mb-1.5;
+  }
+
+  .form-input {
+    @apply block w-full h-8 px-2.5 rounded border border-line bg-surface
+           text-ink text-sm placeholder:text-ink-faint transition-colors
+           duration-150 hover:border-line-strong focus:outline-none
+           focus:border-interactive focus:ring-2 focus:ring-interactive/25;
+  }
+
+  .card-hover {
+    @apply transition-colors duration-150 hover:bg-surface-hover
+           hover:border-line-strong;
+  }
+
+  .fade-in {
+    animation: fade-in 150ms ease-out;
+  }
+
+  .scale-in {
+    animation: scale-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .slide-in {
+    animation: slide-in-right 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Skeleton shimmer for loading states. */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--surface-hover)) 0%,
+      rgb(var(--surface-active)) 50%,
+      rgb(var(--surface-hover)) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: 4px;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
   100% {
-    -webkit-transform: translateY(-400%);
-    transform: translateY(-400%);
+    background-position: -200% 0;
   }
 }
 
-/* Page Loader Styles End */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Respect the user's motion preference — no exceptions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

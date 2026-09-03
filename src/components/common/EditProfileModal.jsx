@@ -157,7 +157,7 @@ const EditProfileModal = ({
                 error={errors.firstName}
                 maxLength={LIMITS.firstName}
               />
-              <p className="text-xs text-gray-400 text-right mt-0.5">
+              <p className="text-xs text-ink-faint text-right mt-0.5">
                 {form.firstName.length}/{LIMITS.firstName}
               </p>
             </div>
@@ -171,7 +171,7 @@ const EditProfileModal = ({
                 error={errors.lastName}
                 maxLength={LIMITS.lastName}
               />
-              <p className="text-xs text-gray-400 text-right mt-0.5">
+              <p className="text-xs text-ink-faint text-right mt-0.5">
                 {form.lastName.length}/{LIMITS.lastName}
               </p>
             </div>
@@ -189,7 +189,7 @@ const EditProfileModal = ({
               error={errors.email}
               maxLength={LIMITS.email}
             />
-            <p className="text-xs text-gray-400 text-right mt-0.5">
+            <p className="text-xs text-ink-faint text-right mt-0.5">
               {form.email.length}/{LIMITS.email}
             </p>
           </div>

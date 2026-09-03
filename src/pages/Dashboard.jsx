@@ -1,113 +1,99 @@
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Users,
-  Car,
-  Activity,
-  CheckCircle,
-  XCircle,
-  DollarSign,
-  ArrowUpRight,
-  Clock,
-  FileWarning,
-  Bell,
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-} from "lucide-react";
-import Card from "../components/ui/Card";
-import StatsCard from "../components/common/StatsCard";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../lib/services";
+import { ArrowRight, Bell, Flag, RefreshCcw } from "lucide-react";
 import toast from "react-hot-toast";
+import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import PageHeader from "../components/common/PageHeader";
+import MetricStrip from "../components/common/MetricStrip";
+import { api } from "../lib/services";
 
-// ── Mini Skeleton ─────────────────────────────────────────────────────────────
-const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg ${className}`} />
+const nf = new Intl.NumberFormat("en-US");
+const money = (value, decimals = 0) =>
+  value == null
+    ? "—"
+    : `$${value.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      })}`;
+const count = (value) => (value == null ? "—" : nf.format(value));
+const pct = (value) => (value == null ? "—" : `${value.toFixed(1)}%`);
+
+/* ── Needs-attention row ──────────────────────────────────────────────────
+   Only rendered when there is something to act on. An empty queue shows a
+   single quiet line instead of two zeroed-out cards demanding attention. */
+const AttentionRow = ({ icon: Icon, tone, label, value, hint, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="group flex items-center gap-3 w-full px-4 py-3 bg-surface border border-line rounded-lg text-left transition-colors hover:bg-surface-hover hover:border-line-strong"
+  >
+    <span
+      className={`shrink-0 w-7 h-7 rounded flex items-center justify-center ${
+        tone === "warning"
+          ? "bg-warning-bg text-warning-fg"
+          : "bg-danger-bg text-danger-fg"
+      }`}
+    >
+      <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+    </span>
+
+    <span className="flex-1 min-w-0">
+      <span className="block text-sm font-medium text-ink">{label}</span>
+      <span className="block text-caption text-ink-subtle">{hint}</span>
+    </span>
+
+    <span className="tnum text-xl font-semibold text-ink">{count(value)}</span>
+    <ArrowRight className="w-4 h-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5" />
+  </button>
 );
 
-const StatsSkeleton = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    {[...Array(4)].map((_, i) => (
-      <Card key={i}>
-        <div className="flex items-center justify-between">
-          <div className="space-y-2 flex-1">
-            <Skeleton className="h-3 w-24" />
-            <Skeleton className="h-7 w-16" />
-            <Skeleton className="h-3 w-32" />
-          </div>
-          <Skeleton className="w-12 h-12 rounded-xl" />
-        </div>
-      </Card>
-    ))}
-  </div>
-);
+/* ── Meter ────────────────────────────────────────────────────────────────
+   A horizontal magnitude bar. Every value is directly labelled, so identity
+   never rests on color alone. */
+const Meter = ({ label, value, total, colorClass, sublabel }) => {
+  const share = total > 0 ? (value / total) * 100 : 0;
 
-// ── Donut Chart (pure CSS) ────────────────────────────────────────────────────
-const DonutSegment = ({ percentage, color, offset }) => {
-  const strokeDasharray = `${percentage} ${100 - percentage}`;
-  const strokeDashoffset = 100 - offset;
   return (
-    <circle
-      cx="20" cy="20" r="15.9155"
-      fill="transparent"
-      stroke={color}
-      strokeWidth="4"
-      strokeDasharray={strokeDasharray}
-      strokeDashoffset={strokeDashoffset}
-      style={{ transition: "stroke-dasharray 0.6s ease" }}
-    />
-  );
-};
-
-const DonutChart = ({ segments }) => {
-  let offset = 25; // start from top
-  return (
-    <svg viewBox="0 0 40 40" className="w-32 h-32">
-      <circle cx="20" cy="20" r="15.9155" fill="transparent" stroke="#f3f4f6" strokeWidth="4" />
-      {segments.map((seg, i) => {
-        const el = <DonutSegment key={i} percentage={seg.percentage} color={seg.color} offset={offset} />;
-        offset += seg.percentage;
-        return el;
-      })}
-    </svg>
-  );
-};
-
-// ── Progress Bar ──────────────────────────────────────────────────────────────
-const ProgressBar = ({ label, value, max, color, suffix = "" }) => {
-  const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs">
-        <span className="text-gray-500 font-medium capitalize">{label}</span>
-        <span className="font-bold text-gray-800">{value}{suffix}</span>
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-sm">
+        <span className="flex items-center gap-2 min-w-0">
+          <span
+            className={`w-2 h-2 rounded-sm shrink-0 ${colorClass}`}
+            aria-hidden="true"
+          />
+          <span className="text-ink truncate">{label}</span>
+        </span>
+        <span className="shrink-0">
+          <span className="tnum font-medium text-ink">{count(value)}</span>
+          <span className="tnum ml-1.5 text-caption text-ink-subtle">
+            {sublabel ?? pct(share)}
+          </span>
+        </span>
       </div>
-      <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+
+      <div
+        className="h-1.5 rounded-full bg-surface-active overflow-hidden"
+        role="img"
+        aria-label={`${label}: ${count(value)}, ${pct(share)} of total`}
+        title={`${label} — ${count(value)} (${pct(share)})`}
+      >
         <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, backgroundColor: color }}
+          className={`h-full rounded-full transition-[width] duration-500 ${colorClass}`}
+          style={{ width: `${Math.min(share, 100)}%` }}
         />
       </div>
     </div>
   );
 };
 
-// ── Pending Action Card ───────────────────────────────────────────────────────
-const PendingActionCard = ({ icon, label, count, color, onClick }) => (
-  <button
-    onClick={onClick}
-    className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 hover:shadow-md transition-all text-left ${color}`}
-  >
-    <div className="p-2.5 rounded-xl bg-white/70">{icon}</div>
-    <div className="flex-1">
-      <p className="text-xs font-semibold opacity-70 uppercase tracking-wider">{label}</p>
-      <p className="text-2xl font-black mt-0.5">{count}</p>
-    </div>
-    <ArrowUpRight className="w-5 h-5 opacity-50" />
-  </button>
+const PanelTitle = ({ children, note }) => (
+  <div className="flex items-baseline justify-between gap-3 mb-4">
+    <h2 className="text-lg font-semibold text-ink">{children}</h2>
+    {note && <span className="text-caption text-ink-subtle shrink-0">{note}</span>}
+  </div>
 );
 
-// ── Main Dashboard ────────────────────────────────────────────────────────────
 const Dashboard = () => {
   const navigate = useNavigate();
 
@@ -115,7 +101,7 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (showToast = false) => {
     setLoading(true);
     try {
       const [statsRes, analyticsRes] = await Promise.all([
@@ -124,300 +110,296 @@ const Dashboard = () => {
       ]);
       setStats(statsRes.data || null);
       setAnalytics(analyticsRes.data || null);
-    } catch (err) {
-      toast.error("Failed to load dashboard data.");
+      if (showToast) toast.success("Dashboard refreshed");
+    } catch {
+      toast.error("Couldn't load dashboard data. Try refreshing.");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
-  // ── Derived values ────────────────────────────────────────────────────────
-  const um = stats?.userMetrics || {};
-  const rm = stats?.rideMetrics || {};
-  const rev = stats?.revenueMetrics || {};
-  const pa = stats?.pendingActions || {};
-  const ov = analytics?.overview || {};
-  const dist = analytics?.rideDistribution || [];
+  const um = stats?.userMetrics ?? {};
+  const rm = stats?.rideMetrics ?? {};
+  const rev = stats?.revenueMetrics ?? {};
+  const pa = stats?.pendingActions ?? {};
+  const ov = analytics?.overview ?? {};
+  const distribution = analytics?.rideDistribution ?? [];
 
-  const topStatsCards = [
+  const metrics = [
     {
-      title: "Active Riders",
-      value: um.totalActiveRiders ?? "—",
-      description: `+${um.newRiderRegistrations?.last7Days ?? 0} last 7 days`,
-      icon: <Users />,
-      index: 0,
+      label: "Active riders",
+      value: count(um.totalActiveRiders),
+      context: `+${count(um.newRiderRegistrations?.last7Days ?? 0)} in last 7 days`,
+      tone: um.newRiderRegistrations?.last7Days > 0 ? "positive" : "default",
     },
     {
-      title: "Active Drivers",
-      value: um.totalActiveDrivers ?? "—",
-      description: `+${um.newDriverRegistrations?.last7Days ?? 0} last 7 days`,
-      icon: <Car />,
-      index: 2,
+      label: "Active drivers",
+      value: count(um.totalActiveDrivers),
+      context: `+${count(um.newDriverRegistrations?.last7Days ?? 0)} in last 7 days`,
+      tone: um.newDriverRegistrations?.last7Days > 0 ? "positive" : "default",
     },
     {
-      title: "Subscription Revenue",
-      value: `$${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}`,
-      description: "Total earned from subscriptions",
-      icon: <DollarSign />,
-      index: 3,
+      label: "Subscription revenue",
+      value: money(rev.subscriptionRevenueUSD),
+      context: "Lifetime, from driver plans",
     },
     {
-      title: "Commission Revenue",
-      value: `$${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}`,
-      description: "Withdrawal commission fees",
-      icon: <TrendingUp />,
-      index: 5,
+      label: "Commission revenue",
+      value: money(rev.withdrawalCommissionRevenueUSD, 2),
+      context: "Fees on driver withdrawals",
     },
   ];
 
-  const rideColors = { luxury: "#6366f1", economy: "#10b981", carpool: "#f59e0b" };
-  const donutSegments = dist.map((d) => ({
-    percentage: d.percentage,
-    color: rideColors[d.type] || "#9ca3af",
-    label: d.type,
-  }));
+  const pendingDrivers = pa.pendingDriverRequests ?? 0;
+  const pendingReports = pa.pendingReports ?? 0;
+  const hasAttention = pendingDrivers > 0 || pendingReports > 0;
+
+  // Fixed series order — a series keeps its color regardless of ranking.
+  const SERIES = ["bg-chart-1", "bg-chart-2", "bg-chart-3"];
+  const seriesOrder = ["economy", "luxury", "carpool"];
+  const orderedDistribution = [...distribution].sort(
+    (a, b) => seriesOrder.indexOf(a.type) - seriesOrder.indexOf(b.type)
+  );
+
+  const periods = [
+    { label: "Today", completed: rm.totalRidesCompleted?.today, cancelled: rm.totalRidesCancelled?.today },
+    { label: "This week", completed: rm.totalRidesCompleted?.thisWeek, cancelled: rm.totalRidesCancelled?.thisWeek },
+    { label: "This month", completed: rm.totalRidesCompleted?.thisMonth, cancelled: rm.totalRidesCancelled?.thisMonth },
+  ];
+
+  const registrations = [
+    { label: "Riders", data: um.newRiderRegistrations },
+    { label: "Drivers", data: um.newDriverRegistrations },
+  ];
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto">
-
-      {/* ── Header ───────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Platform overview &amp; live metrics</p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => navigate("/notifications")}
-            className="btn-primary flex items-center gap-1.5 text-sm"
-          >
-            <Bell className="w-4 h-4" /> Send Notification
-          </button>
-          <button
-            onClick={() => navigate("/reports")}
-            className="btn-secondary flex items-center gap-1.5 text-sm"
-          >
-            <FileWarning className="w-4 h-4" /> View Reports
-          </button>
-        </div>
-      </div>
-
-      {/* ── Top Stats Cards ───────────────────────────────────────────────── */}
-      {loading ? (
-        <StatsSkeleton />
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {topStatsCards.map((s) => (
-            <StatsCard
-              key={s.title}
-              title={s.title}
-              value={s.value}
-              description={s.description}
-              icon={s.icon}
-              colored
-              index={s.index}
+    <div className="space-y-5">
+      <PageHeader
+        title="Dashboard"
+        summary={
+          loading
+            ? "Loading platform metrics…"
+            : `${count(ov.totalRides)} rides · ${count(
+                um.totalActiveDrivers
+              )} active drivers · ${count(um.totalActiveRiders)} active riders`
+        }
+        actions={
+          <>
+            <Button
+              variant="ghost"
+              size="md"
+              icon={<RefreshCcw />}
+              onClick={() => fetchAll(true)}
+              loading={loading}
+              aria-label="Refresh dashboard"
             />
-          ))}
-        </div>
-      )}
+            <Button
+              variant="secondary"
+              size="md"
+              icon={<Flag />}
+              onClick={() => navigate("/reports")}
+            >
+              Reports
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              icon={<Bell />}
+              onClick={() => navigate("/notifications")}
+            >
+              Send notification
+            </Button>
+          </>
+        }
+      />
 
-      {/* ── Pending Actions ───────────────────────────────────────────────── */}
+      <MetricStrip metrics={metrics} loading={loading} />
+
+      {/* Needs attention */}
       {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <PendingActionCard
-            icon={<Car className="w-5 h-5 text-amber-600" />}
-            label="Pending Driver Requests"
-            count={pa.pendingDriverRequests ?? 0}
-            color="bg-amber-50 border-amber-200 text-amber-800"
-            onClick={() => navigate("/driver-requests")}
-          />
-          <PendingActionCard
-            icon={<FileWarning className="w-5 h-5 text-red-600" />}
-            label="Pending Reports"
-            count={pa.pendingReports ?? 0}
-            color="bg-red-50 border-red-200 text-red-800"
-            onClick={() => navigate("/reports")}
-          />
-        </div>
-      )}
-
-      {/* ── Ride Stats + Analytics ────────────────────────────────────────── */}
-      {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card><Skeleton className="h-48 w-full" /></Card>
-          <Card><Skeleton className="h-48 w-full" /></Card>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Ride Completion Metrics */}
-          <Card>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-[#39A300]" />
-                <h2 className="text-base font-bold text-gray-900">Ride Metrics</h2>
-              </div>
-
-              {/* Total / Completed / Cancelled overview */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Total", value: ov.totalRides, color: "bg-blue-50 text-blue-700 border-blue-200" },
-                  { label: "Completed", value: ov.completedRides, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                  { label: "Cancelled", value: ov.cancelledRides, color: "bg-red-50 text-red-700 border-red-200" },
-                ].map((item) => (
-                  <div key={item.label} className={`rounded-xl border p-3 text-center ${item.color}`}>
-                    <p className="text-2xl font-black">{item.value ?? "—"}</p>
-                    <p className="text-xs font-semibold mt-0.5 opacity-80">{item.label}</p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Completion bars */}
-              <div className="space-y-3">
-                <ProgressBar
-                  label="Completed"
-                  value={ov.completedRides ?? 0}
-                  max={ov.totalRides ?? 1}
-                  color="#10b981"
-                  suffix={` (${ov.completedPercentage?.toFixed(1) ?? 0}%)`}
+        <section aria-labelledby="attention-heading" className="space-y-2">
+          <h2 id="attention-heading" className="eyebrow">
+            Needs attention
+          </h2>
+          {hasAttention ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {pendingDrivers > 0 && (
+                <AttentionRow
+                  icon={Bell}
+                  tone="warning"
+                  label="Driver requests"
+                  hint="Waiting on document review"
+                  value={pendingDrivers}
+                  onClick={() => navigate("/driver-requests")}
                 />
-                <ProgressBar
-                  label="Cancelled"
-                  value={ov.cancelledRides ?? 0}
-                  max={ov.totalRides ?? 1}
-                  color="#ef4444"
-                  suffix={` (${ov.cancelledPercentage?.toFixed(1) ?? 0}%)`}
-                />
-              </div>
-
-              {/* Today / Week / Month breakdown */}
-              <div className="border-t border-gray-100 pt-4 grid grid-cols-3 gap-2 text-xs">
-                {[
-                  { period: "Today", completed: rm.totalRidesCompleted?.today, cancelled: rm.totalRidesCancelled?.today },
-                  { period: "This Week", completed: rm.totalRidesCompleted?.thisWeek, cancelled: rm.totalRidesCancelled?.thisWeek },
-                  { period: "This Month", completed: rm.totalRidesCompleted?.thisMonth, cancelled: rm.totalRidesCancelled?.thisMonth },
-                ].map((p) => (
-                  <div key={p.period} className="bg-gray-50 rounded-xl p-3 space-y-1.5">
-                    <p className="font-semibold text-gray-500 text-center">{p.period}</p>
-                    <div className="flex items-center gap-1 justify-center text-emerald-600">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span className="font-bold">{p.completed ?? 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1 justify-center text-red-500">
-                      <XCircle className="w-3.5 h-3.5" />
-                      <span className="font-bold">{p.cancelled ?? 0}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-
-          {/* Ride Type Distribution */}
-          <Card>
-            <div className="p-6 space-y-5">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-indigo-500" />
-                <h2 className="text-base font-bold text-gray-900">Ride Type Distribution</h2>
-              </div>
-
-              {donutSegments.length > 0 ? (
-                <div className="flex items-center gap-8">
-                  <div className="relative shrink-0">
-                    <DonutChart segments={donutSegments} />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-xl font-black text-gray-800">{ov.totalRides ?? 0}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">Total</p>
-                    </div>
-                  </div>
-                  <div className="flex-1 space-y-3">
-                    {dist.map((d) => (
-                      <div key={d.type} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: rideColors[d.type] || "#9ca3af" }} />
-                            <span className="capitalize font-semibold text-gray-700">{d.type}</span>
-                          </div>
-                          <span className="font-bold text-gray-800">{d.count} <span className="text-gray-400 font-normal">({d.percentage?.toFixed(1)}%)</span></span>
-                        </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${d.percentage}%`, backgroundColor: rideColors[d.type] || "#9ca3af" }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                  <Activity className="w-10 h-10 mb-2" />
-                  <p className="text-sm">No ride distribution data</p>
-                </div>
               )}
-
-              {/* Revenue summary */}
-              <div className="border-t border-gray-100 pt-4 grid grid-cols-2 gap-3">
-                <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-indigo-500 mb-1">Subscription Revenue</p>
-                  <p className="text-xl font-black text-indigo-700">${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}</p>
-                </div>
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-emerald-500 mb-1">Commission Revenue</p>
-                  <p className="text-xl font-black text-emerald-700">${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}</p>
-                </div>
-              </div>
+              {pendingReports > 0 && (
+                <AttentionRow
+                  icon={Flag}
+                  tone="danger"
+                  label="Open reports"
+                  hint="Safety and conduct reports"
+                  value={pendingReports}
+                  onClick={() => navigate("/reports")}
+                />
+              )}
             </div>
-          </Card>
-        </div>
-      )}
-
-      {/* ── User Registrations ────────────────────────────────────────────── */}
-      {!loading && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {[
-            {
-              title: "New Rider Registrations",
-              icon: <Users className="w-5 h-5 text-blue-500" />,
-              data: um.newRiderRegistrations,
-              cardBg: "bg-blue-50 border border-blue-100",
-              valueCls: "text-gray-800",
-              labelCls: "text-blue-500",
-            },
-            {
-              title: "New Driver Registrations",
-              icon: <Car className="w-5 h-5 text-purple-500" />,
-              data: um.newDriverRegistrations,
-              cardBg: "bg-purple-50 border border-purple-100",
-              valueCls: "text-gray-800",
-              labelCls: "text-purple-500",
-            },
-          ].map((section) => (
-            <Card key={section.title}>
-              <div className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  {section.icon}
-                  <h3 className="font-bold text-gray-900 text-sm">{section.title}</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className={`${section.cardBg} rounded-xl p-4 text-center`}>
-                    <p className={`text-2xl font-black ${section.valueCls}`}>{section.data?.last7Days ?? 0}</p>
-                    <p className={`text-xs font-semibold ${section.labelCls} mt-1`}>Last 7 Days</p>
-                  </div>
-                  <div className={`${section.cardBg} rounded-xl p-4 text-center`}>
-                    <p className={`text-2xl font-black ${section.valueCls}`}>{section.data?.last30Days ?? 0}</p>
-                    <p className={`text-xs font-semibold ${section.labelCls} mt-1`}>Last 30 Days</p>
-                  </div>
-                </div>
-              </div>
+          ) : (
+            <Card padding="px-4 py-3">
+              <p className="text-sm text-ink-muted">
+                Nothing waiting — driver requests and reports are all cleared.
+              </p>
             </Card>
-          ))}
-        </div>
+          )}
+        </section>
       )}
 
+      {/* Ride performance */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <PanelTitle note={`${count(ov.totalRides)} total`}>
+            Ride completion
+          </PanelTitle>
+
+          {loading ? (
+            <div className="space-y-3">
+              <div className="skeleton h-2 w-full" />
+              <div className="skeleton h-3 w-2/3" />
+              <div className="skeleton h-3 w-1/2" />
+            </div>
+          ) : (
+            <>
+              {/* Stacked magnitude bar. A 2px surface gap separates the two
+                  segments so they never blur into one another. */}
+              <div className="flex h-2 w-full rounded-full overflow-hidden bg-surface-active gap-[2px] mb-4">
+                <div
+                  className="bg-success h-full rounded-l-full transition-[width] duration-500"
+                  style={{ width: `${ov.completedPercentage ?? 0}%` }}
+                  title={`Completed — ${count(ov.completedRides)} (${pct(ov.completedPercentage)})`}
+                />
+                <div
+                  className="bg-danger h-full rounded-r-full transition-[width] duration-500"
+                  style={{ width: `${ov.cancelledPercentage ?? 0}%` }}
+                  title={`Cancelled — ${count(ov.cancelledRides)} (${pct(ov.cancelledPercentage)})`}
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Meter
+                  label="Completed"
+                  value={ov.completedRides}
+                  total={ov.totalRides}
+                  colorClass="bg-success"
+                  sublabel={pct(ov.completedPercentage)}
+                />
+                <Meter
+                  label="Cancelled"
+                  value={ov.cancelledRides}
+                  total={ov.totalRides}
+                  colorClass="bg-danger"
+                  sublabel={pct(ov.cancelledPercentage)}
+                />
+              </div>
+
+              {/* The same numbers as a table — the accessible read of the bar. */}
+              <table className="w-full mt-5 pt-4 border-t border-line">
+                <caption className="sr-only">
+                  Rides completed and cancelled by period
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col" className="eyebrow text-left pb-1.5">Period</th>
+                    <th scope="col" className="eyebrow text-right pb-1.5">Completed</th>
+                    <th scope="col" className="eyebrow text-right pb-1.5">Cancelled</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {periods.map((period) => (
+                    <tr key={period.label} className="border-t border-line-subtle">
+                      <th scope="row" className="py-1.5 text-sm font-normal text-ink-muted text-left">
+                        {period.label}
+                      </th>
+                      <td className="tnum py-1.5 text-sm text-ink text-right">
+                        {count(period.completed ?? 0)}
+                      </td>
+                      <td className="tnum py-1.5 text-sm text-ink text-right">
+                        {count(period.cancelled ?? 0)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          )}
+        </Card>
+
+        <Card>
+          <PanelTitle note={`${count(ov.totalRides)} total`}>Ride mix</PanelTitle>
+
+          {loading ? (
+            <div className="space-y-4">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="space-y-1.5">
+                  <div className="skeleton h-3 w-1/3" />
+                  <div className="skeleton h-1.5 w-full" />
+                </div>
+              ))}
+            </div>
+          ) : orderedDistribution.length > 0 ? (
+            <div className="space-y-3.5">
+              {orderedDistribution.map((item, index) => (
+                <Meter
+                  key={item.type}
+                  label={item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                  value={item.count}
+                  total={ov.totalRides}
+                  colorClass={SERIES[index % SERIES.length]}
+                  sublabel={pct(item.percentage)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="py-10 text-center text-sm text-ink-subtle">
+              No rides recorded yet.
+            </p>
+          )}
+
+          {/* New registrations */}
+          <div className="mt-5 pt-4 border-t border-line">
+            <table className="w-full">
+              <caption className="eyebrow text-left mb-2">
+                New registrations
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col" className="sr-only">Audience</th>
+                  <th scope="col" className="eyebrow text-right pb-1.5">Last 7 days</th>
+                  <th scope="col" className="eyebrow text-right pb-1.5">Last 30 days</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registrations.map((row) => (
+                  <tr key={row.label} className="border-t border-line-subtle">
+                    <th scope="row" className="py-1.5 text-sm font-normal text-ink-muted text-left">
+                      {row.label}
+                    </th>
+                    <td className="tnum py-1.5 text-sm text-ink text-right">
+                      {count(row.data?.last7Days ?? 0)}
+                    </td>
+                    <td className="tnum py-1.5 text-sm text-ink text-right">
+                      {count(row.data?.last30Days ?? 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

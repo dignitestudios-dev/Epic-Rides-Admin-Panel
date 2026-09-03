@@ -287,7 +287,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
               <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-900/50 rounded-md border border-gray-200 dark:border-gray-700">
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Generated Codes</p>
                 {loadingCodes ? (
-                  <p className="text-xs text-gray-500">Loading codes...</p>
+                  <p className="text-xs text-ink-subtle">Loading codes...</p>
                 ) : generatedCodes.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {generatedCodes.map((c, i) => (
@@ -297,7 +297,7 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-500">No codes generated yet.</p>
+                  <p className="text-xs text-ink-subtle">No codes generated yet.</p>
                 )}
               </div>
             )}
@@ -629,7 +629,7 @@ const Campaigns = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaigns</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage promotional campaigns, public codes, and unique generated codes.</p>
+          <p className="text-sm text-ink-subtle mt-1">Manage promotional campaigns, public codes, and unique generated codes.</p>
         </div>
         <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
           Create Campaign

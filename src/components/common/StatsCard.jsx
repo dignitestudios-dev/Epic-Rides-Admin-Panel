@@ -61,7 +61,7 @@ const StatsCard = ({
             {value}
           </p>
           {description && (
-            <p className="text-gray-400 text-xs mt-2">{description}</p>
+            <p className="text-ink-faint text-xs mt-2">{description}</p>
           )}
           {change && (
             <div className="flex items-center mt-2">

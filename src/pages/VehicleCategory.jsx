@@ -108,7 +108,7 @@ const VehicleCategoryManagement = () => {
       key: "notes",
       label: "Notes",
       render: (value) => (
-        <span className="text-xs text-gray-500 max-w-[200px] truncate block">
+        <span className="text-xs text-ink-subtle max-w-[200px] truncate block">
           {value || "N/A"}
         </span>
       ),
@@ -233,10 +233,10 @@ const VehicleCategoryManagement = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-ink">
             Vehicle Category Management
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-ink-subtle mt-1">
             Manage vehicle types and mapping for your fleet
           </p>
         </div>
@@ -389,16 +389,16 @@ const VehicleCategoryManagement = () => {
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
+          <p className="text-ink-muted">
             Are you sure you want to delete this vehicle? This action cannot be
             undone.
           </p>
           {vehicleToDelete && (
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <p className="text-sm font-medium text-gray-900 capitalize">
+              <p className="text-sm font-medium text-ink capitalize">
                 {vehicleToDelete.model}
               </p>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-ink-subtle capitalize">
                 Ride Type: {vehicleToDelete.rideType}
               </p>
             </div>

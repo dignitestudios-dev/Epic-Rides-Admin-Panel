@@ -1,21 +1,71 @@
-import React from 'react';
+import { forwardRef, useId } from "react";
+import { fieldBase } from "./Input";
 
-const TextArea = React.forwardRef(({ label, error, className = '', ...props }, ref) => {
-  return (
-    <div className={className}>
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-          {label}
-        </label>
-      )}
-      <textarea
-        ref={ref}
-        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-primary-500 focus:border-primary-500 transition-colors ${error ? 'border-red-500' : ''}`}
-        {...props}
-      />
-      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
-    </div>
-  );
-});
+const TextArea = forwardRef(
+  (
+    {
+      label,
+      error,
+      helperText,
+      required = false,
+      rows = 4,
+      className = "",
+      id,
+      ...props
+    },
+    ref
+  ) => {
+    const generatedId = useId();
+    const fieldId = id || generatedId;
+    const describedBy = error
+      ? `${fieldId}-error`
+      : helperText
+      ? `${fieldId}-help`
+      : undefined;
+
+    return (
+      <div className={`space-y-1.5 ${className}`}>
+        {label && (
+          <label
+            htmlFor={fieldId}
+            className="block text-caption font-medium text-ink-muted"
+          >
+            {label}
+            {required && <span className="text-danger ml-0.5">*</span>}
+          </label>
+        )}
+
+        <textarea
+          ref={ref}
+          id={fieldId}
+          rows={rows}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          className={[
+            fieldBase,
+            "px-2.5 py-2 text-sm resize-y min-h-[64px]",
+            error ? "border-danger focus:border-danger focus:ring-danger/25" : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          {...props}
+        />
+
+        {error && (
+          <p id={`${fieldId}-error`} className="text-caption text-danger">
+            {error}
+          </p>
+        )}
+        {helperText && !error && (
+          <p id={`${fieldId}-help`} className="text-caption text-ink-subtle">
+            {helperText}
+          </p>
+        )}
+      </div>
+    );
+  }
+);
+
+TextArea.displayName = "TextArea";
 
 export default TextArea;

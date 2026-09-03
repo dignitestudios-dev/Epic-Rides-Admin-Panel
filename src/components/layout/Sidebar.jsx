@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronRight, X } from "lucide-react";
-import { APP_CONFIG } from "../../config/constants";
-import { useApp } from "../../contexts/AppContext";
+import { PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import * as Icons from "lucide-react";
+import { APP_CONFIG, MENU_SECTIONS } from "../../config/constants";
+import { useApp } from "../../contexts/AppContext";
 import useGetRequestsCount from "../../hooks/drivers/useGetRequestsCount";
 
 const Sidebar = () => {
@@ -16,244 +16,174 @@ const Sidebar = () => {
     toggleSidebar,
   } = useApp();
   const { count: pendingRequestsCount } = useGetRequestsCount();
-  const [expandedItems, setExpandedItems] = useState({});
 
-  const toggleExpanded = (itemId) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [itemId]: !prev[itemId],
-    }));
-  };
+  // Group the flat menu into its sections, dropping any section the current
+  // role has no items in.
+  const sections = useMemo(
+    () =>
+      MENU_SECTIONS.map((section) => ({
+        ...section,
+        items: menuItems.filter((item) => (item.section ?? "overview") === section.id),
+      })).filter((section) => section.items.length > 0),
+    [menuItems]
+  );
 
-  const isActive = (path) => {
-    return location.pathname === path;
-  };
+  const isActive = (path) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
-  const isParentActive = (item) => {
-    if (item.children.length === 0) return isActive(item.path);
-    return item.children.some((child) => isActive(child.path));
-  };
+  const badgeCount = (item) =>
+    item.badge === "pendingRequests" ? pendingRequestsCount : null;
 
-  const renderMenuItem = (item) => {
+  const renderItem = (item) => {
     const IconComponent = Icons[item.icon] || Icons.Circle;
-    const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedItems[item.id];
-    const active = isParentActive(item);
+    const active = isActive(item.path);
+    const count = badgeCount(item);
 
     return (
-      <div key={item.id} className="mb-1">
-        {hasChildren ? (
-          <div>
-            <button
-              onClick={() => !sidebarCollapsed && toggleExpanded(item.id)}
-              className={`w-full flex items-center ${
-                sidebarCollapsed ? "justify-center" : "justify-between"
-              } px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
-                active
-                  ? "bg-primary-500/30 dark:bg-primary-900/10 text-primary-700 dark:text-primary-300"
-                  : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              <div className="flex items-center">
-                <div
-                  className={`flex items-center justify-center w-5 h-5 ${
-                    sidebarCollapsed ? "" : "mr-3"
-                  } flex-shrink-0`}
-                >
-                  <IconComponent className="w-5 h-5 transition-colors duration-200" />
-                </div>
-                {!sidebarCollapsed && (
-                  <span className="transition-opacity duration-200 truncate">
-                    {item.label}
-                  </span>
-                )}
-                {item?.id === "driver-management" && (
-                  <div className="ml-auto flex items-center gap-1">
-                    {pendingRequestsCount > 0 && (
-                      <span
-                        title="Pending Driver Requests"
-                        className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
-                      >
-                        {pendingRequestsCount}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              {/* Chevron only if not collapsed */}
-              {!sidebarCollapsed && (
-                <div
-                  className={`transition-transform duration-200 ${
-                    isExpanded ? "rotate-90" : ""
-                  }`}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              )}
-            </button>
+      <li key={item.id}>
+        <Link
+          to={item.path}
+          onClick={() => sidebarOpen && toggleMobileSidebar()}
+          title={sidebarCollapsed ? item.label : undefined}
+          aria-current={active ? "page" : undefined}
+          className={[
+            "group relative flex items-center h-8 rounded-md transition-colors duration-150",
+            sidebarCollapsed ? "justify-center px-0 mx-1.5" : "px-2 gap-2.5 mx-2",
+            active
+              ? "bg-surface-active text-ink font-medium"
+              : "text-ink-muted hover:text-ink hover:bg-surface-hover",
+          ].join(" ")}
+        >
+          {/* The active marker is a green rail, not a filled row — it reads at
+              a glance without turning the whole sidebar into brand color. */}
+          <span
+            aria-hidden="true"
+            className={[
+              "absolute left-0 top-1/2 -translate-y-1/2 w-0.5 rounded-r-full bg-interactive transition-all duration-150",
+              active ? "h-4 opacity-100" : "h-0 opacity-0",
+              sidebarCollapsed ? "-ml-1.5" : "-ml-2",
+            ].join(" ")}
+          />
 
-            {/* Children only if expanded and not collapsed */}
-            {isExpanded && !sidebarCollapsed && (
-              <div className="ml-8 mt-1 space-y-1 fade-in">
-                {item.children.map((child) => (
-                  <Link
-                    key={child.id}
-                    to={child.path}
-                    onClick={() => {
-                      if (window.innerWidth < 1024) {
-                        toggleMobileSidebar();
-                      }
-                    }}
-                    className={`block px-4 py-2 text-sm rounded-lg transition-all duration-200 truncate ${
-                      isActive(child.path)
-                        ? "bg-primary-500/30 dark:bg-primary-900/10 text-primary-700 dark:text-primary-300 border-l-2 border-primary-500"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                    }`}
-                  >
-                    {child.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <Link
-            to={item.path}
-            onClick={() => {
-              if (window.innerWidth < 1024) {
-                toggleMobileSidebar();
-              }
-            }}
-            className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 group ${
-              active
-                ? "bg-primary-500/30 dark:bg-primary-900/10 text-primary-700 dark:text-primary-300 border-l-2 border-primary-500"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+          <IconComponent
+            className={`w-4 h-4 shrink-0 ${
+              active ? "text-interactive" : "text-ink-faint group-hover:text-ink-muted"
             }`}
-          >
-            <div
-              className={`flex items-center justify-center w-5 h-5 ${
-                sidebarCollapsed ? "" : "mr-3"
-              } flex-shrink-0`}
-            >
-              <IconComponent className="w-5 h-5 transition-colors duration-200" />
-            </div>
-            {!sidebarCollapsed && (
-              <span className="transition-opacity duration-200 truncate">
-                {item.label}
-              </span>
-            )}
-            {item?.id === "driver-management" && (
-              <div className="ml-auto flex items-center gap-1">
-                {pendingRequestsCount > 0 && (
-                  <span
-                    title="Pending Driver Requests"
-                    className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded bg-amber-500 text-white text-[10px] font-semibold leading-none"
-                  >
-                    {pendingRequestsCount}
-                  </span>
-                )}
-              </div>
-            )}
-          </Link>
-        )}
-      </div>
+            aria-hidden="true"
+          />
+
+          {!sidebarCollapsed && (
+            <>
+              <span className="flex-1 truncate text-sm">{item.label}</span>
+              {count > 0 && (
+                <span className="tnum shrink-0 min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center rounded-full bg-accent-400 text-accent-950 text-micro font-semibold">
+                  {count > 99 ? "99+" : count}
+                </span>
+              )}
+            </>
+          )}
+
+          {sidebarCollapsed && count > 0 && (
+            <span
+              className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-accent-400"
+              aria-label={`${count} pending`}
+            />
+          )}
+        </Link>
+      </li>
     );
   };
 
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile scrim */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 z-30 bg-neutral-950/50 backdrop-blur-[2px] lg:hidden animate-fade-in"
           onClick={toggleMobileSidebar}
+          aria-hidden="true"
         />
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`
-        fixed top-0 left-0 z-50 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:z-auto flex flex-col
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-        ${sidebarCollapsed ? "lg:w-16" : "lg:w-64"}
-        w-64 transition-all duration-500
-      `}
+        className={[
+          "fixed lg:sticky top-0 left-0 z-40 lg:z-auto",
+          "h-screen shrink-0 flex flex-col",
+          "bg-surface border-r border-line",
+          "transition-[width,transform] duration-200 ease-out",
+          sidebarCollapsed ? "w-[56px]" : "w-[240px]",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        ].join(" ")}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-6 h-20 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-          <div
-            className={`flex items-center ${
-              sidebarCollapsed ? "justify-center w-full" : ""
-            } transition-all duration-500`}
+        {/* Brand */}
+        <div
+          className={`flex items-center h-[52px] shrink-0 border-b border-line ${
+            sidebarCollapsed ? "justify-center px-2" : "px-3 gap-2.5"
+          }`}
+        >
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2.5 min-w-0"
+            aria-label={`${APP_CONFIG.name} home`}
           >
-            {APP_CONFIG.logo ? (
-              <img
-                src={APP_CONFIG.logo}
-                alt={APP_CONFIG.name}
-                className="h-full max-h-10"
-              />
-            ) : (
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-bold text-sm">
-                  {APP_CONFIG.name.charAt(0)}
-                </span>
-              </div>
-            )}
-
+            <img
+              src={APP_CONFIG.logo}
+              alt=""
+              className="w-6 h-6 shrink-0 object-contain"
+            />
             {!sidebarCollapsed && (
-              <span className="ml-3 text-lg font-semibold text-gray-900 dark:text-white transition-opacity duration-300 truncate">
+              <span className="font-semibold text-md text-ink truncate tracking-tight">
                 {APP_CONFIG.name}
               </span>
             )}
-          </div>
-          {/* Collapse/Expand button (desktop only) */}
-          {/* <button
-            onClick={toggleSidebar}
-            className="hidden lg:flex items-center justify-center p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 ml-2"
-            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <ChevronRight
-              className={`w-5 h-5 ${
-                sidebarCollapsed ? "-rotate-180" : ""
-              } transition-all`}
-            />
-          </button> */}
-          {/* Mobile close button */}
-          <button
-            onClick={toggleMobileSidebar}
-            className="lg:hidden p-1 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          </Link>
+
+          {!sidebarCollapsed && (
+            <button
+              onClick={toggleMobileSidebar}
+              className="lg:hidden ml-auto h-7 w-7 inline-flex items-center justify-center rounded text-ink-faint hover:text-ink hover:bg-surface-hover transition-colors"
+              aria-label="Close navigation"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto overflow-x-hidden">
-          {menuItems.map(renderMenuItem)}
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-2" aria-label="Main">
+          {sections.map((section, index) => (
+            <div key={section.id} className={index > 0 ? "mt-4" : ""}>
+              {section.label && !sidebarCollapsed && (
+                <p className="eyebrow px-4 mb-1.5">{section.label}</p>
+              )}
+              {section.label && sidebarCollapsed && index > 0 && (
+                <div className="mx-3 mb-2 border-t border-line" aria-hidden="true" />
+              )}
+              <ul className="space-y-0.5">{section.items.map(renderItem)}</ul>
+            </div>
+          ))}
         </nav>
 
-        {/* Footer */}
-        {/* <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div
-            className={`flex items-center ${
-              sidebarCollapsed ? "justify-center" : "gap-3"
-            } p-3 bg-gray-50 dark:bg-gray-800 rounded-lg`}
+        {/* Collapse control — desktop only */}
+        <div className="hidden lg:flex shrink-0 items-center h-10 px-2 border-t border-line">
+          <button
+            onClick={toggleSidebar}
+            className={`inline-flex items-center h-7 rounded text-ink-faint hover:text-ink hover:bg-surface-hover transition-colors ${
+              sidebarCollapsed ? "w-full justify-center" : "w-full px-2 gap-2"
+            }`}
+            aria-label={sidebarCollapsed ? "Expand navigation" : "Collapse navigation"}
+            title={sidebarCollapsed ? "Expand" : "Collapse"}
           >
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  System Status
-                </p>
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  All systems operational
-                </p>
-              </div>
+            {sidebarCollapsed ? (
+              <PanelLeftOpen className="w-4 h-4" />
+            ) : (
+              <>
+                <PanelLeftClose className="w-4 h-4" />
+                <span className="text-caption">Collapse</span>
+              </>
             )}
-          </div>
-        </div> */}
+          </button>
+        </div>
       </aside>
     </>
   );

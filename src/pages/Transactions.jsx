@@ -138,7 +138,7 @@ const Transactions = () => {
       render: (value, transaction) => (
         <div>
           <p className="font-medium text-gray-900 dark:text-white">{value}</p>
-          <p className="text-sm text-gray-500">{transaction.userEmail}</p>
+          <p className="text-sm text-ink-subtle">{transaction.userEmail}</p>
         </div>
       ),
     },
@@ -155,7 +155,7 @@ const Transactions = () => {
           >
             {formatCurrency(Math.abs(value))}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-subtle">
             Net: {formatCurrency(Math.abs(transaction.netAmount))}
           </p>
         </div>
@@ -193,7 +193,7 @@ const Transactions = () => {
       render: (value) => (
         <div>
           <p className="text-sm">{new Date(value).toLocaleDateString()}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-ink-subtle">
             {new Date(value).toLocaleTimeString()}
           </p>
         </div>
@@ -352,12 +352,12 @@ const Transactions = () => {
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                   Processing Fees
                 </p>
-                <p className="text-2xl font-bold text-gray-600">
+                <p className="text-2xl font-bold text-ink-muted">
                   {formatCurrency(totalFees)}
                 </p>
               </div>
               <div className="p-3 bg-gray-100 rounded-lg">
-                <CreditCard className="w-6 h-6 text-gray-600" />
+                <CreditCard className="w-6 h-6 text-ink-muted" />
               </div>
             </div>
           </Card>
@@ -541,7 +541,7 @@ const Transactions = () => {
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Name
                       </label>
                       <p className="text-gray-900 dark:text-white">
@@ -549,7 +549,7 @@ const Transactions = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Email
                       </label>
                       <p className="text-gray-900 dark:text-white">
@@ -557,7 +557,7 @@ const Transactions = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         User ID
                       </label>
                       <p className="text-gray-900 dark:text-white">
@@ -573,7 +573,7 @@ const Transactions = () => {
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Amount
                       </label>
                       <p
@@ -587,7 +587,7 @@ const Transactions = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Processing Fee
                       </label>
                       <p className="text-gray-900 dark:text-white">
@@ -595,7 +595,7 @@ const Transactions = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Net Amount
                       </label>
                       <p className="text-gray-900 dark:text-white font-semibold">
@@ -605,7 +605,7 @@ const Transactions = () => {
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-sm font-medium text-ink-subtle">
                         Stripe Transaction ID
                       </label>
                       <p className="text-gray-900 dark:text-white font-mono text-sm">
@@ -626,7 +626,7 @@ const Transactions = () => {
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <div>
                       <p className="text-sm font-medium">Transaction Created</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-ink-subtle">
                         {formatDateTime(selectedTransaction.createdAt)}
                       </p>
                     </div>
@@ -638,7 +638,7 @@ const Transactions = () => {
                         <p className="text-sm font-medium">
                           Transaction Completed
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-ink-subtle">
                           {formatDateTime(selectedTransaction.completedAt)}
                         </p>
                       </div>

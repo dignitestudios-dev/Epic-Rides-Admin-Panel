@@ -164,27 +164,29 @@ const Select = forwardRef(
     };
 
     const baseClasses =
-      "block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm transition-colors duration-200 cursor-pointer";
+      "block w-full h-8 px-2.5 border border-line rounded bg-surface text-ink text-sm cursor-pointer transition-colors duration-150 hover:border-line-strong focus:outline-none focus:border-interactive focus:ring-2 focus:ring-interactive/25";
     const errorClasses = error
-      ? "border-red-300 dark:border-red-500 focus:ring-red-500 focus:border-red-500"
+      ? "border-danger focus:border-danger focus:ring-danger/25"
       : "";
-    const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+    const disabledClasses = disabled
+      ? "opacity-45 pointer-events-none bg-surface-sunken"
+      : "";
 
     return (
-      <div className="space-y-1" ref={containerRef}>
+      <div className="space-y-1.5" ref={containerRef}>
         {label && !prefix && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label className="block text-caption font-medium text-ink-muted">
             {label}
           </label>
         )}
         <div className="relative">
           {prefix && (
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 w-28 text-xs font-medium text-gray-500 dark:text-gray-400 pointer-events-none z-10 whitespace-nowrap overflow-hidden text-ellipsis">
-              {prefix}:
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 max-w-[45%] truncate text-caption font-medium text-ink-subtle pointer-events-none z-10">
+              {prefix}
             </span>
           )}
           {leftIcon && !prefix && (
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <div className="absolute inset-y-0 left-2.5 flex items-center pointer-events-none z-10 text-ink-faint [&>svg]:w-4 [&>svg]:h-4">
               {leftIcon}
             </div>
           )}
@@ -196,47 +198,45 @@ const Select = forwardRef(
             onClick={handleToggle}
             disabled={disabled}
             name={name}
-            className={`${baseClasses} ${errorClasses} ${disabledClasses} ${className} flex items-center justify-between text-left ${prefix ? 'pl-32' : (leftIcon ? 'pl-10' : '')}`}
+            className={`${baseClasses} ${errorClasses} ${disabledClasses} ${className} flex items-center justify-between text-left ${prefix ? "pl-[46%]" : leftIcon ? "pl-8" : ""}`}
             {...props}
           >
             <span
-              className={
-                selectedOption
-                  ? "text-gray-900 dark:text-white"
-                  : "text-gray-400 dark:text-gray-500"
-              }
+              className={`truncate ${
+                selectedOption ? "text-ink" : "text-ink-faint"
+              }`}
             >
               {selectedOption ? selectedOption.label : placeholder}
             </span>
             <ChevronDown
-              className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-                isOpen ? "transform rotate-180" : ""
+              className={`w-4 h-4 shrink-0 ml-1.5 text-ink-faint transition-transform duration-150 ${
+                isOpen ? "rotate-180" : ""
               }`}
             />
           </button>
 
           {rightIcon && (
-            <div className="absolute inset-y-0 right-8 pr-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 right-8 flex items-center pointer-events-none text-ink-faint [&>svg]:w-4 [&>svg]:h-4">
               {rightIcon}
             </div>
           )}
 
           {/* Dropdown */}
           <div
-            className={`absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-hidden transition-all duration-200 ease-in-out origin-top ${
+            className={`absolute z-50 w-full mt-1 bg-surface-raised border border-line rounded-lg shadow-lg max-h-60 overflow-hidden origin-top transition-all duration-150 ease-out ${
               isOpen
-                ? "opacity-100 scale-y-100 translate-y-0"
-                : "opacity-0 scale-y-95 -translate-y-2 pointer-events-none"
+                ? "opacity-100 scale-100 translate-y-0"
+                : "opacity-0 scale-[0.98] -translate-y-1 pointer-events-none"
             }`}
           >
             {searchable && (
-              <div className="p-2 border-b border-gray-200 dark:border-gray-700">
+              <div className="p-1.5 border-b border-line">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-ink-faint" />
                   <input
                     ref={searchInputRef}
                     type="text"
-                    className="w-full pl-10 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400"
+                    className="w-full h-7 pl-8 pr-2 text-sm bg-surface-sunken border border-line rounded focus:outline-none focus:border-interactive focus:ring-2 focus:ring-interactive/25 text-ink placeholder:text-ink-faint"
                     placeholder="Search options..."
                     value={searchTerm}
                     onChange={handleSearchChange}
@@ -247,12 +247,12 @@ const Select = forwardRef(
 
             <div className="max-h-48 overflow-y-auto" ref={dropdownRef}>
               {loading ? (
-                <div className="flex items-center justify-center py-12 gap-2">
-                  <Loader2 className={`animate-spin text-primary-600`} />{" "}
-                  <span className="text-gray-400">Loading...</span>
+                <div className="flex items-center justify-center py-10 gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-ink-faint" />
+                  <span className="text-caption text-ink-subtle">Loading</span>
                 </div>
               ) : filteredOptions.length === 0 ? (
-                <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                <div className="px-3 py-6 text-center text-caption text-ink-subtle">
                   No options found
                 </div>
               ) : (
@@ -260,19 +260,19 @@ const Select = forwardRef(
                   <button
                     key={option.value}
                     type="button"
-                    className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-700 flex items-center justify-between transition-colors duration-150 ${
-                      highlightedIndex === index
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
+                    className={`w-full px-2.5 py-1.5 text-left text-sm flex items-center justify-between gap-2 transition-colors duration-100 focus:outline-none hover:bg-surface-hover focus:bg-surface-hover ${
+                      highlightedIndex === index ? "bg-surface-hover" : ""
                     } ${
                       option.value === value
-                        ? "text-primary-600 dark:text-primary-400"
-                        : "text-gray-900 dark:text-white"
+                        ? "font-medium text-ink"
+                        : "text-ink-muted"
                     }`}
                     onClick={() => handleSelect(option)}
                   >
-                    <span>{option.label}</span>
-                    {option.value === value && <Check className="w-4 h-4" />}
+                    <span className="truncate">{option.label}</span>
+                    {option.value === value && (
+                      <Check className="w-3.5 h-3.5 shrink-0 text-interactive" />
+                    )}
                   </button>
                 ))
               )}
@@ -280,11 +280,9 @@ const Select = forwardRef(
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-caption text-danger">{error}</p>}
         {helperText && !error && (
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {helperText}
-          </p>
+          <p className="text-caption text-ink-subtle">{helperText}</p>
         )}
       </div>
     );

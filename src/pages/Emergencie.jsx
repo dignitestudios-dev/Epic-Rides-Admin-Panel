@@ -49,14 +49,14 @@ export default function Emergencies() {
 
                 <td className="p-3">
                   {item.rider.name} <br />
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-ink-subtle">
                     {item.rider.phone}
                   </span>
                 </td>
 
                 <td className="p-3">
                   {item.driver.name} <br />
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-ink-subtle">
                     {item.driver.phone}
                   </span>
                 </td>

@@ -108,7 +108,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
     <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
       {/* Search */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+        <Search className="w-3.5 h-3.5 text-ink-faint shrink-0" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -117,7 +117,7 @@ const UserPicker = ({ type, selectedId, onChange }) => {
         />
         {search && (
           <button type="button" onClick={() => setSearch("")}>
-            <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
+            <X className="w-3.5 h-3.5 text-ink-faint hover:text-ink-muted" />
           </button>
         )}
       </div>
@@ -129,12 +129,12 @@ const UserPicker = ({ type, selectedId, onChange }) => {
         className="max-h-52 overflow-y-auto"
       >
         {loading ? (
-          <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
+          <div className="flex items-center justify-center py-6 gap-2 text-ink-faint">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span className="text-sm">Loading...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-6">No {type}s found.</p>
+          <p className="text-center text-sm text-ink-faint py-6">No {type}s found.</p>
         ) : (
           <>
             {filtered.map((u) => {
@@ -159,13 +159,13 @@ const UserPicker = ({ type, selectedId, onChange }) => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}</p>
-                    <p className="text-xs text-gray-400 truncate">{u.email || "—"}</p>
+                    <p className="text-xs text-ink-faint truncate">{u.email || "—"}</p>
                   </div>
                 </div>
               );
             })}
             {loadingMore && (
-              <div className="flex items-center justify-center py-3 gap-2 text-gray-400">
+              <div className="flex items-center justify-center py-3 gap-2 text-ink-faint">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 <span className="text-xs">Loading more...</span>
               </div>
@@ -421,7 +421,7 @@ const Notifications = () => {
       render: (val, row) => (
         <div>
           <p className="font-semibold text-gray-900 dark:text-white">{val}</p>
-          <p className="text-xs text-gray-500 truncate max-w-[260px] mt-0.5">{row.messagePreview}</p>
+          <p className="text-xs text-ink-subtle truncate max-w-[260px] mt-0.5">{row.messagePreview}</p>
         </div>
       ),
     },
@@ -429,7 +429,7 @@ const Notifications = () => {
       key: "recipientType",
       label: "Recipient Type",
       render: (val) => (
-        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-1.5 text-sm font-medium text-ink-muted">
           {recipientIcon(val)}
           {val || "—"}
         </div>
@@ -439,7 +439,7 @@ const Notifications = () => {
       key: "dateAndTime",
       label: (
         <button
-          className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+          className="flex items-center gap-1 text-xs font-semibold text-ink-subtle hover:text-ink transition-colors"
           onClick={toggleSort}
         >
           Date &amp; Time
@@ -447,7 +447,7 @@ const Notifications = () => {
         </button>
       ),
       render: (val) => (
-        <div className="text-sm text-gray-600">{val ? formatDateTime(val) : "—"}</div>
+        <div className="text-sm text-ink-muted">{val ? formatDateTime(val) : "—"}</div>
       ),
     },
     {
@@ -483,8 +483,8 @@ const Notifications = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-2xl font-bold text-ink">Notifications</h1>
+          <p className="text-sm text-ink-subtle mt-1">
             Send and manage push notifications to riders and drivers.
           </p>
         </div>
@@ -589,7 +589,7 @@ const Notifications = () => {
               error={errors.title?.message}
               placeholder="e.g., New ride available near you"
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchTitle.length}/60</p>
+            <p className="text-xs text-ink-faint mt-1 text-right">{watchTitle.length}/60</p>
           </div>
 
           {/* Message */}
@@ -604,13 +604,13 @@ const Notifications = () => {
               placeholder="Enter the notification message..."
               error={errors.message?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchMessage.length}/500</p>
+            <p className="text-xs text-ink-faint mt-1 text-right">{watchMessage.length}/500</p>
           </div>
 
           {/* Delivery — hidden for single user */}
           {!isSpecific && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Delivery</label>
+              <label className="block text-sm font-medium text-ink-muted mb-2">Delivery</label>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="radio" value="immediate" {...register("deliveryType")} />
@@ -666,17 +666,17 @@ const Notifications = () => {
                   <div className="w-7 h-7 rounded-lg bg-[#39A300] flex items-center justify-center">
                     <Bell className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Epic Rides</p>
+                  <p className="text-xs font-semibold text-ink-faint uppercase tracking-wider">Epic Rides</p>
                 </div>
-                <p className="text-sm font-bold text-gray-900 break-words">{previewData.title}</p>
-                <p className="text-xs text-gray-600 leading-relaxed break-words whitespace-normal">{previewData.message}</p>
+                <p className="text-sm font-bold text-ink break-words">{previewData.title}</p>
+                <p className="text-xs text-ink-muted leading-relaxed break-words whitespace-normal">{previewData.message}</p>
               </div>
             </div>
 
             <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">Recipients</span>
-                <span className="font-semibold text-gray-800 capitalize">
+                <span className="text-ink-subtle">Recipients</span>
+                <span className="font-semibold text-ink capitalize">
                   {previewData.audienceType === "rider_only"
                     ? "1 Rider"
                     : previewData.audienceType === "driver_only"
@@ -685,8 +685,8 @@ const Notifications = () => {
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Delivery</span>
-                <span className="font-semibold text-gray-800">
+                <span className="text-ink-subtle">Delivery</span>
+                <span className="font-semibold text-ink">
                   {previewData.audienceType === "rider_only" || previewData.audienceType === "driver_only"
                     ? "Immediate"
                     : previewData.deliveryType === "scheduled" ? "Scheduled" : "Immediate"}
@@ -694,8 +694,8 @@ const Notifications = () => {
               </div>
               {previewData.deliveryType === "scheduled" && previewData.scheduledFor && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Scheduled For</span>
-                  <span className="font-semibold text-gray-800">{formatDateTime(previewData.scheduledFor)}</span>
+                  <span className="text-ink-subtle">Scheduled For</span>
+                  <span className="font-semibold text-ink">{formatDateTime(previewData.scheduledFor)}</span>
                 </div>
               )}
             </div>
@@ -724,7 +724,7 @@ const Notifications = () => {
         size="md"
       >
         {fetchingDetail ? (
-          <div className="flex items-center justify-center py-10 gap-2 text-gray-400">
+          <div className="flex items-center justify-center py-10 gap-2 text-ink-faint">
             <Loader2 className="w-6 h-6 animate-spin" />
             <span>Loading details...</span>
           </div>
@@ -732,25 +732,25 @@ const Notifications = () => {
           <div className="space-y-5">
             <div className="bg-gray-50 rounded-xl p-5 space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <h3 className="text-base  font-bold text-gray-900">{selectedNotification.title}</h3>
+                <h3 className="text-base  font-bold text-ink">{selectedNotification.title}</h3>
                 <Badge className="capitalize" variant={statusVariant(selectedNotification.status)}>
                   {selectedNotification.status}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed break-words whitespace-pre-wrap">{selectedNotification.message || selectedNotification.messagePreview}</p>
+              <p className="text-sm text-ink-muted leading-relaxed break-words whitespace-pre-wrap">{selectedNotification.message || selectedNotification.messagePreview}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="bg-white rounded-xl border border-gray-100 p-3">
-                <p className="text-xs text-gray-400 mb-1 font-medium">Recipient Type</p>
-                <div className="flex items-center gap-1.5 font-semibold text-gray-800">
+                <p className="text-xs text-ink-faint mb-1 font-medium">Recipient Type</p>
+                <div className="flex items-center gap-1.5 font-semibold text-ink">
                   {recipientIcon(selectedNotification.recipientType)}
                   {selectedNotification.recipientType || "—"}
                 </div>
               </div>
               <div className="bg-white rounded-xl border border-gray-100 p-3">
-                <p className="text-xs text-gray-400 mb-1 font-medium">Date &amp; Time</p>
-                <p className="font-semibold text-gray-800">
+                <p className="text-xs text-ink-faint mb-1 font-medium">Date &amp; Time</p>
+                <p className="font-semibold text-ink">
                   {selectedNotification.dateAndTime || selectedNotification.scheduledFor ? formatDateTime(selectedNotification.dateAndTime || selectedNotification.scheduledFor) : "—"}
                 </p>
               </div>
@@ -791,7 +791,7 @@ const Notifications = () => {
               })}
               error={errorsEdit.title?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditTitle.length}/60</p>
+            <p className="text-xs text-ink-faint mt-1 text-right">{watchEditTitle.length}/60</p>
           </div>
           <div>
             <TextArea
@@ -803,7 +803,7 @@ const Notifications = () => {
               rows={4}
               error={errorsEdit.message?.message}
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{watchEditMessage.length}/500</p>
+            <p className="text-xs text-ink-faint mt-1 text-right">{watchEditMessage.length}/500</p>
           </div>
           <Input
             min={new Date().toISOString().slice(0, 16)}

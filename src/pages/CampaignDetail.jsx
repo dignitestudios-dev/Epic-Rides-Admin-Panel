@@ -63,7 +63,7 @@ const CampaignDetail = () => {
         <Button variant="ghost" onClick={() => navigate("/campaigns")} icon={<ArrowLeft className="w-4 h-4" />}>Back</Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaign Details</h1>
-          <p className="text-sm text-gray-500 mt-1">ID: {id}</p>
+          <p className="text-sm text-ink-subtle mt-1">ID: {id}</p>
         </div>
       </div>
 
@@ -95,48 +95,48 @@ const CampaignDetail = () => {
                 <Card className="p-6">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Campaign Info</h2>
                   {loadingDetails ? (
-                    <p className="text-sm text-gray-500">Loading details...</p>
+                    <p className="text-sm text-ink-subtle">Loading details...</p>
                   ) : details ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div>
-                        <p className="text-sm text-gray-500">Name</p>
+                        <p className="text-sm text-ink-subtle">Name</p>
                         <p className="font-medium text-gray-900 dark:text-white">{details.name || stats.campaignName || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Status</p>
+                        <p className="text-sm text-ink-subtle">Status</p>
                         <p className="font-medium text-gray-900 dark:text-white capitalize">{details.status || stats.status || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Discount</p>
+                        <p className="text-sm text-ink-subtle">Discount</p>
                         <p className="font-medium text-gray-900 dark:text-white">
                           {details.discountType === "percentage" ? `${details.discountValue}%` : `$${details.discountValue}`}
                           {details.maxDiscountCap ? ` (Up to $${details.maxDiscountCap})` : ""}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-sm text-ink-subtle">Duration</p>
                         <p className="font-medium text-gray-900 dark:text-white text-sm">
                           {details.startDate ? formatDate(details.startDate) : (stats.startDate ? formatDate(stats.startDate) : "")} - {details.expiresAt ? formatDate(details.expiresAt) : (stats.expiresAt ? formatDate(stats.expiresAt) : "")}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Code Mode</p>
+                        <p className="text-sm text-ink-subtle">Code Mode</p>
                         <p className="font-medium text-gray-900 dark:text-white capitalize">{details.codeMode || "—"}</p>
                       </div>
                       {/* <div>
-                        <p className="text-sm text-gray-500">Code / Prefix</p>
+                        <p className="text-sm text-ink-subtle">Code / Prefix</p>
                         <p className="font-medium text-gray-900 dark:text-white">{details.codeMode === "public" ? details.code : details.prefix || "—"}</p>
                       </div> */}
                       <div>
-                        <p className="text-sm text-gray-500">Max Uses Per User</p>
+                        <p className="text-sm text-ink-subtle">Max Uses Per User</p>
                         <p className="font-medium text-gray-900 dark:text-white">{details.maxUsesPerUser || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Min Ride Amount</p>
+                        <p className="text-sm text-ink-subtle">Min Ride Amount</p>
                         <p className="font-medium text-gray-900 dark:text-white">{details.minRideAmount ? `$${details.minRideAmount}` : "—"}</p>
                       </div>
                       <div className="col-span-2 md:col-span-4">
-                        <p className="text-sm text-gray-500 mb-1">Eligibility</p>
+                        <p className="text-sm text-ink-subtle mb-1">Eligibility</p>
                         <div className="flex flex-wrap gap-2 mt-2">
                           <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded capitalize dark:bg-blue-900/50 dark:text-blue-300">User Type: {details.eligibility?.userType || "All"}</span>
                           {details.eligibility?.minAge && <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded dark:bg-purple-900/50 dark:text-purple-300">Min Age: {details.eligibility.minAge}</span>}
@@ -146,7 +146,7 @@ const CampaignDetail = () => {
                       </div>
                       {details.description && (
                         <div className="col-span-2 md:col-span-4">
-                          <p className="text-sm text-gray-500 mb-1">Description</p>
+                          <p className="text-sm text-ink-subtle mb-1">Description</p>
                           <p className="font-medium text-gray-900 dark:text-white text-sm">{details.description}</p>
                         </div>
                       )}
@@ -154,22 +154,22 @@ const CampaignDetail = () => {
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div>
-                        <p className="text-sm text-gray-500">Name</p>
+                        <p className="text-sm text-ink-subtle">Name</p>
                         <p className="font-medium text-gray-900 dark:text-white">{stats.campaignName || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Status</p>
+                        <p className="text-sm text-ink-subtle">Status</p>
                         <p className="font-medium text-gray-900 dark:text-white capitalize">{stats.status || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Discount</p>
+                        <p className="text-sm text-ink-subtle">Discount</p>
                         <p className="font-medium text-gray-900 dark:text-white">
                           {stats.discountType === "percentage" ? `${stats.discountValue}%` : `$${stats.discountValue}`}
                           {stats.maxDiscountCap ? ` (Up to $${stats.maxDiscountCap})` : ""}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-500">Duration</p>
+                        <p className="text-sm text-ink-subtle">Duration</p>
                         <p className="font-medium text-gray-900 dark:text-white text-sm">
                           {stats.startDate ? formatDate(stats.startDate) : ""} - {stats.expiresAt ? formatDate(stats.expiresAt) : ""}
                         </p>
@@ -181,28 +181,28 @@ const CampaignDetail = () => {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Metrics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Total Redemptions</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Total Redemptions</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalRedemptions || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Limit: {stats.totalRedemptionLimit || "Unlimited"}</p>
+                    <p className="text-xs text-ink-subtle mt-1">Limit: {stats.totalRedemptionLimit || "Unlimited"}</p>
                   </Card>
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Unique Users Redeemed</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Unique Users Redeemed</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.uniqueUsersCount || 0}</p>
                   </Card>
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Total Discount Given</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Total Discount Given</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.totalDiscountGiven || 0}</p>
                   </Card>
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Average Discount / Ride</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Average Discount / Ride</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.averageDiscountPerRide?.toFixed(2) || 0}</p>
                   </Card>
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Redemption Rate</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Redemption Rate</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.redemptionRate || 0}%</p>
                   </Card>
                   <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Budget Remaining</h3>
+                    <h3 className="text-sm font-medium text-ink-subtle">Budget Remaining</h3>
                     <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.budgetRemaining !== null ? `$${stats.budgetRemaining}` : "Unlimited"}</p>
                   </Card>
                 </div>

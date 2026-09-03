@@ -29,11 +29,15 @@ export const AppProvider = ({ children }) => {
     // Default to general if unknown role
     const permissions = PERMISSIONS[userRole] || PERMISSIONS[USER_ROLES.GENERAL];
 
+    // Every gated route in App.jsx must appear here, otherwise the link shows
+    // for roles that will only hit "Access Denied" when they click it.
     return MENU_ITEMS.filter((item) => {
       switch (item.id) {
         case "admin-management":
           return userRole === USER_ROLES.SUPER_ADMIN;
         case "driver-management":
+        case "suspended-drivers":
+        case "rewarded-balance-history":
           return permissions.viewDriverRequests;
         case "vehicle-category":
           return permissions.vehicleCategory;
@@ -43,14 +47,16 @@ export const AppProvider = ({ children }) => {
         case "ride-rates":
         case "peak-windows":
           return permissions.financials;
-        case "promo-codes":
+        case "campaigns":
           return permissions.promos;
-        case "cancelled-rides":
+        case "private-rides":
+        case "carpool-rides":
           return permissions.cancelledRides;
         case "birds-eye-view":
           return permissions.birdsEye;
         default:
-          return true; // Dashboard, User Management, Reports, Completed Rides allowed for all
+          // Dashboard, Riders & Drivers, Reports — available to every role.
+          return true;
       }
     });
   };
