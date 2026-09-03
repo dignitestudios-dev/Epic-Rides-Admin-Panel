@@ -26,9 +26,10 @@ import Select from "../components/ui/Select";
 import FilterBar from "../components/ui/FilterBar";
 import { useForm } from "react-hook-form";
 import { formatDateTime, downloadCSV } from "../utils/helpers";
-import { api } from "../lib/services";
+import { api, isAbortError } from "../lib/services";
 import toast from "react-hot-toast";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import useRequestGuard from "../hooks/global/useRequestGuard";
 import { useAuth } from "../contexts/AuthContext";
 import { USER_ROLES } from "../config/constants";
 
@@ -64,21 +65,28 @@ const UserPicker = ({ type, selectedId, onChange }) => {
   const listRef = useRef(null);
   const PAGE_SIZE = 20;
 
+  const beginUserRequest = useRequestGuard();
+
   const fetchUsers = useCallback(async (pageNum, reset = false, searchTerm = "") => {
+    const { signal, isCurrent } = beginUserRequest();
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
     try {
-      const res = await api.getUsers(type, pageNum, PAGE_SIZE, searchTerm, "", "");
+      const res = await api.getUsers(type, pageNum, PAGE_SIZE, searchTerm, "", "", { signal });
+      // Drop a response that a newer search has already superseded.
+      if (!isCurrent()) return;
       const fetched = res.data || [];
       setUsers((prev) => reset ? fetched : [...prev, ...fetched]);
       const totalPages = res.pagination?.totalPages || 1;
       setHasMore(pageNum < totalPages);
     } catch { }
     finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (isCurrent()) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-  }, [type]);
+  }, [type, beginUserRequest]);
 
   useEffect(() => {
     setSearch("");
@@ -255,21 +263,27 @@ const Notifications = () => {
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
 
+  const beginRequest = useRequestGuard();
+
   const fetchNotifications = useCallback(async () => {
+    const { signal, isCurrent } = beginRequest();
     setLoading(true);
     try {
-      const res = await api.getNotifications(page, limit, search, sort);
+      const res = await api.getNotifications(page, limit, search, sort, "", "", { signal });
+      // Drop a response that a newer search has already superseded.
+      if (!isCurrent()) return;
       const data = res.data || {};
       setNotifications(data.notifications || []);
       const pagination = data.pagination || {};
       setTotalPages(pagination.totalPages || 1);
       setTotalData(pagination.total || 0);
     } catch (err) {
+      if (!isCurrent() || isAbortError(err)) return;
       toast.error(err.message || "Failed to fetch notifications.");
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  }, [page, limit, search, sort]);
+  }, [page, limit, search, sort, beginRequest]);
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 

@@ -12,8 +12,6 @@ const API = axios.create({
   headers: API_CONFIG.headers,
 });
 
-
-
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("authToken");
@@ -36,14 +34,42 @@ API.interceptors.response.use(
         window.location.href = "/auth/login";
       }
     }
-    console.log(error);
-    console.log("API Error:", error.response?.data || error);
+    // Cancelled requests are expected (a newer search replaced this one) — don't
+    // log them and don't treat them as auth failures.
+    if (!axios.isCancel?.(error) && error?.code !== "ERR_CANCELED") {
+      console.log("API Error:", error.response?.data || error);
+    }
     return Promise.reject(error);
   },
 );
 
 // Centralized API Handling functions start
+
+/**
+ * True when a request was deliberately cancelled (a newer search superseded it),
+ * rather than having actually failed. Callers use this to stay silent instead of
+ * showing an error toast.
+ */
+export const isAbortError = (error) =>
+  Boolean(
+    error &&
+    (error.isCanceled === true ||
+      error.code === "ERR_CANCELED" ||
+      error.name === "CanceledError" ||
+      error.name === "AbortError" ||
+      axios.isCancel?.(error)),
+  );
+
 const handleApiError = (error) => {
+  // A cancelled request is not a failure. Rethrow it tagged so it survives the
+  // conversion to a plain Error below and callers can recognise and ignore it.
+  if (isAbortError(error)) {
+    const canceled = new Error("Request canceled");
+    canceled.isCanceled = true;
+    canceled.code = "ERR_CANCELED";
+    throw canceled;
+  }
+
   if (axios.isAxiosError(error)) {
     const errorMessage =
       error.response?.data?.message ||
@@ -84,7 +110,7 @@ const apiHandler = async (apiCall) => {
     const response = await apiCall();
     return handleApiResponse(response);
   } catch (error) {
-    console.log(error);
+    if (!isAbortError(error)) console.log(error);
     throw handleApiError(error);
   }
 };
@@ -147,10 +173,12 @@ const getAllProducts = (
   status,
   page = 1,
   limit = PAGINATION_CONFIG.defaultPageSize,
+  config,
 ) =>
   apiHandler(() =>
     API.get(
       `/product?page=${page}&limit=${limit}&search=${search}&status=${status}`,
+      config,
     ),
   );
 
@@ -190,11 +218,13 @@ const getOrders = (
   endDate,
   search,
   page = 1,
-  limit = API_CONFIG.pagination.defaultPageSize,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  config,
 ) =>
   apiHandler(() =>
     API.get(
       `/order?paymentStatus=${paymentStatus}&orderStatus=${orderStatus}&orderType=${orderType}&startDate=${formatStartDateForApi(startDate)}&endDate=${formatEndDateForApi(endDate)}&search=${search}&page=${page}&limit=${limit}`,
+      config,
     ),
   );
 
@@ -211,14 +241,16 @@ const getAllDocs = (
   status,
   page = 1,
   limit = PAGINATION_CONFIG.defaultPageSize,
+  config,
 ) =>
   apiHandler(() =>
     API.get(
       `/docs?status=${status}&page=${page}&limit=${limit}&search=${search}`,
+      config,
     ),
   );
 const getDriverDocs = (driverId) =>
-  apiHandler(() => API.get(`/docs?driverId=${driverId}`));
+  apiHandler(() => API.get(`/docs?driverId=${driverId}&limit=${100}`));
 const getDriverVehicles = (driverId) =>
   apiHandler(() => API.get(`/vehicles?driverId=${driverId}`));
 
@@ -250,25 +282,36 @@ const getAllVehicleTypes = (
   limit = PAGINATION_CONFIG.defaultPageSize,
   search = "",
   rideType = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/vehicle-types?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (rideType) url += `&rideType=${rideType}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 // Admin Users API
-const createAdminUser = (data) => apiHandler(() => API.post(`/admin-users`, data));
-const getAdminUsers = (page = 1, limit = 10, role = "", search = "", sort = "desc") =>
+const createAdminUser = (data) =>
+  apiHandler(() => API.post(`/admin-users`, data));
+const getAdminUsers = (
+  page = 1,
+  limit = 10,
+  role = "",
+  search = "",
+  sort = "desc",
+  config,
+) =>
   apiHandler(() => {
     let url = `/admin-users?page=${page}&limit=${limit}&sort=${sort}`;
     if (role) url += `&role=${role}`;
     if (search) url += `&search=${search}`;
-    return API.get(url);
+    return API.get(url, config);
   });
-const updateAdminUser = (id, data) => apiHandler(() => API.patch(`/admin-users/${id}`, data));
-const deleteAdminUser = (id) => apiHandler(() => API.delete(`/admin-users/${id}`));
+const updateAdminUser = (id, data) =>
+  apiHandler(() => API.patch(`/admin-users/${id}`, data));
+const deleteAdminUser = (id) =>
+  apiHandler(() => API.delete(`/admin-users/${id}`));
 
 const createVehicleType = (payload) =>
   apiHandler(() => API.post("/vehicle-types", payload));
@@ -287,13 +330,14 @@ const getUsers = (
   search = "",
   startDate = "",
   endDate = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/users?type=${type}&page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const exportUsers = (
@@ -319,12 +363,13 @@ const getDrivers = (
   limit = PAGINATION_CONFIG.defaultPageSize,
   search = "",
   status = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/drivers?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (status) url += `&status=${status}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const getRequestsCount = () => apiHandler(() => API.get("/requests-count"));
@@ -355,6 +400,7 @@ const getSubscriptionRevenue = (
   startDate = "",
   endDate = "",
   status = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/subscription-revenue?page=${page}&limit=${limit}`;
@@ -362,7 +408,7 @@ const getSubscriptionRevenue = (
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
     if (status) url += `&subscriptionStatus=${status}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const getWithdrawalRevenue = (
@@ -371,13 +417,14 @@ const getWithdrawalRevenue = (
   search = "",
   startDate = "",
   endDate = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/withdrawals?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const getReports = (page = 1, limit = 10, status = "", sort = "desc") =>
@@ -394,13 +441,14 @@ const getNotifications = (
   sort = "desc",
   startDate = "",
   endDate = "",
+  config,
 ) =>
   apiHandler(() => {
     let url = `/notifications?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const sendNotification = (payload) =>
@@ -418,14 +466,22 @@ const updateNotification = (id, payload) =>
 const deleteNotification = (id) =>
   apiHandler(() => API.delete(`/notifications/${id}`));
 
-const getRides = (page = 1, limit = 10, search = "", rideStatus = "", startDate = "", endDate = "") =>
+const getRides = (
+  page = 1,
+  limit = 10,
+  search = "",
+  rideStatus = "",
+  startDate = "",
+  endDate = "",
+  config,
+) =>
   apiHandler(() => {
     let url = `/rides?page=${page}&limit=${limit}`;
     if (search) url += `&search=${search}`;
     if (rideStatus) url += `&rideStatus=${rideStatus}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const resolveReport = (id, adminNotes = "") =>
@@ -440,17 +496,27 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
-const getCarpoolRides = (page = 1, limit = 10, search = "", status = "", startDate = "", endDate = "", sort = "desc") =>
+const getCarpoolRides = (
+  page = 1,
+  limit = 10,
+  search = "",
+  status = "",
+  startDate = "",
+  endDate = "",
+  sort = "desc",
+  config,
+) =>
   apiHandler(() => {
     let url = `/carpool-rides?page=${page}&limit=${limit}&sort=${sort}`;
     if (search) url += `&search=${search}`;
     if (status) url += `&status=${status}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
-const getCarpoolRideById = (id) => apiHandler(() => API.get(`/carpool-rides/${id}`));
+const getCarpoolRideById = (id) =>
+  apiHandler(() => API.get(`/carpool-rides/${id}`));
 
 const exportCarpoolRides = (status, startDate = "", endDate = "") => {
   let url = `/carpool-rides/export?status=${status}`;
@@ -460,12 +526,18 @@ const exportCarpoolRides = (status, startDate = "", endDate = "") => {
 };
 
 // Suspended Drivers API
-const getSuspendedDrivers = (page = 1, limit = 10, suspensionType = "all", search = "") =>
+const getSuspendedDrivers = (
+  page = 1,
+  limit = 10,
+  suspensionType = "all",
+  search = "",
+  config,
+) =>
   apiHandler(() => {
     let url = `/drivers/suspended?page=${page}&limit=${limit}`;
     if (suspensionType) url += `&suspensionType=${suspensionType}`;
     if (search) url += `&search=${search}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
 const getDriverSuspensionDetails = (id) =>
@@ -478,26 +550,38 @@ const unsuspendDriver = (id) =>
   apiHandler(() => API.post(`/drivers/${id}/unsuspend`));
 
 // Rewarded Balance History
-const getRewardedBalanceHistory = (page = 1, limit = 10, userType = "all", search = "", startDate = "", endDate = "", sortBy = "createdAt", order = "desc") =>
+const getRewardedBalanceHistory = (
+  page = 1,
+  limit = 10,
+  userType = "all",
+  search = "",
+  startDate = "",
+  endDate = "",
+  sortBy = "createdAt",
+  order = "desc",
+  config,
+) =>
   apiHandler(() => {
     let url = `/rewarded-balance-history?page=${page}&limit=${limit}&sortBy=${sortBy}&order=${order}`;
     if (userType && userType !== "all") url += `&userType=${userType}`;
     if (search) url += `&search=${search}`;
     if (startDate) url += `&startDate=${formatStartDateForApi(startDate)}`;
     if (endDate) url += `&endDate=${formatEndDateForApi(endDate)}`;
-    return API.get(url);
+    return API.get(url, config);
   });
 
-
 // Campaigns API
-const getCampaigns = (page = 1, limit = PAGINATION_CONFIG.defaultPageSize, status = "") => {
+const getCampaigns = (
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  status = "",
+) => {
   let url = `/campaigns?page=${page}&limit=${limit}`;
   if (status) url += `&status=${status}`;
   return apiHandler(() => API.get(url));
 };
 
-const getCampaignById = (id) =>
-  apiHandler(() => API.get(`/campaigns/${id}`));
+const getCampaignById = (id) => apiHandler(() => API.get(`/campaigns/${id}`));
 
 const createCampaign = (payload) =>
   apiHandler(() => API.post("/campaigns", payload));
@@ -508,20 +592,31 @@ const updateCampaign = (id, payload) =>
 const updateCampaignStatus = (id, status) =>
   apiHandler(() => API.patch(`/campaigns/${id}/status`, { status }));
 
-const deleteCampaign = (id) =>
-  apiHandler(() => API.delete(`/campaigns/${id}`));
+const deleteCampaign = (id) => apiHandler(() => API.delete(`/campaigns/${id}`));
 
 const getCampaignStats = (id) =>
   apiHandler(() => API.get(`/campaigns/${id}/stats`));
 
-const getCampaignRedemptions = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize, search = "") => {
+const getCampaignRedemptions = (
+  id,
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+  search = "",
+  config,
+) => {
   let url = `/campaigns/${id}/redemptions?page=${page}&limit=${limit}`;
   if (search) url += `&search=${search}`;
-  return apiHandler(() => API.get(url));
+  return apiHandler(() => API.get(url, config));
 };
 
-const getGeneratedCodes = (id, page = 1, limit = PAGINATION_CONFIG.defaultPageSize) =>
-  apiHandler(() => API.get(`/campaigns/${id}/codes?page=${page}&limit=${limit}`));
+const getGeneratedCodes = (
+  id,
+  page = 1,
+  limit = PAGINATION_CONFIG.defaultPageSize,
+) =>
+  apiHandler(() =>
+    API.get(`/campaigns/${id}/codes?page=${page}&limit=${limit}`),
+  );
 
 const getUserRedemptionHistory = (campaignId, userId) =>
   apiHandler(() => API.get(`/campaigns/${campaignId}/redemptions/${userId}`));
@@ -529,12 +624,16 @@ const getUserRedemptionHistory = (campaignId, userId) =>
 // Ride Rates & Peak Windows API
 const getRideRates = (cityName) => {
   if (typeof cityName === "string" && cityName.trim()) {
-    return apiHandler(() => API.get(`/ride-rates?cityName=${encodeURIComponent(cityName.trim())}`));
+    return apiHandler(() =>
+      API.get(`/ride-rates?cityName=${encodeURIComponent(cityName.trim())}`),
+    );
   }
   if (cityName && typeof cityName === "object") {
     const searchVal = cityName.cityName || cityName.city;
     if (searchVal && typeof searchVal === "string" && searchVal.trim()) {
-      return apiHandler(() => API.get(`/ride-rates?cityName=${encodeURIComponent(searchVal.trim())}`));
+      return apiHandler(() =>
+        API.get(`/ride-rates?cityName=${encodeURIComponent(searchVal.trim())}`),
+      );
     }
   }
   return apiHandler(() => API.get("/ride-rates"));

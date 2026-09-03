@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
-import { api } from "../../lib/services";
+import { api, isAbortError } from "../../lib/services";
 import toast from "react-hot-toast";
+import useRequestGuard from "../global/useRequestGuard";
 
 const useCampaignDetail = (campaignId) => {
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -43,19 +44,25 @@ const useCampaignDetail = (campaignId) => {
     }
   }, [campaignId]);
 
+  const beginRedemptionsRequest = useRequestGuard();
+
   const fetchRedemptions = useCallback(async (page = 1, limit = 10, search = "") => {
     if (!campaignId) return;
+    const { signal, isCurrent } = beginRedemptionsRequest();
     setLoadingRedemptions(true);
     try {
-      const res = await api.getCampaignRedemptions(campaignId, page, limit, search);
+      const res = await api.getCampaignRedemptions(campaignId, page, limit, search, { signal });
+      // Drop a response that a newer search has already superseded.
+      if (!isCurrent()) return;
       setRedemptions(res.data?.redemptions || []);
       setRedemptionsTotal(res.data?.totalCount || res.data?.pagination?.total || 0);
     } catch (err) {
+      if (!isCurrent() || isAbortError(err)) return;
       toast.error(err.message || "Failed to fetch redemptions.");
     } finally {
-      setLoadingRedemptions(false);
+      if (isCurrent()) setLoadingRedemptions(false);
     }
-  }, [campaignId]);
+  }, [campaignId, beginRedemptionsRequest]);
 
   const fetchCodes = useCallback(async (page = 1, limit = 10) => {
     if (!campaignId) return;

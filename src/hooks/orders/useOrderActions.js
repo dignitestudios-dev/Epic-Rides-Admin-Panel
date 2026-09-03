@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { handleError } from "../../utils/helpers";
-import { api } from "../../lib/services";
+import { api, isAbortError } from "../../lib/services";
+import useRequestGuard from "../global/useRequestGuard";
 
 const useOrderActions = (
   paymentStatus,
@@ -26,7 +27,10 @@ const useOrderActions = (
   const [totalPages, setTotalPages] = useState(1);
   const [totalData, setTotalData] = useState(0);
 
-  const getOrders = async () => {
+  const beginRequest = useRequestGuard();
+
+  const getOrders = useCallback(async () => {
+    const { signal, isCurrent } = beginRequest();
     setLoading(true);
     try {
       const response = await api.getOrders(
@@ -37,21 +41,20 @@ const useOrderActions = (
         endDate,
         search,
         page,
-        limit
+        limit,
+        { signal }
       );
-      setOrders(response.data.orders);
-      setStats(response.data.stats);
-      setTotalPages(response.pagination.totalPages);
-      setTotalData(response.pagination.totalItems);
+      if (!isCurrent()) return;
+      setOrders(response.data?.orders || []);
+      setStats(response.data?.stats);
+      setTotalPages(response.pagination?.totalPages || 1);
+      setTotalData(response.pagination?.totalItems || 0);
     } catch (error) {
+      if (!isCurrent() || isAbortError(error)) return;
       handleError(error);
     } finally {
-      setLoading(false);
+      if (isCurrent()) setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    getOrders();
   }, [
     paymentStatus,
     orderStatus,
@@ -61,7 +64,12 @@ const useOrderActions = (
     search,
     page,
     limit,
+    beginRequest,
   ]);
+
+  useEffect(() => {
+    getOrders();
+  }, [getOrders]);
 
   const getOrdersByContact = async (contactEmail) => {
     setLoadingActions(true);

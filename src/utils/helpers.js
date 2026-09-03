@@ -186,9 +186,20 @@ export const deepClone = (obj) => {
 };
 
 export const handleError = (error) => {
+  // A cancelled request means a newer one replaced it (e.g. the user kept
+  // typing in a search box). That's expected — never surface it as an error.
+  if (
+    error?.isCanceled === true ||
+    error?.code === "ERR_CANCELED" ||
+    error?.name === "CanceledError" ||
+    error?.name === "AbortError"
+  ) {
+    return;
+  }
+
   console.log(error);
   let msg = error?.response?.data?.message || error?.message || "Something went wrong";
-  
+
   if (msg.includes("mapping for model") && msg.includes("already exists")) {
     msg = "This vehicle model already exists. Please use a unique model name.";
   }

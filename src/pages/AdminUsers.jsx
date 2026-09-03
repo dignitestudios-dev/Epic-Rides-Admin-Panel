@@ -39,6 +39,12 @@ const AdminUsers = () => {
     setPage(1);
   };
 
+  const handlePageSizeChange = (size) => {
+    setLimit(size);
+    // Row 51 of 10-per-page doesn't exist at 100-per-page — go back to the start.
+    setPage(1);
+  };
+
   const handleFilterChange = (filterId, value) => {
     // Other filters can be handled here if needed in the future
   };
@@ -202,9 +208,12 @@ const AdminUsers = () => {
           columns={columns}
           data={admins}
           loading={loading}
-          pagination={pagination}
+          totalPages={pagination.totalPages}
+          totalData={pagination.totalData}
+          currentPage={page}
+          pageSize={limit}
           onPageChange={setPage}
-          onLimitChange={setLimit}
+          onPageSizeChange={handlePageSizeChange}
           searchPlaceholder="Search admins..."
         />
       </div>
