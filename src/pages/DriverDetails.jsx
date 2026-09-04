@@ -607,8 +607,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
 const VehicleCard = ({
   vehicle,
   onRespond,
-  hasOtherPendingVehicle = false,
-  hasOtherApprovedVehicle = false,
+  isLatest = false,
 }) => {
   const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -741,11 +740,10 @@ const VehicleCard = ({
             </div>
           )}
 
-          {/* Actions */}
+          {/* Actions — only the latest vehicle can have actions */}
           {!isOld &&
+            isLatest &&
             localStatus !== "approved" &&
-            !hasOtherApprovedVehicle &&
-            !(localStatus === "rejected" && hasOtherPendingVehicle) &&
             hasPermission("approveDriversVehicles") && (
             <div className="space-y-2 pt-3 border-t border-gray-50 mt-3">
               {!showReject ? (
@@ -904,9 +902,34 @@ const DriverDetails = () => {
 
   const pendingDocs = latestDocs.filter((d) => d.status === "pending");
   const approvablePendingDocs = pendingDocs; // Allow approval of all documents including licenses
-  const hasApprovedVehicle = vehicles.some((v) => v.status === "approved");
-  const pendingVehicles = vehicles.filter((v) => v.status === "pending");
-  const approvableVehicles = hasApprovedVehicle ? [] : pendingVehicles;
+
+  const getVehicleTime = (v) => {
+    if (v?.createdAt) {
+      const t = new Date(v.createdAt).getTime();
+      if (!isNaN(t) && t > 0) return t;
+    }
+    if (v?._id && typeof v._id === "string" && v._id.length >= 8) {
+      const t = parseInt(v._id.substring(0, 8), 16) * 1000;
+      if (!isNaN(t) && t > 0) return t;
+    }
+    return 0;
+  };
+
+  const sortedVehicles = useMemo(() => {
+    return [...vehicles].sort((a, b) => {
+      const timeA = getVehicleTime(a);
+      const timeB = getVehicleTime(b);
+      if (timeB !== timeA) return timeB - timeA;
+      if (b._id && a._id && b._id !== a._id) return b._id > a._id ? 1 : -1;
+      return 0;
+    });
+  }, [vehicles]);
+
+  const latestVehicleId = sortedVehicles[0]?._id;
+  const pendingVehicles = sortedVehicles.filter(
+    (v) => v._id === latestVehicleId && v.status === "pending"
+  );
+  const approvableVehicles = pendingVehicles;
   const activeVehicles = vehicles.filter((v) => v.status !== "old");
 
   const handleApproveAll = async () => {
@@ -1198,25 +1221,16 @@ const DriverDetails = () => {
             </div>
           </div>
 
-          {vehicles.length > 0 ? (
+          {sortedVehicles.length > 0 ? (
             <div className="space-y-4">
-              {vehicles.map((v) => {
-                const hasOtherPendingVehicle = vehicles.some(
-                  (other) => other._id !== v._id && other.status === "pending"
-                );
-                const hasOtherApprovedVehicle = vehicles.some(
-                  (other) => other._id !== v._id && other.status === "approved"
-                );
-                return (
-                  <VehicleCard
-                    key={v._id}
-                    vehicle={v}
-                    hasOtherPendingVehicle={hasOtherPendingVehicle}
-                    hasOtherApprovedVehicle={hasOtherApprovedVehicle}
-                    onRespond={fetchData}
-                  />
-                );
-              })}
+              {sortedVehicles.map((v) => (
+                <VehicleCard
+                  key={v._id}
+                  vehicle={v}
+                  isLatest={v._id === latestVehicleId}
+                  onRespond={fetchData}
+                />
+              ))}
             </div>
           ) : (
             <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
