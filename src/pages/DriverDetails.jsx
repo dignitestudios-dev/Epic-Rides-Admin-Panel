@@ -319,6 +319,10 @@ const DocCard = ({ doc, onRespond, isOld }) => {
       toast.error("Rejection reason is required.");
       return;
     }
+    if (isRejected && reason.trim().length > 150) {
+      toast.error("Rejection reason cannot exceed 150 characters.");
+      return;
+    }
     setLoading(true);
     try {
       const payload = { id: doc._id, status };
@@ -552,8 +556,15 @@ const DocCard = ({ doc, onRespond, isOld }) => {
                       className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
                       rows={3}
                       value={reason}
-                      onChange={(e) => setReason(e.target.value)}
+                      maxLength={150}
+                      onChange={(e) => setReason(e.target.value.slice(0, 150))}
                     />
+                    <div className="flex items-center justify-between text-[11px] text-gray-400">
+                      <span>Max 150 characters</span>
+                      <span className={reason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
+                        {reason.length}/150
+                      </span>
+                    </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowRejectBox(false)}
@@ -562,7 +573,7 @@ const DocCard = ({ doc, onRespond, isOld }) => {
                         Cancel
                       </button>
                       <button
-                        disabled={loading || !reason.trim()}
+                        disabled={loading || !reason.trim() || reason.trim().length > 150}
                         onClick={() => respond("rejected")}
                         className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-1"
                       >
@@ -593,13 +604,17 @@ const DocCard = ({ doc, onRespond, isOld }) => {
 
 // ── Vehicle Card ──────────────────────────────────────────────────────────────
 
-const VehicleCard = ({ vehicle, onRespond }) => {
+const VehicleCard = ({ vehicle, onRespond, hasOtherPendingVehicle = false }) => {
   const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(vehicle.status);
   const [showReject, setShowReject] = useState(false);
   const [showApproveConfirm, setShowApproveConfirm] = useState(false);
   const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    setLocalStatus(vehicle.status);
+  }, [vehicle.status]);
 
   const isOld = vehicle.status === "old";
   const [collapsed, setCollapsed] = useState(isOld);
@@ -611,14 +626,18 @@ const VehicleCard = ({ vehicle, onRespond }) => {
       toast.error("Rejection reason is required.");
       return;
     }
+    if (isRejected && reason.trim().length > 150) {
+      toast.error("Rejection reason cannot exceed 150 characters.");
+      return;
+    }
     setLoading(true);
     try {
       const payload = { 
         id: vehicle._id, 
         status, 
         metadata: {
-          vehicleIdentificationNumber: vehicle.vehicleIdentificationNumber || "",
-          registrationNumber: vehicle.registrationNumber || "",
+          vehicleIdentificationNumber: vehicle?.vehicleIdentificationNumber || "",
+          registrationNumber: vehicle?.registrationNumber || "",
         }
       };
       if (isRejected) payload.rejectReason = reason;
@@ -703,12 +722,11 @@ const VehicleCard = ({ vehicle, onRespond }) => {
       {!collapsed && (
         <div className="px-5 pb-5 space-y-4 border-t border-gray-50">
           <div className="grid grid-cols-2 gap-x-6 bg-gray-50 rounded-xl p-3 mt-3">
-            <Detail label="Year" value={vehicle.yearOfManufacture} />
-            <Detail label="Plate #" value={vehicle.licensePlateNumber} />
-            <Detail label="VIN" value={vehicle.vehicleIdentificationNumber} />
-            <Detail label="Reg #" value={vehicle.registrationNumber} />
-            <Detail label="Region" value={vehicle.regionOfRegistration} />
-            <Detail label="Expiry" value={formatDate(vehicle.expiryDate)} />
+            <Detail label="Year" value={vehicle?.yearOfManufacture} />
+            <Detail label="Plate #" value={vehicle?.licensePlateNumber} />
+            <Detail label="VIN" value={vehicle?.vehicleIdentificationNumber} />
+            <Detail label="Region" value={vehicle?.regionOfRegistration} />
+            <Detail label="Expiry" value={formatDate(vehicle?.expiryDate)} />
           </div>
 
           {vehicle.rejectReason && (
@@ -719,7 +737,10 @@ const VehicleCard = ({ vehicle, onRespond }) => {
           )}
 
           {/* Actions */}
-          {!isOld && localStatus !== "approved" && hasPermission('approveDriversVehicles') && (
+          {!isOld &&
+            localStatus !== "approved" &&
+            !(localStatus === "rejected" && hasOtherPendingVehicle) &&
+            hasPermission("approveDriversVehicles") && (
             <div className="space-y-2 pt-3 border-t border-gray-50 mt-3">
               {!showReject ? (
                 <div className="flex gap-2">
@@ -734,13 +755,15 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                       <><CheckCircle className="w-3.5 h-3.5" /> Approve Vehicle</>
                     )}
                   </button>
-                  <button
-                    disabled={loading}
-                    onClick={() => setShowReject(true)}
-                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                  >
-                    <XCircle className="w-3.5 h-3.5" /> Reject Vehicle
-                  </button>
+                  {localStatus === "pending" && (
+                    <button
+                      disabled={loading}
+                      onClick={() => setShowReject(true)}
+                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                    >
+                      <XCircle className="w-3.5 h-3.5" /> Reject Vehicle
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -749,8 +772,15 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                     className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200"
                     rows={3}
                     value={reason}
-                    onChange={(e) => setReason(e.target.value)}
+                    maxLength={150}
+                    onChange={(e) => setReason(e.target.value.slice(0, 150))}
                   />
+                  <div className="flex items-center justify-between text-[11px] text-gray-400">
+                    <span>Max 150 characters</span>
+                    <span className={reason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
+                      {reason.length}/150
+                    </span>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowReject(false)}
@@ -759,7 +789,7 @@ const VehicleCard = ({ vehicle, onRespond }) => {
                       Cancel
                     </button>
                     <button
-                      disabled={loading || !reason.trim()}
+                      disabled={loading || !reason.trim() || reason.trim().length > 150}
                       onClick={() => respond("rejected")}
                       className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1"
                     >
@@ -892,8 +922,8 @@ const DriverDetails = () => {
           id: v._id,
           status: "approved",
           metadata: {
-            vehicleIdentificationNumber: v.vehicleIdentificationNumber || "",
-            registrationNumber: v.registrationNumber || "",
+            vehicleIdentificationNumber: v?.vehicleIdentificationNumber || "",
+            registrationNumber: v?.registrationNumber || "",
           },
         })),
       );
@@ -909,6 +939,10 @@ const DriverDetails = () => {
   const handleRejectAll = async () => {
     if (!rejectAllReason.trim()) {
       toast.error("Please enter a rejection reason.");
+      return;
+    }
+    if (rejectAllReason.trim().length > 150) {
+      toast.error("Rejection reason cannot exceed 150 characters.");
       return;
     }
     setBulkLoading(true);
@@ -1158,9 +1192,19 @@ const DriverDetails = () => {
 
           {vehicles.length > 0 ? (
             <div className="space-y-4">
-              {vehicles.map((v) => (
-                <VehicleCard key={v._id} vehicle={v} onRespond={fetchData} />
-              ))}
+              {vehicles.map((v) => {
+                const hasOtherPendingVehicle = vehicles.some(
+                  (other) => other._id !== v._id && other.status === "pending"
+                );
+                return (
+                  <VehicleCard
+                    key={v._id}
+                    vehicle={v}
+                    hasOtherPendingVehicle={hasOtherPendingVehicle}
+                    onRespond={fetchData}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
@@ -1223,11 +1267,17 @@ const DriverDetails = () => {
           </p>
           <textarea
             value={rejectAllReason}
-            onChange={(e) => setRejectAllReason(e.target.value)}
-            maxLength={200}
+            onChange={(e) => setRejectAllReason(e.target.value.slice(0, 150))}
+            maxLength={150}
             className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 outline-none transition-all text-sm"
             placeholder="e.g., Documents are expired or unreadable. Please resubmit."
           />
+          <div className="flex items-center justify-between text-xs text-gray-400">
+            <span>Max 150 characters</span>
+            <span className={rejectAllReason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
+              {rejectAllReason.length}/150
+            </span>
+          </div>
           <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => setRejectModalOpen(false)}>
               Cancel
@@ -1236,7 +1286,7 @@ const DriverDetails = () => {
               variant="danger"
               onClick={handleRejectAll}
               loading={bulkLoading}
-              disabled={!rejectAllReason.trim()}
+              disabled={!rejectAllReason.trim() || rejectAllReason.trim().length > 150}
             >
               Confirm Reject All
             </Button>
