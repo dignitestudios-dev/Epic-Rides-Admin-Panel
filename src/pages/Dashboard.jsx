@@ -176,6 +176,12 @@ const Dashboard = () => {
       index: 1,
     },
     {
+      title: "Active Drivers",
+      value: um.totalActiveDrivers?.toLocaleString() ?? "—",
+      icon: <Car />,
+      index: 2,
+    },
+    {
       title: "Active Riders",
       value: um.totalActiveRiders?.toLocaleString() ?? "—",
       description: `+${(um.newRiderRegistrations?.last7Days ?? 0).toLocaleString()} last 7 days`,
@@ -183,21 +189,21 @@ const Dashboard = () => {
       index: 0,
     },
     {
-      title: "Active Drivers",
-      value: um.totalActiveDrivers?.toLocaleString() ?? "—",
-      icon: <Car />,
-      index: 2,
-    },
-    {
       title: "Subscription Revenue",
-      value: rev.subscriptionRevenueUSD != null ? formatCurrency(rev.subscriptionRevenueUSD) : "—",
+      value:
+        rev.subscriptionRevenueUSD != null
+          ? formatCurrency(rev.subscriptionRevenueUSD)
+          : "—",
       description: "Total earned from subscriptions",
       icon: <DollarSign />,
       index: 3,
     },
     {
       title: "Commission Revenue",
-      value: rev.withdrawalCommissionRevenueUSD != null ? formatCurrency(rev.withdrawalCommissionRevenueUSD) : "—",
+      value:
+        rev.withdrawalCommissionRevenueUSD != null
+          ? formatCurrency(rev.withdrawalCommissionRevenueUSD)
+          : "—",
       description: "Withdrawal commission fees",
       icon: <TrendingUp />,
       index: 5,
@@ -466,7 +472,9 @@ const Dashboard = () => {
                     Subscription Revenue
                   </p>
                   <p className="text-xl font-black text-indigo-700">
-                    {rev.subscriptionRevenueUSD != null ? formatCurrency(rev.subscriptionRevenueUSD) : "—"}
+                    {rev.subscriptionRevenueUSD != null
+                      ? formatCurrency(rev.subscriptionRevenueUSD)
+                      : "—"}
                   </p>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
@@ -474,7 +482,9 @@ const Dashboard = () => {
                     Commission Revenue
                   </p>
                   <p className="text-xl font-black text-emerald-700">
-                    {rev.withdrawalCommissionRevenueUSD != null ? formatCurrency(rev.withdrawalCommissionRevenueUSD) : "—"}
+                    {rev.withdrawalCommissionRevenueUSD != null
+                      ? formatCurrency(rev.withdrawalCommissionRevenueUSD)
+                      : "—"}
                   </p>
                 </div>
               </div>
