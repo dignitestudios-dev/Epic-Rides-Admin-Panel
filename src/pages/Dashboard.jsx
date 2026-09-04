@@ -22,12 +22,14 @@ import toast from "react-hot-toast";
 
 // ── Mini Skeleton ─────────────────────────────────────────────────────────────
 const Skeleton = ({ className }) => (
-  <div className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg ${className}`} />
+  <div
+    className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg ${className}`}
+  />
 );
 
 const StatsSkeleton = () => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-    {[...Array(4)].map((_, i) => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
+    {[...Array(5)].map((_, i) => (
       <Card key={i}>
         <div className="flex items-center justify-between">
           <div className="space-y-2 flex-1">
@@ -48,7 +50,9 @@ const DonutSegment = ({ percentage, color, offset }) => {
   const strokeDashoffset = 100 - offset;
   return (
     <circle
-      cx="20" cy="20" r="15.9155"
+      cx="20"
+      cy="20"
+      r="15.9155"
       fill="transparent"
       stroke={color}
       strokeWidth="4"
@@ -63,9 +67,23 @@ const DonutChart = ({ segments }) => {
   let offset = 25; // start from top
   return (
     <svg viewBox="0 0 40 40" className="w-32 h-32">
-      <circle cx="20" cy="20" r="15.9155" fill="transparent" stroke="#f3f4f6" strokeWidth="4" />
+      <circle
+        cx="20"
+        cy="20"
+        r="15.9155"
+        fill="transparent"
+        stroke="#f3f4f6"
+        strokeWidth="4"
+      />
       {segments.map((seg, i) => {
-        const el = <DonutSegment key={i} percentage={seg.percentage} color={seg.color} offset={offset} />;
+        const el = (
+          <DonutSegment
+            key={i}
+            percentage={seg.percentage}
+            color={seg.color}
+            offset={offset}
+          />
+        );
         offset += seg.percentage;
         return el;
       })}
@@ -80,7 +98,10 @@ const ProgressBar = ({ label, value, max, color, suffix = "" }) => {
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
         <span className="text-gray-500 font-medium capitalize">{label}</span>
-        <span className="font-bold text-gray-800">{value}{suffix}</span>
+        <span className="font-bold text-gray-800">
+          {value}
+          {suffix}
+        </span>
       </div>
       <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
         <div
@@ -100,7 +121,9 @@ const PendingActionCard = ({ icon, label, count, color, onClick }) => (
   >
     <div className="p-2.5 rounded-xl bg-white/70">{icon}</div>
     <div className="flex-1">
-      <p className="text-xs font-semibold opacity-70 uppercase tracking-wider">{label}</p>
+      <p className="text-xs font-semibold opacity-70 uppercase tracking-wider">
+        {label}
+      </p>
       <p className="text-2xl font-black mt-0.5">{count}</p>
     </div>
     <ArrowUpRight className="w-5 h-5 opacity-50" />
@@ -131,7 +154,9 @@ const Dashboard = () => {
     }
   }, []);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   // ── Derived values ────────────────────────────────────────────────────────
   const um = stats?.userMetrics || {};
@@ -143,16 +168,22 @@ const Dashboard = () => {
 
   const topStatsCards = [
     {
+      title: "Total Drivers",
+      value: um.totalDrivers?.toLocaleString() ?? "—",
+      description: `+${(um.newDriverRegistrations?.last7Days ?? 0).toLocaleString()} last 7 days`,
+      icon: <Car />,
+      index: 1,
+    },
+    {
       title: "Active Riders",
-      value: um.totalActiveRiders ?? "—",
-      description: `+${um.newRiderRegistrations?.last7Days ?? 0} last 7 days`,
+      value: um.totalActiveRiders?.toLocaleString() ?? "—",
+      description: `+${(um.newRiderRegistrations?.last7Days ?? 0).toLocaleString()} last 7 days`,
       icon: <Users />,
       index: 0,
     },
     {
       title: "Active Drivers",
-      value: um.totalActiveDrivers ?? "—",
-      description: `+${um.newDriverRegistrations?.last7Days ?? 0} last 7 days`,
+      value: um.totalActiveDrivers?.toLocaleString() ?? "—",
       icon: <Car />,
       index: 2,
     },
@@ -172,7 +203,11 @@ const Dashboard = () => {
     },
   ];
 
-  const rideColors = { luxury: "#6366f1", economy: "#10b981", carpool: "#f59e0b" };
+  const rideColors = {
+    luxury: "#6366f1",
+    economy: "#10b981",
+    carpool: "#f59e0b",
+  };
   const donutSegments = dist.map((d) => ({
     percentage: d.percentage,
     color: rideColors[d.type] || "#9ca3af",
@@ -181,12 +216,15 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8 max-w-[1600px] mx-auto">
-
       {/* ── Header ───────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Platform overview &amp; live metrics</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Platform overview &amp; live metrics
+          </p>
         </div>
         <div className="flex gap-2">
           <button
@@ -208,7 +246,7 @@ const Dashboard = () => {
       {loading ? (
         <StatsSkeleton />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
           {topStatsCards.map((s) => (
             <StatsCard
               key={s.title}
@@ -246,30 +284,52 @@ const Dashboard = () => {
       {/* ── Ride Stats + Analytics ────────────────────────────────────────── */}
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card><Skeleton className="h-48 w-full" /></Card>
-          <Card><Skeleton className="h-48 w-full" /></Card>
+          <Card>
+            <Skeleton className="h-48 w-full" />
+          </Card>
+          <Card>
+            <Skeleton className="h-48 w-full" />
+          </Card>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
           {/* Ride Completion Metrics */}
           <Card>
             <div className="p-6 space-y-5">
               <div className="flex items-center gap-2">
                 <Activity className="w-5 h-5 text-[#39A300]" />
-                <h2 className="text-base font-bold text-gray-900">Ride Metrics</h2>
+                <h2 className="text-base font-bold text-gray-900">
+                  Ride Metrics
+                </h2>
               </div>
 
               {/* Total / Completed / Cancelled overview */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: "Total", value: ov.totalRides, color: "bg-blue-50 text-blue-700 border-blue-200" },
-                  { label: "Completed", value: ov.completedRides, color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-                  { label: "Cancelled", value: ov.cancelledRides, color: "bg-red-50 text-red-700 border-red-200" },
+                  {
+                    label: "Total",
+                    value: ov.totalRides,
+                    color: "bg-blue-50 text-blue-700 border-blue-200",
+                  },
+                  {
+                    label: "Completed",
+                    value: ov.completedRides,
+                    color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+                  },
+                  {
+                    label: "Cancelled",
+                    value: ov.cancelledRides,
+                    color: "bg-red-50 text-red-700 border-red-200",
+                  },
                 ].map((item) => (
-                  <div key={item.label} className={`rounded-xl border p-3 text-center ${item.color}`}>
+                  <div
+                    key={item.label}
+                    className={`rounded-xl border p-3 text-center ${item.color}`}
+                  >
                     <p className="text-2xl font-black">{item.value ?? "—"}</p>
-                    <p className="text-xs font-semibold mt-0.5 opacity-80">{item.label}</p>
+                    <p className="text-xs font-semibold mt-0.5 opacity-80">
+                      {item.label}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -295,12 +355,29 @@ const Dashboard = () => {
               {/* Today / Week / Month breakdown */}
               <div className="border-t border-gray-100 pt-4 grid grid-cols-3 gap-2 text-xs">
                 {[
-                  { period: "Today", completed: rm.totalRidesCompleted?.today, cancelled: rm.totalRidesCancelled?.today },
-                  { period: "This Week", completed: rm.totalRidesCompleted?.thisWeek, cancelled: rm.totalRidesCancelled?.thisWeek },
-                  { period: "This Month", completed: rm.totalRidesCompleted?.thisMonth, cancelled: rm.totalRidesCancelled?.thisMonth },
+                  {
+                    period: "Today",
+                    completed: rm.totalRidesCompleted?.today,
+                    cancelled: rm.totalRidesCancelled?.today,
+                  },
+                  {
+                    period: "This Week",
+                    completed: rm.totalRidesCompleted?.thisWeek,
+                    cancelled: rm.totalRidesCancelled?.thisWeek,
+                  },
+                  {
+                    period: "This Month",
+                    completed: rm.totalRidesCompleted?.thisMonth,
+                    cancelled: rm.totalRidesCancelled?.thisMonth,
+                  },
                 ].map((p) => (
-                  <div key={p.period} className="bg-gray-50 rounded-xl p-3 space-y-1.5">
-                    <p className="font-semibold text-gray-500 text-center">{p.period}</p>
+                  <div
+                    key={p.period}
+                    className="bg-gray-50 rounded-xl p-3 space-y-1.5"
+                  >
+                    <p className="font-semibold text-gray-500 text-center">
+                      {p.period}
+                    </p>
                     <div className="flex items-center gap-1 justify-center text-emerald-600">
                       <CheckCircle className="w-3.5 h-3.5" />
                       <span className="font-bold">{p.completed ?? 0}</span>
@@ -320,7 +397,9 @@ const Dashboard = () => {
             <div className="p-6 space-y-5">
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-indigo-500" />
-                <h2 className="text-base font-bold text-gray-900">Ride Type Distribution</h2>
+                <h2 className="text-base font-bold text-gray-900">
+                  Ride Type Distribution
+                </h2>
               </div>
 
               {donutSegments.length > 0 ? (
@@ -328,8 +407,12 @@ const Dashboard = () => {
                   <div className="relative shrink-0">
                     <DonutChart segments={donutSegments} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <p className="text-xl font-black text-gray-800">{ov.totalRides ?? 0}</p>
-                      <p className="text-[10px] text-gray-400 font-medium">Total</p>
+                      <p className="text-xl font-black text-gray-800">
+                        {ov.totalRides ?? 0}
+                      </p>
+                      <p className="text-[10px] text-gray-400 font-medium">
+                        Total
+                      </p>
                     </div>
                   </div>
                   <div className="flex-1 space-y-3">
@@ -337,15 +420,31 @@ const Dashboard = () => {
                       <div key={d.type} className="space-y-1">
                         <div className="flex justify-between text-xs">
                           <div className="flex items-center gap-1.5">
-                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: rideColors[d.type] || "#9ca3af" }} />
-                            <span className="capitalize font-semibold text-gray-700">{d.type}</span>
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{
+                                backgroundColor:
+                                  rideColors[d.type] || "#9ca3af",
+                              }}
+                            />
+                            <span className="capitalize font-semibold text-gray-700">
+                              {d.type}
+                            </span>
                           </div>
-                          <span className="font-bold text-gray-800">{d.count} <span className="text-gray-400 font-normal">({d.percentage?.toFixed(1)}%)</span></span>
+                          <span className="font-bold text-gray-800">
+                            {d.count}{" "}
+                            <span className="text-gray-400 font-normal">
+                              ({d.percentage?.toFixed(1)}%)
+                            </span>
+                          </span>
                         </div>
                         <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-700"
-                            style={{ width: `${d.percentage}%`, backgroundColor: rideColors[d.type] || "#9ca3af" }}
+                            style={{
+                              width: `${d.percentage}%`,
+                              backgroundColor: rideColors[d.type] || "#9ca3af",
+                            }}
                           />
                         </div>
                       </div>
@@ -362,12 +461,20 @@ const Dashboard = () => {
               {/* Revenue summary */}
               <div className="border-t border-gray-100 pt-4 grid grid-cols-2 gap-3">
                 <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-indigo-500 mb-1">Subscription Revenue</p>
-                  <p className="text-xl font-black text-indigo-700">${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}</p>
+                  <p className="text-xs font-semibold text-indigo-500 mb-1">
+                    Subscription Revenue
+                  </p>
+                  <p className="text-xl font-black text-indigo-700">
+                    ${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}
+                  </p>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-                  <p className="text-xs font-semibold text-emerald-500 mb-1">Commission Revenue</p>
-                  <p className="text-xl font-black text-emerald-700">${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}</p>
+                  <p className="text-xs font-semibold text-emerald-500 mb-1">
+                    Commission Revenue
+                  </p>
+                  <p className="text-xl font-black text-emerald-700">
+                    ${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -400,16 +507,34 @@ const Dashboard = () => {
               <div className="p-5 space-y-4">
                 <div className="flex items-center gap-2">
                   {section.icon}
-                  <h3 className="font-bold text-gray-900 text-sm">{section.title}</h3>
+                  <h3 className="font-bold text-gray-900 text-sm">
+                    {section.title}
+                  </h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className={`${section.cardBg} rounded-xl p-4 text-center`}>
-                    <p className={`text-2xl font-black ${section.valueCls}`}>{section.data?.last7Days ?? 0}</p>
-                    <p className={`text-xs font-semibold ${section.labelCls} mt-1`}>Last 7 Days</p>
+                  <div
+                    className={`${section.cardBg} rounded-xl p-4 text-center`}
+                  >
+                    <p className={`text-2xl font-black ${section.valueCls}`}>
+                      {section.data?.last7Days ?? 0}
+                    </p>
+                    <p
+                      className={`text-xs font-semibold ${section.labelCls} mt-1`}
+                    >
+                      Last 7 Days
+                    </p>
                   </div>
-                  <div className={`${section.cardBg} rounded-xl p-4 text-center`}>
-                    <p className={`text-2xl font-black ${section.valueCls}`}>{section.data?.last30Days ?? 0}</p>
-                    <p className={`text-xs font-semibold ${section.labelCls} mt-1`}>Last 30 Days</p>
+                  <div
+                    className={`${section.cardBg} rounded-xl p-4 text-center`}
+                  >
+                    <p className={`text-2xl font-black ${section.valueCls}`}>
+                      {section.data?.last30Days ?? 0}
+                    </p>
+                    <p
+                      className={`text-xs font-semibold ${section.labelCls} mt-1`}
+                    >
+                      Last 30 Days
+                    </p>
                   </div>
                 </div>
               </div>
@@ -417,7 +542,6 @@ const Dashboard = () => {
           ))}
         </div>
       )}
-
     </div>
   );
 };

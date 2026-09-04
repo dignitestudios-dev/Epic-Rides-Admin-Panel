@@ -48,7 +48,7 @@ const StatsCard = ({
   const colorObj = COLOR_ORDER[index % COLOR_ORDER.length];
 
   return (
-    <Card className="flex justify-between items-center">
+    <Card className="flex justify-between items-center py-5">
       <div className="flex items-center w-full justify-between">
         <div className="flex-1 items-center">
           <p className="text-sm font-medium text-gray-600 dark:text-gray-400">

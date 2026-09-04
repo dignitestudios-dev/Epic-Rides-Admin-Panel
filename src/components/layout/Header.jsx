@@ -105,6 +105,8 @@ const Header = () => {
 
   const confirmLogout = async () => {
     // await logout();
+    sessionStorage.removeItem("authToken");
+    sessionStorage.removeItem("userData");
     localStorage.removeItem("authToken");
     localStorage.removeItem("userData");
     localStorage.removeItem("lockedUntil");

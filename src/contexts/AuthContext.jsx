@@ -65,14 +65,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const token = localStorage.getItem("authToken");
-        const userData = localStorage.getItem("userData");
+        const token = sessionStorage.getItem("authToken");
+        const userData = sessionStorage.getItem("userData");
+
+        // Clean up legacy localStorage so closing browser enforces fresh session
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("userData");
 
         if (token && userData) {
           const parsedUser = JSON.parse(userData);
           setUser(parsedUser);
         }
       } catch (error) {
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("userData");
         localStorage.removeItem("authToken");
         localStorage.removeItem("userData");
       } finally {
@@ -113,9 +119,11 @@ export const AuthProvider = ({ children }) => {
       const userData = response?.data?.admin;
       const token = response?.data?.token;
 
-      // Store auth data
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userData", JSON.stringify(userData));
+      // Store auth data in sessionStorage so closing the tab/browser logs out automatically
+      sessionStorage.setItem("authToken", token);
+      sessionStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userData");
 
       setUser(userData);
       setLoginAttempts(0);
@@ -166,6 +174,8 @@ export const AuthProvider = ({ children }) => {
 
     try {
       // Clear auth data
+      sessionStorage.removeItem("authToken");
+      sessionStorage.removeItem("userData");
       localStorage.removeItem("authToken");
       localStorage.removeItem("userData");
 
@@ -209,7 +219,8 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response?.data?.token) {
-        localStorage.setItem("authToken", response.data.token);
+        sessionStorage.setItem("authToken", response.data.token);
+        localStorage.removeItem("authToken");
       }
 
       handleSuccess(response.message, "OTP verified successfully");
@@ -257,6 +268,7 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.success) {
+        sessionStorage.removeItem("authToken");
         localStorage.removeItem("authToken");
         handleSuccess(response.message, "Password reset successfully");
         return { success: true };
@@ -284,6 +296,8 @@ export const AuthProvider = ({ children }) => {
         handleSuccess(response.message, "Password updated successfully");
 
         // Clear auth data
+        sessionStorage.removeItem("authToken");
+        sessionStorage.removeItem("userData");
         localStorage.removeItem("authToken");
         localStorage.removeItem("userData");
 
