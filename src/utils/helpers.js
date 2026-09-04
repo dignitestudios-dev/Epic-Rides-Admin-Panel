@@ -1,4 +1,5 @@
 import toast from "react-hot-toast";
+import axios from "axios";
 import { DATE_CONFIG } from "../config/constants";
 
 // Date formatting utilities
@@ -186,6 +187,16 @@ export const deepClone = (obj) => {
 };
 
 export const handleError = (error) => {
+  if (
+    !error ||
+    axios.isCancel(error) ||
+    error?.name === "CanceledError" ||
+    error?.code === "ERR_CANCELED" ||
+    error?.message === "canceled" ||
+    error?.__CANCEL__
+  ) {
+    return;
+  }
   console.log(error);
   let msg = error?.response?.data?.message || error?.message || "Something went wrong";
   

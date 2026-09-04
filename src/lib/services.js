@@ -14,8 +14,113 @@ const API = axios.create({
 
 
 
+// Map to track in-flight requests: requestKey -> { controller, signal }
+const pendingRequests = new Map();
+
+/**
+ * Generates a unique key for an API call to identify duplicate in-flight requests.
+ * Uses HTTP method + normalized URL path (query parameters stripped).
+ */
+export const getRequestKey = (config) => {
+  if (config.cancelKey) return config.cancelKey;
+  const method = (config.method || "get").toUpperCase();
+  let url = config.url || "";
+  // Strip query parameters
+  url = url.split("?")[0];
+  // If full URL with protocol
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      url = new URL(url).pathname;
+    } catch {
+      // ignore
+    }
+  }
+  // Normalize leading slash and remove trailing slash
+  if (!url.startsWith("/")) {
+    url = `/${url}`;
+  }
+  if (url.length > 1 && url.endsWith("/")) {
+    url = url.slice(0, -1);
+  }
+  return `${method}:${url}`;
+};
+
+/**
+ * Checks if an error is due to request cancellation.
+ */
+export const isCancelError = (error) => {
+  return (
+    axios.isCancel(error) ||
+    error?.name === "CanceledError" ||
+    error?.code === "ERR_CANCELED" ||
+    error?.message === "canceled" ||
+    Boolean(error?.__CANCEL__)
+  );
+};
+
+/**
+ * Cancels all currently pending in-flight requests.
+ */
+export const cancelAllPendingRequests = (reason = "All pending requests canceled") => {
+  pendingRequests.forEach(({ controller }) => {
+    try {
+      controller.abort(reason);
+    } catch {
+      // ignore
+    }
+  });
+  pendingRequests.clear();
+};
+
+/**
+ * Cancels a specific in-flight request by key.
+ */
+export const cancelRequest = (requestKey, reason = "Request canceled") => {
+  if (pendingRequests.has(requestKey)) {
+    try {
+      pendingRequests.get(requestKey).controller.abort(reason);
+    } catch {
+      // ignore
+    }
+    pendingRequests.delete(requestKey);
+  }
+};
+
 API.interceptors.request.use(
   (config) => {
+    // Automatically neglect (cancel) older pending request if a new one is sent to the same API
+    if (!config.skipCancel) {
+      const requestKey = getRequestKey(config);
+
+      if (pendingRequests.has(requestKey)) {
+        const { controller: oldController } = pendingRequests.get(requestKey);
+        try {
+          oldController.abort("Canceled: newer request to the same API was initiated");
+        } catch {
+          // ignore
+        }
+        pendingRequests.delete(requestKey);
+      }
+
+      const controller = new AbortController();
+
+      // If caller already provided a signal, chain it
+      if (config.signal) {
+        if (config.signal.aborted) {
+          controller.abort(config.signal.reason);
+        } else {
+          config.signal.addEventListener("abort", () => {
+            controller.abort(config.signal.reason);
+          });
+        }
+      }
+
+      config.signal = controller.signal;
+      config._requestKey = requestKey;
+      config._requestSignal = controller.signal;
+      pendingRequests.set(requestKey, { controller, signal: controller.signal });
+    }
+
     const token = localStorage.getItem("authToken");
     // console.log("req token: ", token);
     if (token) {
@@ -28,8 +133,28 @@ API.interceptors.request.use(
 
 // Response Interceptor
 API.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Remove completed request from pending map
+    const requestKey = response.config?._requestKey;
+    const requestSignal = response.config?._requestSignal;
+    if (requestKey && pendingRequests.get(requestKey)?.signal === requestSignal) {
+      pendingRequests.delete(requestKey);
+    }
+    return response;
+  },
   (error) => {
+    // Remove completed (failed/aborted) request from pending map
+    const requestKey = error.config?._requestKey;
+    const requestSignal = error.config?._requestSignal;
+    if (requestKey && pendingRequests.get(requestKey)?.signal === requestSignal) {
+      pendingRequests.delete(requestKey);
+    }
+
+    // If request was canceled/aborted, neglect it silently
+    if (isCancelError(error)) {
+      return new Promise(() => {}); // Never settles so old promise is completely neglected
+    }
+
     if (error?.response?.status === 401) {
       localStorage.removeItem("authToken");
       if (!window.location.pathname.includes("/login")) {
@@ -44,6 +169,9 @@ API.interceptors.response.use(
 
 // Centralized API Handling functions start
 const handleApiError = (error) => {
+  if (isCancelError(error)) {
+    return error;
+  }
   if (axios.isAxiosError(error)) {
     const errorMessage =
       error.response?.data?.message ||
@@ -84,6 +212,9 @@ const apiHandler = async (apiCall) => {
     const response = await apiCall();
     return handleApiResponse(response);
   } catch (error) {
+    if (isCancelError(error)) {
+      return new Promise(() => {});
+    }
     console.log(error);
     throw handleApiError(error);
   }
@@ -122,7 +253,10 @@ const updatePassword = (payload) =>
 const updatePasswordAuth = (payload) =>
   apiHandler(() => API.post("/auth/update-password-auth", payload));
 
-const logout = () => apiHandler(() => API.post("/auth/logout"));
+const logout = () => {
+  cancelAllPendingRequests();
+  return apiHandler(() => API.post("/auth/logout"));
+};
 
 // App Configs API
 const getAppConfigs = () => apiHandler(() => API.get("/global/config"));
@@ -659,4 +793,7 @@ export const api = {
   deletePeakWindow,
   getRideConfiguration,
   updateRideConfiguration,
+  cancelAllPendingRequests,
+  cancelRequest,
+  isCancelError,
 };
