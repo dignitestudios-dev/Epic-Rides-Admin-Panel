@@ -89,12 +89,21 @@ export const formatNumber = (num) => {
   return new Intl.NumberFormat("en-US").format(num);
 };
 
+export const formatPercent = (val, fractionDigits = 2) => {
+  if (val == null || val === "" || isNaN(Number(val))) return "0.00%";
+  const num = Number(val);
+  if (num === 100) return "100%";
+  return `${num.toFixed(fractionDigits)}%`;
+};
+
 export const formatPercentage = (num, fractionDigits = 2) => {
-  return num
-    ? num > 0
-      ? `+${num?.toFixed(fractionDigits)}%`
-      : `${num?.toFixed(fractionDigits)}%`
-    : "0%";
+  if (num == null || isNaN(Number(num))) return "0.00%";
+  const parsed = Number(num);
+  if (parsed === 100) return "100%";
+  if (parsed === -100) return "-100%";
+  return parsed > 0
+    ? `+${parsed.toFixed(fractionDigits)}%`
+    : `${parsed.toFixed(fractionDigits)}%`;
 };
 
 export const getTrend = (num) => {

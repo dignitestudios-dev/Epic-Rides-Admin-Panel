@@ -20,7 +20,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
-import { formatDate, handleError, handleSuccess, maskEmail, maskPhone } from "../utils/helpers";
+import { formatDate, handleError, handleSuccess, maskEmail, maskPhone, formatCurrency } from "../utils/helpers";
 import Table from "../components/ui/Table";
 import StatsCard from "../components/common/StatsCard";
 import EditProfileModal from "../components/common/EditProfileModal";
@@ -133,7 +133,7 @@ const RiderDetail = () => {
     {
       key: "rideFare",
       label: "Fare",
-      render: (val) => `$${val || 0}`,
+      render: (val) => formatCurrency(val || 0),
     },
     {
       key: "rideStatus",
@@ -187,7 +187,7 @@ const RiderDetail = () => {
     {
       key: "fareCharged",
       label: "Fare",
-      render: (val) => `$${val != null ? Number(val).toFixed(2) : "0.0000"}`,
+      render: (val) => formatCurrency(val || 0),
     },
     {
       key: "status",
@@ -328,7 +328,7 @@ const RiderDetail = () => {
           <div className={`mb-4 grid gap-4 ${details?.rewardedBalance != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <StatsCard
               title="Wallet Balance"
-              value={`$${(walletBalance || 0).toFixed(2)}`}
+              value={formatCurrency(walletBalance || 0)}
               icon={<Wallet />}
               colored
               index={3}
@@ -336,7 +336,7 @@ const RiderDetail = () => {
             {details?.rewardedBalance != null && (
               <StatsCard
                 title="Rewarded Balance"
-                value={`$${(details?.rewardedBalance || 0).toFixed(2)}`}
+                value={formatCurrency(details?.rewardedBalance || 0)}
                 icon={<Wallet />}
                 colored
                 index={4}
@@ -360,9 +360,11 @@ const RiderDetail = () => {
             />
             <StatsCard
               title="Average Rating"
-              value={parseFloat(
-                details?.averageRating,
-              ).toFixed(1)}
+              value={
+                details?.averageRating != null && !isNaN(parseFloat(details.averageRating))
+                  ? parseFloat(details.averageRating).toFixed(2)
+                  : "0.00"
+              }
               icon={<Star />}
               colored
               index={4}
@@ -445,7 +447,7 @@ const RiderDetail = () => {
                                 : "text-red-600"
                             }
                           >
-                            {row.type === "credit" ? "+" : "-"}${Math.abs(val)}
+                            {row.type === "credit" ? "+" : "-"}${Number(Math.abs(val || 0)).toFixed(2)}
                           </span>
                         ),
                       },

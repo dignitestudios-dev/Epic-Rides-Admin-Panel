@@ -18,7 +18,7 @@ import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import MultiSelect from "../components/ui/MultiSelect";
 import StatsCard from "../components/common/StatsCard";
-import { formatDate } from "../utils/helpers";
+import { formatDate, formatPercent } from "../utils/helpers";
 import { PAGINATION_CONFIG, FLORIDA_CITIES } from "../config/constants";
 import useCampaigns from "../hooks/campaigns/useCampaigns";
 import { api } from "../lib/services";
@@ -567,7 +567,9 @@ const Campaigns = () => {
       label: "Discount",
       render: (_, row) => (
         <span className="font-semibold text-gray-800 dark:text-gray-200">
-          {row.discountType === "percentage" ? `${row.discountValue}%` : `$${row.discountValue}`}
+          {row.discountType === "percentage"
+            ? formatPercent(row.discountValue)
+            : `$${Number(row.discountValue || 0).toFixed(2)}`}
         </span>
       ),
     },

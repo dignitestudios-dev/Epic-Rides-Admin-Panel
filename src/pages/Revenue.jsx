@@ -17,7 +17,7 @@ import DataTable from "../components/common/DataTable";
 import FilterBar from "../components/ui/FilterBar";
 import StatsCard from "../components/common/StatsCard";
 
-import { formatDate, downloadCSV } from "../utils/helpers";
+import { formatDate, downloadCSV, formatCurrency } from "../utils/helpers";
 import useGetSubscriptionRevenue from "../hooks/revenue/useGetSubscriptionRevenue";
 import useGetWithdrawalRevenue from "../hooks/revenue/useGetWithdrawalRevenue";
 import useDebounce from "../hooks/global/useDebounce";
@@ -160,7 +160,7 @@ const Revenue = () => {
         Status: i.subscriptionStatus,
         "Purchase Date": formatDate(i.purchaseDate),
         "Expiry Date": formatDate(i.expiryDate),
-        Amount: `$${i.amount || 0}`,
+        Amount: `$${Number(i.amount || 0).toFixed(2)}`,
       }));
 
       downloadCSV(formatted, "subscription_revenue");
@@ -169,9 +169,9 @@ const Revenue = () => {
 
       const formatted = withData.map((i) => ({
         "Driver Name": i.driverName,
-        "Withdrawal Amount": `$${i.withdrawalAmount}`,
+        "Withdrawal Amount": `$${Number(i.withdrawalAmount || 0).toFixed(2)}`,
         Date: formatDate(i.date),
-        "Admin Commission": `$${i.adminCommission}`,
+        "Admin Commission": `$${Number(i.adminCommission || 0).toFixed(2)}`,
       }));
 
       downloadCSV(formatted, "withdrawal_commission");
@@ -232,7 +232,7 @@ const Revenue = () => {
     {
       key: "amount",
       label: "Amount",
-      render: (v) => `$${v || 0}`,
+      render: (v) => formatCurrency(v || 0),
     },
   ];
 
@@ -255,12 +255,12 @@ const Revenue = () => {
     {
       key: "withdrawalAmount",
       label: "Withdrawal Amount",
-      render: (v) => `$${v}`,
+      render: (v) => formatCurrency(v || 0),
     },
     {
       key: "adminCommission",
       label: "Admin Commission",
-      render: (v) => `$${v}`,
+      render: (v) => formatCurrency(v || 0),
     },
     {
       key: "date",
@@ -354,7 +354,7 @@ const Revenue = () => {
           />
           <StatsCard
             title="Total Revenue"
-            value={`$${subStats?.totalRevenue ?? 0}`}
+            value={formatCurrency(subStats?.totalRevenue ?? 0)}
             description={subDateDesc}
             icon={<DollarSign />}
             colored
@@ -373,7 +373,7 @@ const Revenue = () => {
           />
           <StatsCard
             title="Total Card Fees"
-            value={`$${withStats?.totalCommissionRevenue ?? 0}`}
+            value={formatCurrency(withStats?.totalCommissionRevenue ?? 0)}
             description={withDateDesc}
             icon={<TrendingUp />}
             colored

@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { formatCurrency } from "../utils/helpers";
+import { formatCurrency, formatPercent } from "../utils/helpers";
 import {
   LineChart,
   Line,
@@ -105,15 +105,14 @@ const Analytics = () => {
   const totalRevenue = revenueData.reduce((sum, item) => sum + item.revenue, 0);
   const avgRevenue = totalRevenue / revenueData.length;
 
-  const userGrowthRate =
+  const rawGrowthRate =
     userGrowthData.length > 1
-      ? (
-          ((userGrowthData[userGrowthData.length - 1].users -
-            userGrowthData[0].users) /
-            userGrowthData[0].users) *
-          100
-        ).toFixed(1)
+      ? ((userGrowthData[userGrowthData.length - 1].users -
+          userGrowthData[0].users) /
+          userGrowthData[0].users) *
+        100
       : 0;
+  const userGrowthRate = formatPercent(rawGrowthRate);
 
   return (
     <div className="space-y-6">
@@ -162,7 +161,7 @@ const Analytics = () => {
                 {totalUsers.toLocaleString()}
               </p>
               <p className="text-sm text-green-600 mt-1">
-                +{userGrowthRate}% growth
+                +{userGrowthRate} growth
               </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">

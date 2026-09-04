@@ -192,7 +192,7 @@ const CarpoolRideDetail = () => {
                           </p>
                           <p className="text-xs text-gray-500 flex items-center gap-1">
                             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                            {booking.passenger?.rating || "New"}
+                            {booking.passenger?.rating != null ? Number(booking.passenger.rating).toFixed(2) : "New"}
                           </p>
                         </div>
                       </div>
@@ -260,7 +260,7 @@ const CarpoolRideDetail = () => {
               <h4 className="font-semibold text-lg text-gray-900 dark:text-white">{fullName(driver)}</h4>
               <div className="flex items-center gap-1 mt-1 text-sm text-gray-500">
                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                <span>{driver?.rating || "No rating"}</span>
+                <span>{driver?.rating != null ? Number(driver.rating).toFixed(2) : "No rating"}</span>
               </div>
             </div>
             

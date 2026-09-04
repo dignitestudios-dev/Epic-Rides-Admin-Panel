@@ -9,6 +9,7 @@ import Select from '../components/ui/Select'
 import TextArea from '../components/ui/TextArea'
 import { useForm } from 'react-hook-form'
 import { EMAIL_CONFIG, USER_ROLES } from '../config/constants'
+import { formatPercent } from '../utils/helpers'
 
 const SendEmail = () => {
   const [emailHistory, setEmailHistory] = useState([
@@ -116,12 +117,14 @@ const SendEmail = () => {
 
   const totalSent = emailHistory.filter(e => e.status === 'sent').length
   const totalRecipients = emailHistory.reduce((sum, e) => sum + e.recipientCount, 0)
-  const avgOpenRate = emailHistory.length > 0 
-    ? (emailHistory.reduce((sum, e) => sum + e.openRate, 0) / emailHistory.length).toFixed(1)
+  const avgOpenRateVal = emailHistory.length > 0 
+    ? (emailHistory.reduce((sum, e) => sum + e.openRate, 0) / emailHistory.length)
     : 0
-  const avgClickRate = emailHistory.length > 0
-    ? (emailHistory.reduce((sum, e) => sum + e.clickRate, 0) / emailHistory.length).toFixed(1)
+  const avgClickRateVal = emailHistory.length > 0
+    ? (emailHistory.reduce((sum, e) => sum + e.clickRate, 0) / emailHistory.length)
     : 0
+  const avgOpenRate = formatPercent(avgOpenRateVal)
+  const avgClickRate = formatPercent(avgClickRateVal)
 
   return (
     <div className="space-y-6">
@@ -155,7 +158,7 @@ const SendEmail = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Open Rate</p>
-              <p className="text-2xl font-bold text-purple-600">{avgOpenRate}%</p>
+              <p className="text-2xl font-bold text-purple-600">{avgOpenRate}</p>
             </div>
             <div className="p-3 bg-purple-100 rounded-lg">
               <Mail className="w-6 h-6 text-purple-600" />
@@ -167,7 +170,7 @@ const SendEmail = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Click Rate</p>
-              <p className="text-2xl font-bold text-orange-600">{avgClickRate}%</p>
+              <p className="text-2xl font-bold text-orange-600">{avgClickRate}</p>
             </div>
             <div className="p-3 bg-orange-100 rounded-lg">
               <UserCheck className="w-6 h-6 text-orange-600" />
@@ -302,11 +305,11 @@ const SendEmail = () => {
                   {email.status === 'sent' && (
                     <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
                       <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                        <p className="font-medium text-purple-600">{email.openRate}%</p>
+                        <p className="font-medium text-purple-600">{formatPercent(email.openRate)}</p>
                         <p className="text-gray-500">Open Rate</p>
                       </div>
                       <div className="text-center p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                        <p className="font-medium text-orange-600">{email.clickRate}%</p>
+                        <p className="font-medium text-orange-600">{formatPercent(email.clickRate)}</p>
                         <p className="text-gray-500">Click Rate</p>
                       </div>
                     </div>

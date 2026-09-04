@@ -24,6 +24,7 @@ import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
 import ConfirmModal from "../components/global/ConfirmModal";
 import { FLORIDA_CITIES } from "../config/constants";
+import { formatPercent } from "../utils/helpers";
 import useRideRatesActions from "../hooks/ride-rates/useRideRatesActions";
 import useDebounce from "../hooks/global/useDebounce";
 
@@ -840,7 +841,7 @@ const RideRates = () => {
                       <div className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
                         <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Global Discount</div>
                         <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                          {Number(rate.discountPercentage || 0)}%
+                          {formatPercent(rate.discountPercentage)}
                         </div>
                       </div>
                     </div>

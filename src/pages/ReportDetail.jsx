@@ -350,7 +350,7 @@ const ReportDetail = () => {
                       <DollarSign className="w-3.5 h-3.5 mr-1" />
                       <span className="text-[10px] font-black uppercase tracking-tighter">Fare</span>
                     </div>
-                    <p className="text-sm font-black text-gray-900 dark:text-white">${report.relatedDetails.rideFare || "0.00"}</p>
+                    <p className="text-sm font-black text-gray-900 dark:text-white">${report.relatedDetails.rideFare != null ? Number(report.relatedDetails.rideFare).toFixed(2) : "0.00"}</p>
                   </div>
                   <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <div className="flex items-center text-gray-400 mb-1">

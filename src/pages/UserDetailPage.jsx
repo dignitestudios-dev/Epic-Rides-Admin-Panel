@@ -218,7 +218,7 @@ const UserDetailPage = () => {
               <>
                 <InfoRow
                   label="Average"
-                  value={`${userData.ratings.average} ⭐ (${userData.ratings.count})`}
+                  value={`${Number(userData.ratings.average || 0).toFixed(2)} ⭐ (${userData.ratings.count})`}
                 />
                 <ul className="list-disc pl-5 mt-2 space-y-1 text-gray-700">
                   {userData.ratings.comments.map((c, i) => (

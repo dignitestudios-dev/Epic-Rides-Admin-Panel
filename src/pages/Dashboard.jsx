@@ -19,6 +19,7 @@ import StatsCard from "../components/common/StatsCard";
 import { useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
+import { formatCurrency, formatPercent } from "../utils/helpers";
 
 // ── Mini Skeleton ─────────────────────────────────────────────────────────────
 const Skeleton = ({ className }) => (
@@ -189,14 +190,14 @@ const Dashboard = () => {
     },
     {
       title: "Subscription Revenue",
-      value: `$${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}`,
+      value: rev.subscriptionRevenueUSD != null ? formatCurrency(rev.subscriptionRevenueUSD) : "—",
       description: "Total earned from subscriptions",
       icon: <DollarSign />,
       index: 3,
     },
     {
       title: "Commission Revenue",
-      value: `$${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}`,
+      value: rev.withdrawalCommissionRevenueUSD != null ? formatCurrency(rev.withdrawalCommissionRevenueUSD) : "—",
       description: "Withdrawal commission fees",
       icon: <TrendingUp />,
       index: 5,
@@ -341,14 +342,14 @@ const Dashboard = () => {
                   value={ov.completedRides ?? 0}
                   max={ov.totalRides ?? 1}
                   color="#10b981"
-                  suffix={` (${ov.completedPercentage?.toFixed(1) ?? 0}%)`}
+                  suffix={` (${formatPercent(ov.completedPercentage)})`}
                 />
                 <ProgressBar
                   label="Cancelled"
                   value={ov.cancelledRides ?? 0}
                   max={ov.totalRides ?? 1}
                   color="#ef4444"
-                  suffix={` (${ov.cancelledPercentage?.toFixed(1) ?? 0}%)`}
+                  suffix={` (${formatPercent(ov.cancelledPercentage)})`}
                 />
               </div>
 
@@ -434,7 +435,7 @@ const Dashboard = () => {
                           <span className="font-bold text-gray-800">
                             {d.count}{" "}
                             <span className="text-gray-400 font-normal">
-                              ({d.percentage?.toFixed(1)}%)
+                              ({formatPercent(d.percentage)})
                             </span>
                           </span>
                         </div>
@@ -465,7 +466,7 @@ const Dashboard = () => {
                     Subscription Revenue
                   </p>
                   <p className="text-xl font-black text-indigo-700">
-                    ${rev.subscriptionRevenueUSD?.toLocaleString() ?? "—"}
+                    {rev.subscriptionRevenueUSD != null ? formatCurrency(rev.subscriptionRevenueUSD) : "—"}
                   </p>
                 </div>
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
@@ -473,7 +474,7 @@ const Dashboard = () => {
                     Commission Revenue
                   </p>
                   <p className="text-xl font-black text-emerald-700">
-                    ${rev.withdrawalCommissionRevenueUSD?.toFixed(2) ?? "—"}
+                    {rev.withdrawalCommissionRevenueUSD != null ? formatCurrency(rev.withdrawalCommissionRevenueUSD) : "—"}
                   </p>
                 </div>
               </div>

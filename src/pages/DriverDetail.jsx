@@ -22,7 +22,7 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import StatsCard from "../components/common/StatsCard";
-import { formatDate, handleError, handleSuccess, formatPhoneNumber, maskEmail, maskPhone } from "../utils/helpers";
+import { formatDate, handleError, handleSuccess, formatPhoneNumber, maskEmail, maskPhone, formatCurrency } from "../utils/helpers";
 import EditProfileModal from "../components/common/EditProfileModal";
 import { api } from "../lib/services";
 import { useAuth } from "../contexts/AuthContext";
@@ -147,7 +147,7 @@ console.log(details)
     { 
       key: "rideFare", 
       label: "Earnings", 
-      render: (val) => `$${val || 0}` 
+      render: (val) => formatCurrency(val || 0) 
     },
     { 
       key: "rideStatus", 
@@ -198,7 +198,7 @@ console.log(details)
     {
       key: "fareCharged",
       label: "Fare",
-      render: (val) => `$${val != null ? Number(val).toFixed(2) : "0.0000"}`,
+      render: (val) => formatCurrency(val || 0),
     },
     {
       key: "status",
@@ -389,7 +389,7 @@ console.log(details)
           <div className={`mb-4 grid gap-4 ${details?.rewardedBalance != null ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <StatsCard
               title="Wallet Balance"
-              value={`$${(details?.walletBalance || 0).toFixed(2)}`}
+              value={formatCurrency(details?.walletBalance || 0)}
               // icon={<Wallet />}
               colored
               index={3}
@@ -397,7 +397,7 @@ console.log(details)
             {details?.rewardedBalance != null && (
               <StatsCard
                 title="Rewarded Balance"
-                value={`$${(details?.rewardedBalance || 0).toFixed(2)}`}
+                value={formatCurrency(details?.rewardedBalance || 0)}
                 // icon={<Wallet />}
                 colored
                 index={4}
@@ -421,7 +421,7 @@ console.log(details)
             />
             <StatsCard
               title="Admin Commission (3%)"
-              value={`$${revenue?.adminCommission || "0.00"}`}
+              value={formatCurrency(revenue?.adminCommission || 0)}
               // icon={<TrendingUp />}
               colored
               index={3}
@@ -504,7 +504,7 @@ console.log(details)
         <h3 className="text-lg font-bold text-gray-900">Latest Reviews & Feedback</h3>
         <div className="flex items-center gap-2">
           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-          <span className="text-xl font-bold">{ratingAndFeedback?.rating || 0}</span>
+          <span className="text-xl font-bold">{ratingAndFeedback?.rating != null ? Number(ratingAndFeedback.rating).toFixed(2) : "0.00"}</span>
           <span className="text-gray-500 text-sm">({ratingAndFeedback?.reviewsCount || 0} reviews)</span>
         </div>
       </div>
@@ -604,7 +604,7 @@ console.log(details)
                         {
                           key: "amount",
                           label: "Amount",
-                          render: (val) => `$${val ?? 0}`,
+                          render: (val) => formatCurrency(val ?? 0),
                         },
                         {
                           key: "purpose",

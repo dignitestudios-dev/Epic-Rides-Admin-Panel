@@ -4,7 +4,7 @@ import { ArrowLeft, BarChart3, Users, QrCode } from "lucide-react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import DataTable from "../components/common/DataTable";
-import { formatDate } from "../utils/helpers";
+import { formatDate, formatPercent } from "../utils/helpers";
 import useCampaignDetail from "../hooks/campaigns/useCampaignDetail";
 
 const CampaignDetail = () => {
@@ -109,8 +109,8 @@ const CampaignDetail = () => {
                       <div>
                         <p className="text-sm text-gray-500">Discount</p>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {details.discountType === "percentage" ? `${details.discountValue}%` : `$${details.discountValue}`}
-                          {details.maxDiscountCap ? ` (Up to $${details.maxDiscountCap})` : ""}
+                          {details.discountType === "percentage" ? formatPercent(details.discountValue) : `$${Number(details.discountValue || 0).toFixed(2)}`}
+                          {details.maxDiscountCap ? ` (Up to $${Number(details.maxDiscountCap).toFixed(2)})` : ""}
                         </p>
                       </div>
                       <div>
@@ -133,7 +133,7 @@ const CampaignDetail = () => {
                       </div>
                       <div>
                         <p className="text-sm text-gray-500">Min Ride Amount</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{details.minRideAmount ? `$${details.minRideAmount}` : "—"}</p>
+                        <p className="font-medium text-gray-900 dark:text-white">{details.minRideAmount ? `$${Number(details.minRideAmount).toFixed(2)}` : "—"}</p>
                       </div>
                       <div className="col-span-2 md:col-span-4">
                         <p className="text-sm text-gray-500 mb-1">Eligibility</p>
@@ -164,8 +164,8 @@ const CampaignDetail = () => {
                       <div>
                         <p className="text-sm text-gray-500">Discount</p>
                         <p className="font-medium text-gray-900 dark:text-white">
-                          {stats.discountType === "percentage" ? `${stats.discountValue}%` : `$${stats.discountValue}`}
-                          {stats.maxDiscountCap ? ` (Up to $${stats.maxDiscountCap})` : ""}
+                          {stats.discountType === "percentage" ? formatPercent(stats.discountValue) : `$${Number(stats.discountValue || 0).toFixed(2)}`}
+                          {stats.maxDiscountCap ? ` (Up to $${Number(stats.maxDiscountCap).toFixed(2)})` : ""}
                         </p>
                       </div>
                       <div>
@@ -191,19 +191,19 @@ const CampaignDetail = () => {
                   </Card>
                   <Card className="p-4">
                     <h3 className="text-sm font-medium text-gray-500">Total Discount Given</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.totalDiscountGiven || 0}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${Number(stats.totalDiscountGiven || 0).toFixed(2)}</p>
                   </Card>
                   <Card className="p-4">
                     <h3 className="text-sm font-medium text-gray-500">Average Discount / Ride</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.averageDiscountPerRide?.toFixed(2) || 0}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.averageDiscountPerRide != null ? Number(stats.averageDiscountPerRide).toFixed(2) : "0.00"}</p>
                   </Card>
                   <Card className="p-4">
                     <h3 className="text-sm font-medium text-gray-500">Redemption Rate</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.redemptionRate || 0}%</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{formatPercent(stats.redemptionRate)}</p>
                   </Card>
                   <Card className="p-4">
                     <h3 className="text-sm font-medium text-gray-500">Budget Remaining</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.budgetRemaining !== null ? `$${stats.budgetRemaining}` : "Unlimited"}</p>
+                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.budgetRemaining !== null ? `$${Number(stats.budgetRemaining).toFixed(2)}` : "Unlimited"}</p>
                   </Card>
                 </div>
               </>
