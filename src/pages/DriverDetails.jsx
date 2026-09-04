@@ -604,7 +604,12 @@ const DocCard = ({ doc, onRespond, isOld }) => {
 
 // ── Vehicle Card ──────────────────────────────────────────────────────────────
 
-const VehicleCard = ({ vehicle, onRespond, hasOtherPendingVehicle = false }) => {
+const VehicleCard = ({
+  vehicle,
+  onRespond,
+  hasOtherPendingVehicle = false,
+  hasOtherApprovedVehicle = false,
+}) => {
   const { hasPermission } = useAuth();
   const [loading, setLoading] = useState(false);
   const [localStatus, setLocalStatus] = useState(vehicle.status);
@@ -739,6 +744,7 @@ const VehicleCard = ({ vehicle, onRespond, hasOtherPendingVehicle = false }) => 
           {/* Actions */}
           {!isOld &&
             localStatus !== "approved" &&
+            !hasOtherApprovedVehicle &&
             !(localStatus === "rejected" && hasOtherPendingVehicle) &&
             hasPermission("approveDriversVehicles") && (
             <div className="space-y-2 pt-3 border-t border-gray-50 mt-3">
@@ -898,11 +904,13 @@ const DriverDetails = () => {
 
   const pendingDocs = latestDocs.filter((d) => d.status === "pending");
   const approvablePendingDocs = pendingDocs; // Allow approval of all documents including licenses
+  const hasApprovedVehicle = vehicles.some((v) => v.status === "approved");
   const pendingVehicles = vehicles.filter((v) => v.status === "pending");
+  const approvableVehicles = hasApprovedVehicle ? [] : pendingVehicles;
   const activeVehicles = vehicles.filter((v) => v.status !== "old");
 
   const handleApproveAll = async () => {
-    if (approvablePendingDocs.length === 0 && pendingVehicles.length === 0)
+    if (approvablePendingDocs.length === 0 && approvableVehicles.length === 0)
       return;
     setBulkLoading(true);
     try {
@@ -918,7 +926,7 @@ const DriverDetails = () => {
           }
           return payload;
         }),
-        pendingVehicles.map((v) => ({
+        approvableVehicles.map((v) => ({
           id: v._id,
           status: "approved",
           metadata: {
@@ -970,7 +978,7 @@ const DriverDetails = () => {
     }
   };
 
-  const totalPending = approvablePendingDocs.length + pendingVehicles.length;
+  const totalPending = approvablePendingDocs.length + approvableVehicles.length;
 
   if (loading) {
     return (
@@ -1196,11 +1204,15 @@ const DriverDetails = () => {
                 const hasOtherPendingVehicle = vehicles.some(
                   (other) => other._id !== v._id && other.status === "pending"
                 );
+                const hasOtherApprovedVehicle = vehicles.some(
+                  (other) => other._id !== v._id && other.status === "approved"
+                );
                 return (
                   <VehicleCard
                     key={v._id}
                     vehicle={v}
                     hasOtherPendingVehicle={hasOtherPendingVehicle}
+                    hasOtherApprovedVehicle={hasOtherApprovedVehicle}
                     onRespond={fetchData}
                   />
                 );
