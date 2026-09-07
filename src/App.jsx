@@ -63,6 +63,7 @@ import CarpoolRideDetail from "./pages/CarpoolRideDetail";
 import BirdsEyeView from "./pages/BirdsEyeView";
 import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
+import RideConfiguration from "./pages/RideConfiguration";
 import AdminUsers from "./pages/AdminUsers";
 import { USER_ROLES } from "./config/constants";
 
@@ -259,6 +260,14 @@ function App() {
                           element={
                             <ProtectedRoute requiredPermission="financials">
                               <PeakWindows />
+                            </ProtectedRoute>
+                          }
+                        />
+                        <Route
+                          path="/ride-configuration"
+                          element={
+                            <ProtectedRoute requiredPermission="financials">
+                              <RideConfiguration />
                             </ProtectedRoute>
                           }
                         />

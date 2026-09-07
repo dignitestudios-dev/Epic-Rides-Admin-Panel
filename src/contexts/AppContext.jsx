@@ -42,6 +42,7 @@ export const AppProvider = ({ children }) => {
         case "revenue":
         case "ride-rates":
         case "peak-windows":
+        case "ride-configuration":
           return permissions.financials;
         case "promo-codes":
           return permissions.promos;

@@ -237,6 +237,13 @@ export const MENU_ITEMS = [
     children: [],
   },
   {
+    id: "ride-configuration",
+    label: "Ride Configuration",
+    icon: "SlidersHorizontal",
+    path: "/ride-configuration",
+    children: [],
+  },
+  {
     id: "birds-eye-view",
     label: "Bird's Eye View",
     icon: "Map",
