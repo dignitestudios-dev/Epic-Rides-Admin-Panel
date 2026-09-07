@@ -1,21 +1,36 @@
-# Epic Rides Admin Panel - Comprehensive Project Documentation
+# Epic Rides Admin Panel - Comprehensive Engineering & Operations Documentation
 
-## 1. Overview
-The **Epic Rides Admin Panel** is a modern React single-page application (SPA) built with **Vite**, **React 18**, **Tailwind CSS**, and **Radix UI primitives**. It provides platform administrators with tools to manage ride hailing operations, riders, drivers, document verifications, vehicle categories, dynamic pricing (ride rates & peak windows), promotional codes, revenue streams, real-time vehicle locations (Bird's Eye View), customer support, and system notifications.
+## 1. Executive Summary & Overview
+The **Epic Rides Admin Panel** is a mission-critical, enterprise-grade Single Page Application (SPA) designed to manage all administrative, operational, financial, and regulatory operations of the **Epic Rides** ride-hailing and carpooling ecosystem.
+
+The platform provides platform super administrators, operations teams, and customer support representatives with end-to-end operational visibility and administrative control over:
+- **Riders & Drivers**: Account lifecycles, activity audits, suspension states, rewarded balance transactions, and data exports.
+- **Driver Verification**: Document audits (commercial/personal driver licenses, vehicle registrations, insurance policies) with an interactive inspection viewer (zoom, rotation, inspection notes, approval/rejection reasons).
+- **Vehicle Cataloging**: Vehicle model categorization and ride type associations (`economy`, `luxury`, `carpool`).
+- **Dynamic Pricing & Peak Windows**: Dual pricing models comprising global fallback rates and city-based fixed mileage bracket pricing across Florida cities, coupled with scheduled surge pricing windows.
+- **Ride Operations**: Monitoring and tracking of completed, ongoing, and cancelled **Private Rides** and **Carpool Rides** (multi-stop waypoint and passenger tracking).
+- **Real-Time Fleet Telemetry (Bird's Eye View)**: Live Google Maps tracking with dynamic SVG vehicle headings, status polling, and cluster views.
+- **Financials & Accounting**: Driver subscription fee revenues, driver payout/withdrawal requests, and commission analytics.
+- **Marketing & Campaigns**: Single public coupon codes and bulk-generated unique alphanumeric promo codes with usage caps, per-user limits, and city/ride-type eligibility.
+- **Safety, Trust & Incident Management**: Incident reports, dispute resolution, and audit logs.
+- **Targeted Communications**: Role-based, user-specific, and broadcast push notifications.
 
 ---
 
 ## 2. Technical Stack & Key Dependencies
 
-- **Build Tool / Framework**: Vite 6.0 + React 18
-- **Routing**: `react-router-dom` v6
-- **Styling**: Tailwind CSS v3 + CSS Variables (Dynamic Theme System)
-- **UI Components**: Radix UI Primitives (`@radix-ui/react-*`), Lucide Icons (`lucide-react`), React Icons (`react-icons`)
-- **State Management & Contexts**: React Context API (`AuthContext`, `ThemeContext`, `AppContext`)
-- **HTTP Client**: Axios (with custom request/response interceptors & centralized error handling)
-- **Forms & Validation**: `react-hook-form` + `@hookform/resolvers` + `zod`
-- **Charts & Maps**: Recharts, Chart.js (`react-chartjs-2`), Google Maps API (`@react-google-maps/api`)
-- **Notifications**: `react-hot-toast`
+| Layer | Technologies / Libraries | Purpose & Details |
+| :--- | :--- | :--- |
+| **Framework & Runtime** | React 18.2.0, Vite 6.0.3, TypeScript types | Ultra-fast HMR, ES module bundling, modern React features (Concurrent Mode, Hooks). |
+| **Routing** | `react-router-dom` v6.20.1 | Client-side routing, nested layouts, programmatic redirects, route-level permission guards. |
+| **Styling & Design System** | Tailwind CSS v3.4.17, PostCSS, Autoprefixer | Utility-first styling with dynamic CSS variables for real-time theme customization. |
+| **UI Primitives** | Radix UI (`@radix-ui/react-*`), Lucide Icons, React Icons | Headless, accessible primitives (Modals, Dropdowns, Sliders, Accordions, Tabs). |
+| **Form Management** | `react-hook-form` v7.48.2, `@hookform/resolvers`, `zod` v3.25 | Performant uncontrolled forms with type-safe schema validation and runtime constraint checks. |
+| **HTTP & Networking** | Axios v1.11.0 | Centralized interceptors, bearer token injection, error normalization, and `AbortController` cancellation. |
+| **Charts & Visualizations** | Recharts v2.8.0, Chart.js v4.5.1, `react-chartjs-2` | Interactive analytics, ride metrics, distribution donuts, revenue trends, and user growth charts. |
+| **Maps & Geolocation** | `@react-google-maps/api` v2.20.8 | Live fleet tracking, custom vector markers, heading rotation, and route geometry. |
+| **Toasts & Feedback** | `react-hot-toast` v2.6.0 | Toast notification system with custom styling and error-handling helpers. |
+| **Date & Time** | `date-fns` v2.30.0 + Native Intl APIs | Timezone-aware date/time formatting, date ranges, and ISO timestamp conversions. |
 
 ---
 
@@ -23,123 +38,392 @@ The **Epic Rides Admin Panel** is a modern React single-page application (SPA) b
 
 ```
 Epic-Rides-Admin-Panel/
-├── public/                 # Static assets (logos, icons, images)
+├── public/                     # Static assets (favicons, logos, icons, vector graphics)
+│   ├── images/
+│   │   ├── logo.png
+│   │   └── favicon.ico
 ├── src/
-│   ├── components/
-│   │   ├── auth/          # ProtectedRoute wrapper
-│   │   ├── common/        # Table, Pagination, Filters, StatCards, ConfirmModal
-│   │   ├── global/        # Global notifications, quick search
-│   │   ├── layout/        # Layout, Header, Sidebar
-│   │   ├── loader/        # Loaders & spinners
-│   │   └── ui/            # Reusable UI primitives (Button, Modal, Input, Badge, etc.)
+│   ├── components/             # Reusable UI & Layout Components
+│   │   ├── admin/              # Admin-specific modals (AdminUserModal.jsx)
+│   │   ├── auth/               # Route protection (ProtectedRoute.jsx)
+│   │   ├── common/             # Tables, StatsCards, Profile Modals, Calendar, DateTable
+│   │   ├── global/             # ConfirmModal, Drawer, GlobalFilter
+│   │   ├── layout/             # Header, Sidebar, Layout wrapper
+│   │   ├── loader/             # DashboardLoader and suspense spinners
+│   │   └── ui/                 # 18+ Primitives: Button, Card, Input, Modal, Badge, Select,
+│   │                           # MultiSelect, FilterBar, ImageUploader, ImagesGallery, etc.
 │   ├── config/
-│   │   └── constants.js   # APP_CONFIG, COLOR_CONFIG, API_CONFIG, MENU_ITEMS, SECURITY_CONFIG
+│   │   └── constants.js        # APP_CONFIG, COLOR_CONFIG, FLORIDA_CITIES, MENU_ITEMS,
+│   │                           # USER_ROLES, PERMISSIONS, SECURITY_CONFIG, PAGINATION_CONFIG
 │   ├── contexts/
-│   │   ├── AppContext.jsx # Global app state (notifications, sidebar toggle)
-│   │   ├── AuthContext.jsx# User authentication, auto-logout on inactivity, lockouts
-│   │   └── ThemeContext.jsx# Light/Dark mode & dynamic primary/secondary color system
-│   ├── hooks/             # Custom domain hooks (users, drivers, rides, revenue, etc.)
-│   │   └── useApi.js      # Fetch wrapper utility
+│   │   ├── AppContext.jsx      # Global UI state (sidebar state, menu RBAC filtering)
+│   │   ├── AuthContext.jsx     # Auth state, session timeout, lockout, permissions, login/logout
+│   │   └── ThemeContext.jsx    # Light/Dark mode & dynamic primary/secondary palette generator
+│   ├── hooks/                  # Custom Domain & Utility React Hooks
+│   │   ├── admin/              # useAdminUsers.js
+│   │   ├── app-configs/        # useAppConfigsActions.js
+│   │   ├── auth/               # useAuthActions.js
+│   │   ├── campaigns/          # useCampaigns.js, useCampaignDetail.js
+│   │   ├── categories/         # useGetAllCategories.js, useCreateCategory.js, useCategoryActions.js
+│   │   ├── dashboard-analytics/# useGetDashboardAnalytics.js
+│   │   ├── Docs/               # useGetDocuments.js
+│   │   ├── drivers/            # useGetDrivers.js, useGetRequestsCount.js
+│   │   ├── global/             # useDebounce.tsx, usePersistentState.js, useRequestGuard.js
+│   │   ├── orders/             # useOrderActions.js
+│   │   ├── products/           # useGetAllProducts.js, useCreateProduct.js, useProductActions.js
+│   │   ├── revenue/            # useGetSubscriptionRevenue.js, useGetWithdrawalRevenue.js
+│   │   ├── ride-rates/         # useRideRatesActions.js, usePeakWindowsActions.js
+│   │   ├── rides/              # useGetRides.js, useGetCarpoolRides.js
+│   │   ├── users/              # useGetUsers.js, useGetUserDetails.js, useUserActions.js,
+│   │   │                       # useGetSuspendedDrivers.js, useGetRewardedBalanceHistory.js
+│   │   └── vehicle-types/      # useGetAllVehicleTypes.js, useCreateVehicleType.js, useVehicleTypeActions.js
 │   ├── lib/
-│   │   └── services.js    # Centralized Axios API service methods
-│   ├── pages/             # Route page views (Dashboard, Users, Rides, Rates, Revenue, etc.)
-│   │   └── auth/          # Login, ForgotPassword, VerifyOTP, ResetPassword
+│   │   └── services.js         # Centralized Axios instance, interceptors, error handling, 60+ APIs
+│   ├── pages/                  # 40 Route Views
+│   │   ├── auth/               # Login, ForgotPassword, VerifyOTP, ResetPassword
+│   │   ├── AdminUsers.jsx      # Admin account management (Super Admin only)
+│   │   ├── Analytics.jsx       # Deep analytics & metrics
+│   │   ├── BirdsEyeView.jsx    # Live Google Maps fleet telemetry
+│   │   ├── Campaigns.jsx       # Promo discount campaigns list & creator
+│   │   ├── CampaignDetail.jsx  # Campaign analytics, redemptions & generated code vouchers
+│   │   ├── CarpoolRides.jsx    # Carpool rides table with status tabs & CSV export
+│   │   ├── CarpoolRideDetail.jsx # Multi-passenger carpool itinerary & stops detail
+│   │   ├── Categories.jsx      # Legacy category management
+│   │   ├── ChangePassword.jsx  # Super admin password change
+│   │   ├── ChatSupport.jsx     # In-app support chat interface
+│   │   ├── Configurations.jsx  # Global system configurations
+│   │   ├── ContentManagement.jsx# App content & CMS pages
+│   │   ├── Dashboard.jsx       # Platform analytics, counters, and pending queues
+│   │   ├── Documentation.jsx   # In-app reference & guides
+│   │   ├── DriverDetail.jsx    # Driver profile summary
+│   │   ├── DriverDetails.jsx   # Document review & verification workspace
+│   │   ├── DriverRequests.jsx  # Pending driver registrations
+│   │   ├── Emergencie.jsx      # Emergency SOS logs
+│   │   ├── EmergencyDetails.jsx# Emergency case details
+│   │   ├── Notifications.jsx   # Targeted & broadcast push notifications
+│   │   ├── Orders.jsx          # Order fulfillment view
+│   │   ├── PeakWindows.jsx     # Peak surcharge schedule rules
+│   │   ├── PrivacyPolicy.jsx   # Public privacy policy
+│   │   ├── PrivateRides.jsx    # Private rides table with status tabs & CSV export
+│   │   ├── Products.jsx        # Product management
+│   │   ├── ReportDetail.jsx    # Incident investigation & resolution
+│   │   ├── Reports.jsx         # Flagged incident reports
+│   │   ├── Revenue.jsx         # Subscription & withdrawal revenue analytics
+│   │   ├── RewardedBalanceHistory.jsx # Points and reward ledger
+│   │   ├── RideRates.jsx       # Global & City-based bracket pricing configuration
+│   │   ├── RiderDetail.jsx     # Rider profile summary & ride history
+│   │   ├── SendEmail.jsx       # Direct email communications
+│   │   ├── SupportTickets.jsx  # Customer support tickets
+│   │   ├── SuspendedDrivers.jsx# Suspension management (auto vs timed vs permanent)
+│   │   ├── TermCondtion.jsx    # Public terms & conditions
+│   │   ├── Transactions.jsx    # Driver wallet transaction logs
+│   │   ├── UserDetailPage.jsx  # User profile details
+│   │   ├── Users.jsx           # User management (Riders & Drivers) with custom export
+│   │   ├── Vehicle.jsx         # Vehicle details
+│   │   └── VehicleCategory.jsx # Vehicle models & ride type mapping
 │   ├── utils/
-│   │   └── helpers.js     # Date/Currency/Phone formatters, CSV download, toast wrappers
-│   ├── App.jsx            # Application root router & provider tree
-│   ├── App.css            # Base styles & theme utility overrides
-│   └── main.jsx           # Application entry point
+│   │   └── helpers.js          # Currency, percentage, phone & date formatters, CSV generator, toast helpers
+│   ├── App.css                 # CSS variables, animations, scrollbars
+│   ├── App.jsx                 # Master application router & provider nesting
+│   ├── index.html              # HTML shell & font definitions
+│   ├── main.jsx                # Application root mount
+│   ├── postcss.config.js       # PostCSS configuration
+│   ├── tailwind.config.js      # Tailwind theme configuration
+│   └── vite.config.js          # Vite build configuration
 ├── package.json
-├── tailwind.config.js
-└── vite.config.js
+└── vercel.json                 # SPA routing rewrite rule for deployment
 ```
 
 ---
 
-## 4. Architecture & Core Concepts
+## 4. Architectural Deep Dive & Core Systems
 
-### 4.1 Routing & Protection (`src/App.jsx` & `ProtectedRoute.jsx`)
-- Public routes: `/auth/login`, `/auth/forgot-password`, `/auth/verify-otp`, `/auth/reset-password`, `/terms-conditions`, `/privacy-policy`.
-- Protected routes wrapped with `<ProtectedRoute>` and `<Layout>`:
-  - `/dashboard`: Analytics dashboard overview.
-  - `/user-management`: Riders and drivers management.
-  - `/user-management/rider/:id` & `/user-management/driver/:id`: Detailed profile views.
-  - `/driver-requests` & `/driver/:id`: Driver registration verification and document inspection.
-  - `/vehicle-category`: Vehicle category & type management.
-  - `/ride-rates`: Distance/time-based pricing matrix per vehicle category.
-  - `/peak-windows`: Dynamic multiplier pricing rules by schedule.
-  - `/cancelled-rides` & `/completed-rides`: Historical ride tracking.
-  - `/birds-eye-view`: Live interactive map showing active driver locations.
-  - `/revenue`: Financial analytics (subscriptions & withdrawals).
-  - `/promo-codes`: Marketing discount code management.
-  - `/reports`: Incident and safety issue reports.
-  - `/notifications`: Targeted push notification builder.
+### 4.1 Authentication, Session Lifecycle & Security (`AuthContext.jsx`)
+- **Storage Strategy**: Authentication tokens (`authToken`) and user identity records (`userData`) are stored in `sessionStorage`. This ensures that closing a browser tab or window automatically terminates the administrative session. A startup cleanup routine purges any legacy `localStorage` tokens.
+- **Inactivity Auto-Logout**: An activity listener tracks `mousemove`, `mousedown`, `keypress`, `scroll`, and `touchstart` events. Inactivity exceeding **5 minutes** (`SECURITY_CONFIG.sessionTimeout = 300000ms`) automatically executes `logout()` and triggers the non-dismissible `SessionTimeoutModal`.
+- **Brute-Force Lockout Defense**: Failed login attempts are recorded. If attempts reach `SECURITY_CONFIG.maxLoginAttempts` (5 attempts), the account is locked for **2 minutes** (`SECURITY_CONFIG.lockoutDuration = 120000ms`). An active countdown displays remaining seconds to the user.
+- **Hardware/Device Fingerprinting**: Login requests generate synthetic client device identifiers (`deviceuniqueid` and `devicemodel` from `navigator.userAgent`) and send them as request headers to aid backend device tracking.
 
-### 4.2 Authentication & Security (`AuthContext.jsx`)
-- **Token Management**: `authToken` stored in `localStorage`. Automatically attached as `Authorization: Bearer <token>` header on API requests.
-- **Session Timeout**: Listens to user interactions (`mousemove`, `mousedown`, `keypress`, `scroll`, `touchstart`). If inactive for 5 minutes (configurable via `SECURITY_CONFIG.sessionTimeout`), triggers auto-logout and displays the `SessionTimeoutModal`.
-- **Lockout Mechanism**: Tracks failed login attempts in `localStorage`. Locks authentication after maximum login attempts (`SECURITY_CONFIG.maxLoginAttempts`) for a set lockout duration (`SECURITY_CONFIG.lockoutDuration`).
-- **Device Headers**: Device headers (`deviceuniqueid`, `devicemodel`) generated and passed upon login.
+### 4.2 Role-Based Access Control (RBAC) (`src/config/constants.js`)
+The application supports three hierarchical administrative tiers:
+1. **`super_admin`**: Full system permissions, including Admin User creation/deletion, CSV data exports, financials, and password management.
+2. **`admin`**: Day-to-day operations (driver verifications, user status toggling, fleet tracking, safety reports, notifications), without access to financial ledgers, promo code creation, or data export.
+3. **`general`**: Read-only oversight (birds-eye view, user view only, completed/cancelled ride inspection).
 
-### 4.3 API Service Layer (`src/lib/services.js`)
-- Axios instance configured with base URL `https://api.epicridesapp.com/api/admin/` (or via `VITE_BASE_URL`).
-- **Interceptors**:
-  - Request interceptor attaches token from `localStorage`.
-  - Response interceptor checks for HTTP status `401`, clears token, and redirects to `/auth/login`.
-- **Response Handling (`handleApiResponse`)**: Unpacks JSON responses and verifies `responseData.success === true`. Throws errors formatted with `responseData.message`.
-- Centralized `api` object exposing endpoints for Auth, Dashboard, Users, Drivers, Documents, Vehicle Types, Rides, Promo Codes, Rates, Peak Windows, Reports, Notifications, and Financials.
+#### Permissions Matrix
 
-### 4.4 Theme & Color System (`ThemeContext.jsx` & `src/config/constants.js`)
-- Supports **Light Mode** and **Dark Mode**, persisting preference in `localStorage`.
-- Dynamic color themes via custom CSS variables (`--color-primary-rgb`, `--color-secondary-rgb`) driven by `COLOR_CONFIG` in `constants.js`.
+| Permission Key | Super Admin | Admin | General | Description |
+| :--- | :---: | :---: | :---: | :--- |
+| `downloadExcel` | ✅ | ❌ | ❌ | Exporting user, ride, and revenue records to CSV. |
+| `approveDriversVehicles` | ✅ | ✅ | ❌ | Approving or rejecting driver licenses, insurance, registrations. |
+| `seeSensitiveData` | ✅ | ✅ | ❌ | Viewing unmasked user contact info and financial transactions. |
+| `sendNotifications` | ✅ | ✅ | ❌ | Dispatching push notifications to users. |
+| `birdsEye` | ✅ | ✅ | ✅ | Viewing the real-time Google Map fleet telemetry. |
+| `cancelledRides` | ✅ | ✅ | ✅ | Viewing cancelled ride histories. |
+| `vehicleCategory` | ✅ | ✅ | ❌ | Creating or editing vehicle models and ride types. |
+| `financials` | ✅ | ❌ | ❌ | Accessing subscription revenue, withdrawals, and ride rate matrix. |
+| `promos` | ✅ | ❌ | ❌ | Managing marketing campaigns and discount codes. |
+| `balancePoints` | ✅ | ❌ | ❌ | Modifying rewarded balance and credit points. |
+| `manageUsers` | ✅ | ✅ | ❌ | Editing user profiles, activating, suspending, or deleting accounts. |
+| `viewUsersOnly` | ❌ | ❌ | ✅ | Read-only view of user rosters. |
+| `viewDriverRequests` | ✅ | ✅ | ❌ | Accessing driver registration applications. |
 
----
+Guards are enforced in two places:
+1. **Route Level (`ProtectedRoute.jsx`)**: Verifies `hasPermission(permission)` or `hasRole(role)` and renders an "Access Denied" screen if unauthorized.
+2. **Navigation Level (`Sidebar.jsx` via `AppContext.jsx`)**: Menu items are dynamically filtered out so unauthorized options are completely hidden from the sidebar.
 
-## 5. Domain Modules & Features
+### 4.3 Network & API Service Layer (`src/lib/services.js`)
+- **Instance Configuration**: Axios instance initialized with `baseURL: https://api.epicridesapp.com/api/admin/` (or configurable via `VITE_BASE_URL`), timeout of 100,000ms, and standard JSON headers.
+- **Request Interceptor**: Extracts `authToken` from `sessionStorage` and attaches `Authorization: Bearer <token>`.
+- **Response Interceptor**:
+  - Automatically handles HTTP `401 Unauthorized` by purging session storage and immediately redirecting to `/auth/login`.
+  - Distinguishes between network/server errors and intentional search cancellations, suppressing console spam for aborted requests.
+- **Request Cancellation & Anti-Race Guard (`useRequestGuard.js`)**:
+  - Provides an `AbortController` signal to Axios requests.
+  - When a user types in search boxes (e.g. searching users, drivers, carpools), previous in-flight requests are immediately aborted.
+  - `isCurrent()` checks guarantee that out-of-order or late-arriving responses are dropped, preventing table repaints with stale data.
+  - `isAbortError()` ensures cancelled searches do not trigger error toast popups.
 
-| Module | Route / Page | Description |
-| :--- | :--- | :--- |
-| **Dashboard** | `/dashboard` | Key performance stats (total rides, revenue, active drivers, riders) and ride analytics charts. |
-| **User Management** | `/user-management` | Paginated lists for Riders & Drivers. Allows searching, date filtering, CSV export, status updates (Active/Inactive), and account deletion. |
-| **Driver Verification** | `/driver-requests`, `/driver/:id` | Review driver registration applications, inspect uploaded documents (License, Registration, Insurance), and approve/reject with feedback reasons (`updateDocs`). |
-| **Vehicle Category** | `/vehicle-category` | Manage vehicle categories and capacity specs. |
-| **Ride Rates** | `/ride-rates` | Configure base fare, rate per mile/km, rate per minute, and minimum fare across ride types. |
-| **Peak Windows** | `/peak-windows` | Set surge pricing timeframes with dynamic fare multipliers. |
-| **Rides Tracking** | `/completed-rides`, `/cancelled-rides` | View ride details, pickup/drop-off addresses, driver/rider info, trip duration, fares, and reasons for cancellation. Export ride data to CSV. |
-| **Bird's Eye View** | `/birds-eye-view` | Interactive Google Map tracking driver positions in real-time. |
-| **Revenue & Financials** | `/revenue` | Subscription revenue logs and driver withdrawal request processing. |
-| **Promo Codes** | `/promo-codes` | Create and manage discount codes (fixed amount or percentage, usage limits, expiration dates). |
-| **Reports & Safety** | `/reports`, `/reports-detail/:id` | Review flagged safety reports, rider/driver complaints, and resolve incidents with admin notes. |
-| **Notifications** | `/notifications` | Broadcast or targeted push notifications to riders or drivers. |
+### 4.4 Dynamic Theming System (`ThemeContext.jsx`)
+- Supports **Light Mode** and **Dark Mode** toggle, persisting preference in `localStorage`.
+- Converts hexadecimal brand colors (`#61CB08` primary, `#ebc501` secondary) into 11 RGB shades (50 through 950) and injects them dynamically into `:root` CSS custom properties (`--color-primary-500`, etc.).
+- Tailwind configuration utilizes dynamic opacity interpolation (`rgb(var(--color-primary-500) / <alpha-value>)`).
 
 ---
 
-## 6. How to Run & Build
+## 5. Domain Modules & Feature Specifications
 
-### Development Mode
+### 5.1 Executive Dashboard (`/dashboard`)
+- **Metric Cards**: Total Drivers, Active Drivers, Active Riders, Subscription Revenue (USD), Withdrawal Commission Fees (USD).
+- **Pending Action Triggers**: Instant indicators for Pending Driver Applications and Unresolved Safety Reports with deep-links to their management pages.
+- **Ride Metrics Widget**: Visual breakdown of Total, Completed, and Cancelled rides with progress bars and percentage metrics across Today, This Week, and This Month.
+- **Distribution Donut**: SVG-based donut chart displaying ride type share (`luxury`, `economy`, `carpool`).
+- **Growth Trends**: 7-day and 30-day new rider and driver registration counters.
+
+### 5.2 User Management (`/user-management`)
+- **Segmented Views**: Tabbed data tables for **Riders** and **Drivers**.
+- **Search & Filter**: Real-time debounced keyword search, registration date range filtering.
+- **Custom CSV Exporter**: Modal allowing selective field inclusion (First Name, Last Name, Email, Phone, Status) and date range filtering, exporting formatted CSV via `Blob` download.
+- **Account Actions**: View full details, update user profile, activate/deactivate user, or delete user record.
+- **Profile Details**: Dedicated detail pages (`/user-management/rider/:id` and `/user-management/driver/:id`) displaying ride history, lifetime spend, wallet transactions, and ratings.
+
+### 5.3 Driver Onboarding & Document Verification (`/driver-requests`, `/driver/:id`)
+- **Applications Queue**: Lists pending driver signups.
+- **Interactive Verification Workbench (`DriverDetails.jsx`)**:
+  - Detailed driver biographical info, contact info, vehicle specs.
+  - Verification checklist covering:
+    - **Driver's License** (Front & Back)
+    - **Vehicle Registration Certificate**
+    - **Vehicle Insurance Document**
+    - **Vehicle Exterior & Interior Photographs**
+  - **Inspection Image Viewer**: Interactive inspection lightbox with **Zoom In / Zoom Out**, **90° Clockwise / Counter-Clockwise Rotation**, and Fullscreen mode.
+  - **Individual Decisioning**: Approve or Reject individual documents and vehicle assets.
+  - **Rejection Reason Modal**: Requires an explicit administrative explanation when rejecting a document so the driver receives clear actionable feedback in their mobile application.
+
+### 5.4 Suspended Drivers Management (`/suspended-drivers`)
+- **Classification of Suspensions**:
+  - `cancellation`: System-automated suspension triggered by excessive driver ride cancellations.
+  - `admin_manual`: Timed suspension applied manually by an administrator.
+  - `admin_permanent`: Indefinite/permanent platform ban.
+- **Live Countdown Timer**: Calculates and displays remaining suspension duration (`Xd Xh Xm`).
+- **Suspension Details & Unsuspend Modal**: Inspects historical suspension violations and provides an immediate one-click **Unsuspend Driver** action.
+
+### 5.5 Rewarded Balance Ledger (`/rewarded-balance-history`)
+- Tracks promotional loyalty points, referral bonuses, and driver credits.
+- Filterable by User Type (`all`, `rider`, `driver`), date ranges, and searchable by user identity.
+- Displays credit/debit transaction details, transaction timestamp, and remaining balances.
+
+### 5.6 Vehicle Categories & Mapping (`/vehicle-category`)
+- Manages vehicle makes, models, and specifications.
+- Maps vehicle models to platform ride tiers (`economy`, `luxury`, `carpool`).
+- Validates model uniqueness to prevent conflicting vehicle classifications.
+- Provides status toggles to activate or deactivate entire vehicle classes.
+
+### 5.7 Dynamic Pricing & City-Based Mileage Brackets (`/ride-rates`)
+The platform employs a two-tier pricing engine:
+1. **Global Fallback Pricing**:
+   - Used when no specific city rule exists or when a city's rate is disabled.
+   - Configured per ride type (`economy`, `luxury`, `carpool`).
+   - Supports: Base Fare, Per-Mile Rates (mileage tiers), Per-Minute Rates, Minimum Fare, Cancellation Fee, and Global Discount Percentage.
+2. **City-Based Fixed Bracket Pricing**:
+   - Configurable across **27 Florida Cities** (Miami, Orlando, Tampa, Jacksonville, Tallahassee, Fort Lauderdale, etc.).
+   - Utilizes **Fixed Pricing Brackets** rather than variable per-mile calculations:
+     - Bracket 1: `0 - 4` miles
+     - Bracket 2: `5 - 9` miles
+     - Bracket 3: `10 - 15` miles
+     - Bracket 4: `16 - 20` miles
+     - Bracket 5: `21+` miles (`maxMiles: null`)
+   - Configurable `peakSurchargePerMile` added during active peak hours.
+   - Case-insensitive city matching (e.g. `"Miami"`, `" miami "`, `"MIAMI"` resolve identically).
+   - Independent lookups for `private` ride requests (calculating Economy and Luxury options independently).
+
+### 5.8 Peak Windows & Surge Pricing (`/peak-windows`)
+- Configures surge pricing hours.
+- Evaluated against `America/New_York` (Eastern Time) timezone.
+- Defined as whole-hour intervals `[startHour, endHour)` from `0` to `24`.
+- Strict client-side and server-side validation preventing overlapping peak windows.
+- Active toggle allowing administrative enabling/disabling of surge windows without deletion.
+
+### 5.9 Ride Tracking: Private & Carpool Operations
+- **Private Rides (`/private-rides`)**:
+  - Filter by ride status (`completed`, `cancelled`, `ongoing`) and payment status (`paid`, `pending`, `failed`).
+  - Modal viewing detailed ride ID, route coordinates, driver/rider info, vehicle details, distance, duration, fare breakdown, and cancellation reasons.
+  - CSV export supporting customized date ranges.
+- **Carpool Rides (`/carpool-rides`, `/carpool-rides/:id`)**:
+  - Manages multi-passenger shared rides.
+  - Tracks total seats, available seats, pickup/drop-off sequences, passenger rosters, and fare collections per seat.
+  - Full trip route timeline rendering each stop along the carpool itinerary.
+
+### 5.10 Real-Time Fleet Telemetry: Bird's Eye View (`/birds-eye-view`)
+- **Google Maps Integration**: Live map interface centered by default on Florida (`lat: 28.5383, lng: -81.3792`).
+- **Polling & Animation**: Polls active driver telemetry every **10 seconds** (`POLL_INTERVAL = 10000ms`), with a 2.5-second easing animation between coordinates.
+- **Dynamic Vehicle Heading**: Computes course bearing and rotates custom vector SVG car icons according to actual travel orientation.
+- **Fleet Filtering**: Filter active drivers on map by ride category (`economy`, `luxury`, `carpool`) and availability status (`online`, `on_ride`).
+- **Driver Info Modal**: Clicking on any vehicle marker opens a modal displaying driver profile, current ride, vehicle plate, phone number, and battery/speed telemetry if available.
+
+### 5.11 Financials & Revenue Streams (`/revenue`)
+- **Subscription Revenue**:
+  - Audits recurring platform membership fees charged to drivers.
+  - Tracks subscription start/end dates, plan tiers, payment status, and Stripe transaction references.
+- **Driver Withdrawal Requests**:
+  - Manages driver payout requests from their platform earnings wallet.
+  - Displays requested amount, administrative commission deductions, net payout, and payment processing status.
+
+### 5.12 Marketing Campaigns & Promo Codes (`/campaigns`, `/campaigns/:id`)
+- **Dual Code Modes**:
+  - **Public Code**: A single universally usable promo code string (e.g. `SUMMER2026`).
+  - **Unique Batch Codes**: Generates a batch of unique random alphanumeric promo codes with a custom prefix and batch quantity (e.g. `VIP-A8F2K`, `VIP-9B3C1`).
+- **Discount Rules**: Fixed currency amount or Percentage discount with maximum discount ceiling (`maxDiscountCap`).
+- **Eligibility Criteria**: Restrict by Ride Types (`private`, `carpool`), eligible Florida cities, minimum rider age, and target user type (`rider`, `driver`, `all`).
+- **Usage Restrictions**: Enforce `maxUsesPerUser` and `totalRedemptionLimit`.
+- **Redemptions Tracking**: Inspects individual rider redemptions, redemption dates, and ride IDs.
+
+### 5.13 Safety, Incident Reports & Disputes (`/reports`, `/reports-detail/:id`)
+- Tracks incidents flagged by riders or drivers (e.g., safety concerns, vehicle condition, disputes, lost items).
+- Status workflow: `pending` ➔ `investigating` ➔ `resolved` / `dismissed`.
+- Detailed case screen with reporter narrative, ride details, and admin resolution interface allowing permanent notes to be appended.
+
+### 5.14 Targeted Push Notifications (`/notifications`)
+- Broadcasts announcements or targeted push notifications via Firebase Cloud Messaging (FCM).
+- **Targeting Modes**:
+  - All Users (Global broadcast)
+  - Role-based (All Drivers or All Riders)
+  - Specific Individual User: Includes an infinite-scrolling `UserPicker` with search and request cancellation guards.
+- Tracks dispatch status (`sent`, `scheduled`, `failed`) and notification delivery logs.
+
+### 5.15 Admin Team & Access Management (`/admin-users`)
+- Super Admin exclusive area for managing platform operators.
+- Create new administrative users with assigned roles (`super_admin`, `admin`, `general`).
+- Password reset, role adjustments, and account deactivation.
+
+---
+
+## 6. Developer Guidelines & Engineering Patterns
+
+### 6.1 Adding a New API Endpoint
+1. Open `src/lib/services.js`.
+2. Define the service function using `apiHandler()`:
+   ```javascript
+   const getRefundRequests = (page = 1, limit = 10, config) =>
+     apiHandler(() => API.get(`/refunds?page=${page}&limit=${limit}`, config));
+   ```
+3. Expose the function in the exported `api` object.
+
+### 6.2 Preventing Search & Filter Race Conditions
+Always employ the `useRequestGuard` and `useDebounce` pattern for text inputs that trigger API requests:
+```javascript
+import useRequestGuard from "../hooks/global/useRequestGuard";
+import useDebounce from "../hooks/global/useDebounce";
+
+const MySearchComponent = () => {
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
+  const beginRequest = useRequestGuard();
+
+  const fetchData = useCallback(async () => {
+    const { signal, isCurrent } = beginRequest();
+    try {
+      const res = await api.getUsers(debouncedSearch, { signal });
+      if (!isCurrent()) return; // Discard if superseded
+      setData(res.data);
+    } catch (err) {
+      if (!isCurrent() || isAbortError(err)) return; // Ignore aborted searches
+      handleError(err);
+    }
+  }, [debouncedSearch, beginRequest]);
+};
+```
+
+### 6.3 State Persistence Across Navigation
+Use `usePersistentState` instead of standard `useState` when storing table filters, search queries, active tabs, or pagination. This ensures that when an admin navigates into a driver detail page and clicks "Back", their exact table scroll position, page, and active filters are restored from `sessionStorage`.
+
+```javascript
+import { usePersistentState } from "../hooks/global/usePersistentState";
+
+const [page, setPage] = usePersistentState("drivers_page", 1);
+const [search, setSearch] = usePersistentState("drivers_search", "");
+```
+
+### 6.4 Toast & Feedback Standard
+Never invoke `toast.error()` or `toast.success()` directly in components without the centralized helpers in `src/utils/helpers.js`:
+- `handleError(error)`: Normalizes error formats, checks for aborted requests (silently ignoring them), and formats known backend messages (e.g. unique vehicle model constraints).
+- `handleSuccess(message, defaultMessage)`: Displays green success toast.
+
+---
+
+## 7. Build, Environment & Deployment Configuration
+
+### 7.1 Environment Variables (`.env`)
+```env
+# Google Maps JavaScript API Key (Must have Maps JavaScript API & Geocoding API enabled)
+VITE_GOOGLE_MAPS_API_KEY=AIzaSy...
+
+# Optional: Override base API URL (Defaults to https://api.epicridesapp.com/api/admin/)
+VITE_BASE_URL=https://api.epicridesapp.com/api/admin/
+
+# Optional: Stripe Public Key for Revenue Tracking
+VITE_STRIPE_PUBLIC_KEY=pk_live_...
+```
+
+### 7.2 Running Locally
 ```bash
+# Install dependencies
+npm install
+
+# Start development server (Port 5173)
 npm run dev
-# or
-pnpm dev
-```
-Starts Vite dev server on `http://localhost:5173`.
 
-### Production Build
-```bash
+# Build for production (Generates dist/ bundle)
 npm run build
-```
-Generates production build in `dist/`.
 
-### Linting
-```bash
-npm run lint
+# Preview production build locally
+npm run preview
 ```
-Runs ESLint check.
+
+### 7.3 Deployment (Vercel / SPA Hosting)
+Because this is a Single Page Application using HTML5 client-side routing (`react-router-dom`), web servers must rewrite all non-file route requests to `/index.html`.
+`vercel.json` is pre-configured with:
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
 
 ---
 
-## 7. Useful Guidelines for Developers
-1. **Adding New API Services**: Add the endpoint function in `src/lib/services.js` using `apiHandler` wrapper and expose it in the exported `api` object.
-2. **Creating Custom Hooks**: Place domain-specific data-fetching hooks under `src/hooks/<domain>/` following existing patterns (using `useState`, `useEffect`, `useCallback`, and importing `api` from `src/lib/services.js`).
-3. **UI Components**: Use Radix UI primitives with Tailwind styles in `src/components/ui/`.
-4. **Toast Feedback**: Always use `handleSuccess()` or `handleError()` from `src/utils/helpers.js` for consistent notification messages.
+## 8. Code Review Findings, Optimizations & Recommendations
+
+### 8.1 Critical Issues & Setup Improvements
+1. **Missing ESLint Configuration**:
+   - `npm run lint` fails because there is no `.eslintrc.cjs` or `eslint.config.js` in the project root.
+   - *Recommendation*: Create a standardized `.eslintrc.cjs` configured with React and React Hooks plugins.
+2. **Bundle Chunk Size Optimization**:
+   - Vite produces a single `dist/assets/index-*.js` bundle exceeding 1.5MB (uncompressed) / 348KB (gzipped).
+   - *Recommendation*: Implement route-based lazy loading with `React.lazy()` and `Suspense` in `src/App.jsx`, especially for heavy views such as `BirdsEyeView.jsx` (which loads Google Maps), `RideRates.jsx`, and `DriverDetails.jsx`.
+3. **Template Legacy Artifacts**:
+   - Files like `src/pages/Products.jsx`, `src/pages/Categories.jsx`, and `src/pages/Orders.jsx` are relics from the starter dashboard template. They are commented out in the sidebar but still present in routes and the API service.
+   - *Recommendation*: Safely deprecate or prune these unused files to keep the codebase clean and reduce cognitive load.
+4. **Base URL Centralization**:
+   - In `src/lib/services.js`, `STAGING_BASE_URL` is hardcoded as `https://api.epicridesapp.com/api/admin/`. It should be unified to prioritize `import.meta.env.VITE_BASE_URL` from `API_CONFIG.baseURL`.
+5. **In-App Documentation Harmonization**:
+   - `src/pages/Documentation.jsx` contains generic starter template instructions referring to an external generic template. It should be aligned with the actual Epic Rides platform features.

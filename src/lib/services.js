@@ -3,8 +3,8 @@ import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // Create an Axios instance
 
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
