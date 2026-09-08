@@ -391,7 +391,10 @@ const Analytics = () => {
                     key={index}
                     className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
                   >
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                    <td
+                      className="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-[200px] truncate"
+                      title={page.page}
+                    >
                       {page.page}
                     </td>
                     <td className="px-6 py-4 text-gray-600 dark:text-gray-400">

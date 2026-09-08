@@ -2,7 +2,7 @@ import { useState } from "react";
 import Button from "../components/ui/Button";
 import EmergencyDetails from "./EmergencyDetails";
 import Badge from "../components/ui/Badge";
-import { getStatusVariant } from "../utils/helpers";
+import { getStatusVariant, formatPhoneNumber } from "../utils/helpers";
 
 const emergencyData = [
   {
@@ -45,20 +45,20 @@ export default function Emergencies() {
           <tbody>
             {emergencyData.map((item) => (
               <tr key={item.alertId} className="border-b">
-                <td className="p-3 font-semibold">{item.alertId}</td>
+                <td className="p-3 font-semibold max-w-[150px] truncate" title={item.alertId}>{item.alertId}</td>
 
-                <td className="p-3">
-                  {item.rider.name} <br />
-                  <span className="text-sm text-gray-500">
-                    {item.rider.phone}
-                  </span>
+                <td className="p-3 max-w-[200px]" title={`${item.rider.name} - ${formatPhoneNumber(item.rider.phone)}`}>
+                  <div className="truncate font-medium">{item.rider.name}</div>
+                  <div className="text-sm text-gray-500 truncate">
+                    {formatPhoneNumber(item.rider.phone)}
+                  </div>
                 </td>
 
-                <td className="p-3">
-                  {item.driver.name} <br />
-                  <span className="text-sm text-gray-500">
-                    {item.driver.phone}
-                  </span>
+                <td className="p-3 max-w-[200px]" title={`${item.driver.name} - ${formatPhoneNumber(item.driver.phone)}`}>
+                  <div className="truncate font-medium">{item.driver.name}</div>
+                  <div className="text-sm text-gray-500 truncate">
+                    {formatPhoneNumber(item.driver.phone)}
+                  </div>
                 </td>
 
                 <td className="p-3 capitalize">{item.rideStatus}</td>

@@ -52,29 +52,21 @@ export const maskEmail = (email) => {
 };
 
 export const maskPhone = (phone) => {
-  if (!phone || typeof phone !== 'string') return "";
-  const cleaned = phone.replace(/\D/g, "");
-  if (cleaned.length < 4) return "****";
-  return `***-***-${cleaned.slice(-4)}`;
+  if (!phone) return "";
+  const str = String(phone).trim();
+  if (!str || str === "—" || str === "---" || str === "-") return "";
+  const cleaned = str.replace(/\D/g, "");
+  if (cleaned.length < 4) return "+****";
+  return `+***-***-${cleaned.slice(-4)}`;
 };
 
 export const formatPhoneNumber = (phoneNumberString) => {
   if (!phoneNumberString) return "";
-  const cleaned = ("" + phoneNumberString).replace(/\D/g, "");
-  
-  if (cleaned.length >= 10) {
-    const countryCode = cleaned.slice(0, cleaned.length - 10);
-    const rest = cleaned.slice(cleaned.length - 10);
-    const match = rest.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      if (countryCode) {
-        return `+${countryCode} (${match[1]}) ${match[2]}-${match[3]}`;
-      }
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
+  const str = String(phoneNumberString).trim();
+  if (!str || str === "—" || str === "---" || str === "-" || str === "N/A" || str === "null" || str === "undefined") {
+    return "";
   }
-  
-  return phoneNumberString;
+  return str.startsWith("+") ? str : `+${str}`;
 };
 
 // Number utilities

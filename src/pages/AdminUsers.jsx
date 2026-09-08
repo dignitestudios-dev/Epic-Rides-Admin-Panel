@@ -97,11 +97,11 @@ const AdminUsers = () => {
       label: "Name",
       key: "name",
       render: (value, row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-medium">
+        <div className="flex items-center gap-3 min-w-0" title={value}>
+          <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-600 dark:text-primary-400 font-medium shrink-0">
             {value?.charAt(0).toUpperCase()}
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-gray-900 truncate">
             {value}
           </span>
         </div>

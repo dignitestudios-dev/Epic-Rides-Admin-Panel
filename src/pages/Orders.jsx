@@ -19,7 +19,7 @@ import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
-import { formatCurrency, formatDate, formatDateTime, formatNumber } from "../utils/helpers";
+import { formatCurrency, formatDate, formatDateTime, formatNumber, formatPhoneNumber } from "../utils/helpers";
 import { ORDER_STATUS, PAGINATION_CONFIG } from "../config/constants";
 import useOrderActions from "../hooks/orders/useOrderActions";
 import useDebounce from "../hooks/global/useDebounce";
@@ -548,7 +548,7 @@ const Orders = () => {
                       Phone Number
                     </label>
                     <p className="text-gray-900 dark:text-white">
-                      {selectedOrder?.delivery?.phoneNumber || "---"}
+                      {formatPhoneNumber(selectedOrder?.delivery?.phoneNumber) || "---"}
                     </p>
                   </div>
                 </div>
@@ -628,9 +628,12 @@ const Orders = () => {
                   <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                     {selectedOrder?.products?.map((item) => (
                       <tr key={item.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                          {item.product.title}
-                          <p className="text-gray-400">
+                        <td
+                          className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white max-w-[200px] truncate"
+                          title={item.product.title}
+                        >
+                          <div className="truncate">{item.product.title}</div>
+                          <p className="text-gray-400 truncate">
                             ID: {item.product._id}
                           </p>
                         </td>

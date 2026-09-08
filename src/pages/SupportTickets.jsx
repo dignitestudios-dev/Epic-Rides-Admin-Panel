@@ -2,6 +2,7 @@ import { useState } from "react";
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
 import { useNavigate } from "react-router-dom";
+import { formatPhoneNumber } from "../utils/helpers";
 
 const SupportTickets = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const SupportTickets = () => {
         <div>
           <p className="font-medium">{submittedBy.name}</p>
           <p className="text-sm text-gray-500">
-            {submittedBy.type.toUpperCase()} — {submittedBy.contact}
+            {submittedBy.type.toUpperCase()} — {submittedBy.contact ? (!submittedBy.contact.includes("@") ? formatPhoneNumber(submittedBy.contact) : submittedBy.contact) : "—"}
           </p>
         </div>
       ),

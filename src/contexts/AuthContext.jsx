@@ -29,6 +29,11 @@ export const AuthProvider = ({ children }) => {
       if (timer) clearTimeout(timer);
       if (user && !showTimeoutModal) {
         timer = setTimeout(async () => {
+          // Capture current path ONLY for auto-logout
+          const currentPath = window.location.pathname + window.location.search + window.location.hash;
+          if (currentPath && !currentPath.startsWith("/auth") && currentPath !== "/") {
+            sessionStorage.setItem("autoLogoutRedirectUrl", currentPath);
+          }
           // Automatic logout on timeout
           await logout();
           setShowTimeoutModal(true);

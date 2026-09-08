@@ -21,7 +21,17 @@ const ProtectedRoute = ({ children, requiredPermission = null, requiredRole = nu
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to={AUTH_ROUTES.LOGIN} state={{ from: location }} replace />
+    const autoRedirect = sessionStorage.getItem("autoLogoutRedirectUrl");
+    if (autoRedirect && !autoRedirect.startsWith("/auth") && autoRedirect !== "/") {
+      return (
+        <Navigate
+          to={`${AUTH_ROUTES.LOGIN}?redirect=${encodeURIComponent(autoRedirect)}`}
+          state={{ from: autoRedirect, isAutoLogout: true }}
+          replace
+        />
+      );
+    }
+    return <Navigate to={AUTH_ROUTES.LOGIN} replace />;
   }
 
   // Check required permission

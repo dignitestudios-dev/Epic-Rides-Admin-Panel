@@ -15,6 +15,7 @@ import { usePersistentState } from "../hooks/global/usePersistentState";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { formatPhoneNumber } from "../utils/helpers";
 
 const EXPORT_FIELDS = [
   { key: "firstName",   label: "First Name" },
@@ -184,11 +185,11 @@ const Users = () => {
       render: (_, row) => {
         const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || "—";
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs">
+          <div className="flex items-center gap-3 min-w-0" title={name}>
+            <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-xs shrink-0">
               {name.charAt(0).toUpperCase()}
             </div>
-            <span className="font-medium text-gray-900">{name}</span>
+            <span className="font-medium text-gray-900 truncate">{name}</span>
           </div>
         );
       },
@@ -201,7 +202,7 @@ const Users = () => {
     {
       key: "phoneNumber",
       label: "Phone",
-      render: (value) => <span className="text-gray-600">{value || "—"}</span>,
+      render: (value) => <span className="text-gray-600">{formatPhoneNumber(value) || "—"}</span>,
     },
     ...(activeTab === "driver" ? [{
       key: "subscriptionStatus",

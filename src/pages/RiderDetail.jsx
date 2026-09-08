@@ -20,7 +20,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
-import { formatDate, handleError, handleSuccess, maskEmail, maskPhone, formatCurrency } from "../utils/helpers";
+import { formatDate, handleError, handleSuccess, maskEmail, maskPhone, formatPhoneNumber, formatCurrency } from "../utils/helpers";
 import Table from "../components/ui/Table";
 import StatsCard from "../components/common/StatsCard";
 import EditProfileModal from "../components/common/EditProfileModal";
@@ -279,7 +279,7 @@ const RiderDetail = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-4 h-4 text-gray-400" />
-                <span>{hasPermission('seeSensitiveData') ? (personalInfo.phone || personalInfo.phoneNumber) : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
+                <span>{hasPermission('seeSensitiveData') ? (formatPhoneNumber(personalInfo.phone || personalInfo.phoneNumber) || "—") : maskPhone(personalInfo.phone || personalInfo.phoneNumber)}</span>
               </div>
               {(personalInfo?.address || details?.fullDetails?.address) && (
                 <div className="flex items-start gap-3">

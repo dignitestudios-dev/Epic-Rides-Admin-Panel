@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../lib/services";
-import { formatDate, handleError, maskEmail, maskPhone } from "../utils/helpers";
+import { formatDate, handleError, maskEmail, maskPhone, formatPhoneNumber } from "../utils/helpers";
 import toast from "react-hot-toast";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
@@ -351,7 +351,6 @@ const DocCard = ({ doc, onRespond, isOld }) => {
     doc.type
       ?.replace(/([A-Z])/g, " $1")
       .replace(/^./, (s) => s.toUpperCase()) || "Document";
-  const isLicense = doc.type === "driverLicense";
 
   return (
     <>
@@ -522,8 +521,8 @@ const DocCard = ({ doc, onRespond, isOld }) => {
               Submitted: {formatDate(doc.createdAt)}
             </p>
 
-            {/* Actions — for driverLicense: pending shows both, rejected shows approve only, approved shows static label; for others: pending only */}
-            {!isOld && (isLicense ? localStatus !== "approved" : localStatus === "pending") && hasPermission('approveDriversVehicles') && (
+            {/* Actions — pending shows both, rejected shows approve only, approved shows static label */}
+            {!isOld && localStatus !== "approved" && hasPermission('approveDriversVehicles') && (
               <div className="space-y-2 pt-1 border-t border-gray-50">
                 {!showRejectBox ? (
                   <div className="flex gap-2">
@@ -585,8 +584,8 @@ const DocCard = ({ doc, onRespond, isOld }) => {
               </div>
             )}
 
-            {/* Static label for approved/actioned docs */}
-            {!isOld && (isLicense ? localStatus === "approved" : localStatus !== "pending") && (
+            {/* Static label for approved docs, or rejected docs if user cannot approve */}
+            {!isOld && (localStatus === "approved" || (!hasPermission('approveDriversVehicles') && localStatus === "rejected")) && (
               <div
                 className={`text-center text-xs py-1.5 rounded-lg font-medium ${
                   localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
@@ -1133,7 +1132,7 @@ const DriverDetails = () => {
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <Phone className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {hasPermission('seeSensitiveData') ? (pInfo?.phone || pInfo?.phoneNumber || "—") : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
+                {hasPermission('seeSensitiveData') ? (formatPhoneNumber(pInfo?.phone || pInfo?.phoneNumber) || "—") : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
               </div>
               <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
                 <CreditCard  className="w-3.5 h-3.5 text-gray-400" />{" "}

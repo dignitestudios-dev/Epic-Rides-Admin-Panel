@@ -2,7 +2,7 @@ import { useState } from "react";
 import TextArea from "../components/ui/TextArea";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
-import { getStatusVariant } from "../utils/helpers";
+import { getStatusVariant, formatPhoneNumber } from "../utils/helpers";
 
 export default function EmergencyDetails({ data, onClose }) {
   const [note, setNote] = useState("");
@@ -33,13 +33,13 @@ export default function EmergencyDetails({ data, onClose }) {
           <div className="p-4 bg-gray-50 rounded">
             <h4 className="font-bold mb-1">Rider Info</h4>
             <p>{data.rider.name}</p>
-            <p className="text-sm text-gray-600">{data.rider.phone}</p>
+            <p className="text-sm text-gray-600">{formatPhoneNumber(data.rider.phone)}</p>
           </div>
 
           <div className="p-4 bg-gray-50 rounded">
             <h4 className="font-bold mb-1">Driver Info</h4>
             <p>{data.driver.name}</p>
-            <p className="text-sm text-gray-600">{data.driver.phone}</p>
+            <p className="text-sm text-gray-600">{formatPhoneNumber(data.driver.phone)}</p>
           </div>
         </div>
 

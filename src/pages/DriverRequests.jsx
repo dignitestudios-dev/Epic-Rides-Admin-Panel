@@ -14,7 +14,7 @@ import {
   Eye,
   AlertCircle
 } from "lucide-react";
-import { downloadCSV, formatDate } from "../utils/helpers";
+import { downloadCSV, formatDate, formatPhoneNumber } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
 
 const statuses = [
@@ -53,7 +53,7 @@ const DriverRequests = () => {
       ID: driver._id,
       Name: [driver.firstName, driver.lastName].filter(Boolean).join(" ") || "—",
       Email: driver.email,
-      Phone: driver.phone || "—",
+      Phone: formatPhoneNumber(driver.phone) || "—",
       "Registration Date": formatDate(driver.createdAt),
       Status: driver.requiresApproval ? "Pending" : "Approved",
       Vehicles: driver.vehicleCount || 0,
@@ -121,7 +121,7 @@ const DriverRequests = () => {
     {
       key: "phone",
       label: "Phone Number",
-      render: (val) => <span className="text-gray-600">{val || "—"}</span>,
+      render: (val) => <span className="text-gray-600">{formatPhoneNumber(val) || "—"}</span>,
     },
     // {
     //   key: "createdAt",

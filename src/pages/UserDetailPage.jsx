@@ -3,7 +3,7 @@ import { useState } from "react";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { formatDate, formatDateTime, maskPhone } from "../utils/helpers";
+import { formatDate, formatDateTime, maskPhone, formatPhoneNumber } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
 
 const UserDetailPage = () => {
@@ -130,7 +130,7 @@ const UserDetailPage = () => {
             <h3 className="text-xl font-semibold border-b pb-2">
               Contact Information
             </h3>
-            <InfoRow label="Phone" value={hasPermission('seeSensitiveData') ? (userData.phone || "-") : maskPhone(userData.phone || "-")} />
+            <InfoRow label="Phone" value={hasPermission('seeSensitiveData') ? (formatPhoneNumber(userData.phone || userData.phoneNumber) || "—") : maskPhone(userData.phone || userData.phoneNumber || "—")} />
             <InfoRow label="Address" value={userData.address || "-"} />
             <InfoRow label="City" value={userData.city || "-"} />
             <InfoRow label="State" value={userData.state || "-"} />
@@ -335,7 +335,9 @@ const UserDetailPage = () => {
           return (
             <tr key={i} className="hover:bg-gray-100">
               <td className="border-b px-4 py-2">{formatDate(date)}</td>
-              <td className="border-b px-4 py-2">{text}</td>
+              <td className="border-b px-4 py-2 max-w-[300px] truncate" title={text}>
+                {text}
+              </td>
             </tr>
           );
         })}

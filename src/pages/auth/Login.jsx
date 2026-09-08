@@ -17,10 +17,43 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
 
+  // Validate redirect path to prevent open redirect vulnerabilities
+  const isValidRedirect = (url) => {
+    if (!url || typeof url !== "string") return false;
+    if (!url.startsWith("/") || url.startsWith("//")) return false;
+    if (url.startsWith("/auth")) return false;
+    return true;
+  };
+
+  // Determine the target redirect path (only used if auto-logged out)
+  const getRedirectUrl = () => {
+    // 1. URL search parameters: ?redirect=... or ?redirectUrl=...
+    const searchParams = new URLSearchParams(location.search);
+    const queryRedirect = searchParams.get("redirect") || searchParams.get("redirectUrl");
+    if (isValidRedirect(queryRedirect)) {
+      return queryRedirect;
+    }
+
+    // 2. Stored auto-logout redirect in sessionStorage
+    const storedAutoRedirect = sessionStorage.getItem("autoLogoutRedirectUrl");
+    if (isValidRedirect(storedAutoRedirect)) {
+      return storedAutoRedirect;
+    }
+
+    // 3. Fallback to dashboard
+    return "/dashboard";
+  };
+
+  const clearAutoRedirect = () => {
+    sessionStorage.removeItem("autoLogoutRedirectUrl");
+    sessionStorage.removeItem("redirectUrl");
+  };
+
   // Redirect if already logged in
   if (user) {
-    const from = location.state?.from?.pathname || "/";
-    return <Navigate to={from} replace />;
+    const destination = getRedirectUrl();
+    clearAutoRedirect();
+    return <Navigate to={destination} replace />;
   }
 
   useEffect(() => {
@@ -54,7 +87,9 @@ const Login = () => {
 
     const result = await login(formData.email, formData.password);
     if (result?.success) {
-      navigate("/dashboard");
+      const destination = getRedirectUrl();
+      clearAutoRedirect();
+      navigate(destination, { replace: true });
     }
     if (!result.success) {
       setError(result.error);

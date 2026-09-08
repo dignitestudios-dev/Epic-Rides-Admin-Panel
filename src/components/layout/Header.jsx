@@ -3,7 +3,7 @@ import { Settings, LogOut, Moon, Sun, Menu, X, Shield, Bell } from "lucide-react
 import { useAuth } from "../../contexts/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
 import { useApp } from "../../contexts/AppContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import ConfirmModal from "../global/ConfirmModal";
 import { api } from "../../lib/services";
 import { formatDate } from "../../utils/helpers";
@@ -17,6 +17,7 @@ const Header = () => {
   const { theme, toggleTheme, canToggleTheme } = useTheme();
   const { markNotificationAsRead, sidebarOpen, toggleMobileSidebar } = useApp();
 
+  const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
@@ -104,7 +105,8 @@ const Header = () => {
   };
 
   const confirmLogout = async () => {
-    // await logout();
+    sessionStorage.removeItem("autoLogoutRedirectUrl");
+    sessionStorage.removeItem("redirectUrl");
     sessionStorage.removeItem("authToken");
     sessionStorage.removeItem("userData");
     localStorage.removeItem("authToken");
@@ -113,7 +115,7 @@ const Header = () => {
     localStorage.removeItem("loginAttempts");
     setUser(null);
     setShowLogoutConfirm(false);
-    navigate("/auth/login");
+    navigate("/auth/login", { replace: true });
   };
 
   return (

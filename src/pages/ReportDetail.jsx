@@ -22,7 +22,7 @@ import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
 import { api } from "../lib/services";
 import toast from "react-hot-toast";
-import { formatDate, formatDateTime } from "../utils/helpers";
+import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 
 const ReportDetail = () => {
   const { id } = useParams();
@@ -176,7 +176,7 @@ const ReportDetail = () => {
         {/* Phone */}
         <div className="flex items-center text-gray-600 dark:text-gray-400 min-w-0">
           <Phone className="w-4 h-4 mr-2 shrink-0" />
-          <span className="truncate">{info.phone}</span>
+          <span className="truncate">{formatPhoneNumber(info.phone) || "—"}</span>
         </div>
       </div>
 

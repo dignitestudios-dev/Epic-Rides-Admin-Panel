@@ -33,6 +33,8 @@ API.interceptors.response.use(
       sessionStorage.removeItem("userData");
       localStorage.removeItem("authToken");
       localStorage.removeItem("userData");
+      sessionStorage.removeItem("autoLogoutRedirectUrl");
+      sessionStorage.removeItem("redirectUrl");
       if (!window.location.pathname.includes("/login")) {
         window.location.href = "/auth/login";
       }

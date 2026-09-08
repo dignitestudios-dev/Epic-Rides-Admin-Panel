@@ -7,7 +7,7 @@ import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import FilterBar from "../components/ui/FilterBar";
 
-import { formatDate, formatDateTime } from "../utils/helpers";
+import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
 import useGetRewardedBalanceHistory from "../hooks/users/useGetRewardedBalanceHistory";
 import useDebounce from "../hooks/global/useDebounce";
@@ -81,7 +81,7 @@ const RewardedBalanceHistory = () => {
               <p className="text-sm font-medium text-gray-900 dark:text-white">
                 {fullName(userData)}
               </p>
-              <p className="text-xs text-gray-400">{userData?.email || userData?.phone || ""}</p>
+              <p className="text-xs text-gray-400">{userData?.email || (userData?.phone ? formatPhoneNumber(userData.phone) : "")}</p>
             </div>
           </div>
         );

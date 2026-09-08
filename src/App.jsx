@@ -73,7 +73,15 @@ const SessionTimeoutModal = () => {
 
   const handleClose = () => {
     setShowTimeoutModal(false);
-    navigate("/auth/login");
+    const redirectUrl = sessionStorage.getItem("autoLogoutRedirectUrl");
+    if (redirectUrl && !redirectUrl.startsWith("/auth") && redirectUrl !== "/") {
+      navigate(`/auth/login?redirect=${encodeURIComponent(redirectUrl)}`, {
+        state: { from: redirectUrl, isAutoLogout: true },
+        replace: true,
+      });
+    } else {
+      navigate("/auth/login", { replace: true });
+    }
   };
 
   return (
