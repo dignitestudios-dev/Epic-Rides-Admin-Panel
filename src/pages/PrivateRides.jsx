@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Eye, MapPin, User, Car, Download, XCircle, CheckCircle2 } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
@@ -115,6 +116,7 @@ const RideDetailDialog = ({ ride, onClose }) => {
 
 const PrivateRides = () => {
   const { hasPermission } = useAuth();
+  const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = usePersistentState("privaterides_activeTab", "cancelled");
   const [search, setSearch] = usePersistentState("privaterides_search", "");
@@ -284,7 +286,12 @@ const PrivateRides = () => {
       key: "_id",
       label: "",
       render: (_, row) => (
-        <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => setSelectedRide(row)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon={<Eye className="w-4 h-4" />}
+          onClick={() => navigate(`/private-rides/${row._id || row.id}`)}
+        >
           View
         </Button>
       ),

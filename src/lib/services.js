@@ -501,6 +501,12 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
+const getRideById = (id) =>
+  apiHandler(() => API.get(`/rides/${id}`));
+
+const getJourneyTimeline = (journeyType, id) =>
+  apiHandler(() => API.get(`/journeys/${journeyType}/${id}/timeline`));
+
 const getCarpoolRides = (
   page = 1,
   limit = 10,
@@ -734,6 +740,8 @@ export const api = {
   updateNotification,
   deleteNotification,
   getRides,
+  getRideById,
+  getJourneyTimeline,
   exportRides,
   getCarpoolRides,
   getCarpoolRideById,

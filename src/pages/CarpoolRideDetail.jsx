@@ -2,13 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, User, Car, Clock, Star, Phone, Mail, 
-  Calendar, DollarSign, CheckCircle2, Navigation, Activity 
+  Calendar, DollarSign, CheckCircle2, Navigation, Activity, FileText 
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import { api } from "../lib/services";
 import { formatDateTime, formatPhoneNumber } from "../utils/helpers";
+import JourneyTimelineMap from "../components/common/JourneyTimelineMap";
 import toast from "react-hot-toast";
 
 const fullName = (obj) => [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
@@ -60,6 +61,7 @@ const CarpoolRideDetail = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [rideData, setRideData] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     fetchRideDetail();
@@ -99,8 +101,21 @@ const CarpoolRideDetail = () => {
   const { carpoolDetails: ride, carpoolBookingDetails: bookings } = rideData;
   const { driver, startingPoint, destination, routes, vehicleDetails } = ride;
 
+  const tabs = [
+    {
+      id: "overview",
+      label: "Ride Overview",
+      icon: <FileText className="w-4 h-4" />,
+    },
+    {
+      id: "timeline",
+      label: "Journey & Activity Timeline",
+      icon: <Navigation className="w-4 h-4" />,
+    },
+  ];
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Button 
@@ -122,7 +137,28 @@ const CarpoolRideDetail = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex space-x-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`${
+                activeTab === tab.id
+                  ? "border-[#39A300] text-[#39A300] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+              } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {activeTab === "overview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Ride Info & Route */}
         <div className="lg:col-span-2 space-y-6">
           <Card className="p-6">
@@ -309,6 +345,14 @@ const CarpoolRideDetail = () => {
           </Card>
         </div>
       </div>
+      )}
+
+      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP */}
+      {activeTab === "timeline" && (
+        <div className="space-y-4">
+          <JourneyTimelineMap journeyType="carpool" journeyId={id} />
+        </div>
+      )}
     </div>
   );
 };
