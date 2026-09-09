@@ -1,11 +1,10 @@
 import axios from "axios";
 import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
-// Create an Axios instance
-
 // const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
 const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
 
+// Create an Axios instance
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
   timeout: API_CONFIG.timeout,
@@ -501,8 +500,7 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
-const getRideById = (id) =>
-  apiHandler(() => API.get(`/rides/${id}`));
+const getRideById = (id) => apiHandler(() => API.get(`/rides/${id}`));
 
 const getJourneyTimeline = (journeyType, id) =>
   apiHandler(() => API.get(`/journeys/${journeyType}/${id}/timeline`));
