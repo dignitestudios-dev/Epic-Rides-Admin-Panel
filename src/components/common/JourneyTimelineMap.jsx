@@ -842,12 +842,19 @@ const JourneyTimelineMap = ({ journeyType = "ride", journeyId, className = "" })
                                 {group.events[0]?.title}
                               </span>
                             </div>
-                            <Badge
-                              variant={group.events[0]?.visuals?.badgeVariant}
-                              className="text-[9px] py-0 px-1.5 shrink-0 uppercase font-semibold"
-                            >
-                              {group.events[0]?.icon || group.events[0]?.category}
-                            </Badge>
+                            {group.events[0]?.status && (
+                              <span
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-semibold shrink-0 uppercase ${
+                                  group.events[0]?.status === "completed"
+                                    ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+                                    : group.events[0]?.status === "failed"
+                                    ? "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+                                    : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                }`}
+                              >
+                                {formatTitleCase(group.events[0]?.status)}
+                              </span>
+                            )}
                           </div>
                         </div>
                       )}
@@ -955,22 +962,11 @@ const JourneyTimelineMap = ({ journeyType = "ride", journeyId, className = "" })
                             </span>
                           </div>
 
-                          {/* Badges & Category */}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-                            {ev.icon && (
-                              <Badge variant={ev.visuals.badgeVariant} className="text-[10px] uppercase font-semibold flex items-center gap-1">
-                                <IconComp className="w-3 h-3" />
-                                {ev.icon}
-                              </Badge>
-                            )}
-                            {ev.category && ev.category !== ev.icon && (
-                              <Badge variant="outline" className="text-[10px] uppercase font-mono">
-                                {ev.category}
-                              </Badge>
-                            )}
-                            {ev.status && (
+                          {/* Status Badge */}
+                          {ev.status && (
+                            <div className="mt-1.5 flex items-center gap-1.5 text-xs">
                               <span
-                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider ${
                                   ev.status === "completed"
                                     ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
                                     : ev.status === "failed"
@@ -980,8 +976,8 @@ const JourneyTimelineMap = ({ journeyType = "ride", journeyId, className = "" })
                               >
                                 {formatTitleCase(ev.status)}
                               </span>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 

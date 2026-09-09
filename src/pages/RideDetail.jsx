@@ -539,6 +539,7 @@ const RideDetail = () => {
                     <table className="w-full text-left text-xs">
                       <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 border-b border-gray-200 dark:border-gray-700">
                         <tr>
+                          <th className="py-2.5 px-3">Participant</th>
                           <th className="py-2.5 px-3">Amount</th>
                           <th className="py-2.5 px-3">Type</th>
                           <th className="py-2.5 px-3">Status</th>
@@ -546,20 +547,76 @@ const RideDetail = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {transactions.map((tx, idx) => (
-                          <tr key={tx._id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">
-                              ${Number(tx.amount || 0).toFixed(2)}
-                            </td>
-                            <td className="py-2.5 px-3 capitalize">
-                              {formatTitleCase(tx.type || tx.transactionType || "Payment")}
-                            </td>
-                            <td className="py-2.5 px-3">{transactionStatusBadge(tx.status)}</td>
-                            <td className="py-2.5 px-3 text-gray-500">
-                              {formatDateTime(tx.createdAt || tx.date)}
-                            </td>
-                          </tr>
-                        ))}
+                        {transactions.map((tx, idx) => {
+                          const uType = (tx?.userType || "").toLowerCase();
+                          let txUserName = "—";
+                          let txUserRole = tx?.userType ? formatTitleCase(tx.userType) : "User";
+                          let txUserImg = null;
+
+                          if (tx?.user && typeof tx.user === "object") {
+                            txUserName = fullName(tx.user);
+                            txUserRole = uType === "driver" ? "Driver" : "Rider";
+                            txUserImg = tx.user.profilePicture || tx.user.profileImage;
+                          } else if (uType === "driver" || (driver?._id && String(tx?.user) === String(driver._id))) {
+                            txUserName = fullName(driver) || "Driver";
+                            txUserRole = "Driver";
+                            txUserImg = driver?.profilePicture || driver?.profileImage;
+                          } else if (uType === "user" || uType === "rider" || (rider?._id && String(tx?.user) === String(rider._id))) {
+                            txUserName = fullName(rider) || "Rider";
+                            txUserRole = "Rider";
+                            txUserImg = rider?.profilePicture || rider?.profileImage;
+                          } else if (tx?.user) {
+                            txUserName = `${String(tx.user).substring(0, 8)}...`;
+                          }
+
+                          const isDriver = txUserRole === "Driver";
+
+                          return (
+                            <tr key={tx._id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                              <td className="py-2.5 px-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 border border-gray-200 dark:border-gray-700">
+                                    {txUserImg ? (
+                                      <img
+                                        src={txUserImg}
+                                        alt={txUserName}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : isDriver ? (
+                                      <Car className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                    ) : (
+                                      <User className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-gray-900 dark:text-white truncate">
+                                      {txUserName}
+                                    </p>
+                                    <span
+                                      className={`inline-block text-[10px] font-medium px-1.5 py-0.2 rounded ${
+                                        isDriver
+                                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                                          : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
+                                      }`}
+                                    >
+                                      {txUserRole}
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">
+                                ${Number(tx.amount || 0).toFixed(2)}
+                              </td>
+                              <td className="py-2.5 px-3 capitalize">
+                                {formatTitleCase(tx.type || tx.transactionType || "Payment")}
+                              </td>
+                              <td className="py-2.5 px-3">{transactionStatusBadge(tx.status)}</td>
+                              <td className="py-2.5 px-3 text-gray-500">
+                                {formatDateTime(tx.createdAt || tx.date)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
