@@ -39,7 +39,7 @@ const MAP_OPTIONS = {
   disableDefaultUI: false,
   zoomControl: true,
   streetViewControl: false,
-  mapTypeControl: true,
+  mapTypeControl: false,
   fullscreenControl: true,
   clickableIcons: false,
   styles: [
