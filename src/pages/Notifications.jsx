@@ -46,8 +46,10 @@ const statusVariant = (status) => {
 
 const recipientIcon = (type) => {
   switch (type?.toLowerCase()) {
-    case "driver": return <UserCheck className="w-3 h-3" />;
+    case "driver":
+    case "drivers": return <UserCheck className="w-3 h-3" />;
     case "rider":
+    case "riders":
     case "user": return <Users className="w-3 h-3" />;
     default: return <Bell className="w-3 h-3" />;
   }
@@ -391,14 +393,23 @@ const Notifications = () => {
     setSending(true);
     try {
       const specific = previewData.audienceType === "rider_only" || previewData.audienceType === "driver_only";
+      let recipientType = "both";
+      if (previewData.audienceType === "rider_only") {
+        recipientType = "rider";
+      } else if (previewData.audienceType === "driver_only") {
+        recipientType = "driver";
+      } else if (previewData.audienceType === "riders") {
+        recipientType = "riders";
+      } else if (previewData.audienceType === "drivers") {
+        recipientType = "drivers";
+      } else {
+        recipientType = "both";
+      }
+
       const payload = {
         title: previewData.title,
         message: previewData.message,
-        recipientType: previewData.audienceType === "both"
-          ? "both"
-          : previewData.audienceType === "riders" || previewData.audienceType === "rider_only"
-            ? "riders"
-            : "drivers",
+        recipientType,
       };
       if (specific && previewData.recipientId) {
         payload.recipientId = previewData.recipientId;
