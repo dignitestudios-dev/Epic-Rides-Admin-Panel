@@ -118,7 +118,7 @@ const PrivateRides = () => {
   const { hasPermission } = useAuth();
   const navigate = useNavigate();
   
-  const [activeTab, setActiveTab] = usePersistentState("privaterides_activeTab", "cancelled");
+  const [activeTab, setActiveTab] = usePersistentState("privaterides_activeTab", "completed");
   const [search, setSearch] = usePersistentState("privaterides_search", "");
   const [page, setPage] = usePersistentState("privaterides_page", 1);
   const [limit, setLimit] = usePersistentState("privaterides_limit", 10);
@@ -324,19 +324,6 @@ const PrivateRides = () => {
 
       <div className="flex border-b border-gray-200">
         <button
-          onClick={() => handleTabChange("cancelled")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-            activeTab === "cancelled"
-              ? "text-[#39A300] border-b-2 border-[#39A300]"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <XCircle className="w-4 h-4" />
-            Cancelled Rides
-          </div>
-        </button>
-        <button
           onClick={() => handleTabChange("completed")}
           className={`px-6 py-3 text-sm font-medium transition-colors relative ${
             activeTab === "completed"
@@ -349,6 +336,19 @@ const PrivateRides = () => {
             Completed Rides
           </div>
         </button>
+        <button
+          onClick={() => handleTabChange("cancelled")}
+          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === "cancelled"
+              ? "text-[#39A300] border-b-2 border-[#39A300]"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <div className="flex items-center gap-2 text-base">
+            <XCircle className="w-4 h-4" />
+            Cancelled Rides
+          </div>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -356,7 +356,7 @@ const PrivateRides = () => {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="p-4">
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Total {activeTab === "cancelled" ? "Cancelled" : "Completed"} Rides
+              Total {activeTab === "completed" ? "Completed" : "Cancelled"} Rides
             </p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {stats.totalRides ?? "—"}
