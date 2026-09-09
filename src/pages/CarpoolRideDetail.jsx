@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { 
   ArrowLeft, MapPin, User, Car, Clock, Star, Phone, Mail, 
-  Calendar, DollarSign, CheckCircle2, Navigation, Activity, FileText 
+  Calendar, DollarSign, CheckCircle2, Navigation, Activity, FileText, Sparkles 
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
@@ -59,9 +59,12 @@ const InfoItem = ({ label, value, valueClass = "" }) => (
 const CarpoolRideDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isDev = location.pathname.startsWith("/dev");
+
   const [loading, setLoading] = useState(true);
   const [rideData, setRideData] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(isDev ? "timeline" : "overview");
 
   useEffect(() => {
     fetchRideDetail();
@@ -75,7 +78,7 @@ const CarpoolRideDetail = () => {
       setRideData(res.data);
     } catch (error) {
       toast.error(error.message || "Failed to fetch carpool ride details.");
-      navigate("/carpool-rides");
+      navigate(isDev ? "/dev" : "/carpool-rides");
     } finally {
       setLoading(false);
     }
@@ -93,7 +96,9 @@ const CarpoolRideDetail = () => {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 dark:text-gray-400">Ride details not found.</p>
-        <Button className="mt-4" onClick={() => navigate("/carpool-rides")}>Go Back</Button>
+        <Button className="mt-4" onClick={() => navigate(isDev ? "/dev" : "/carpool-rides")}>
+          {isDev ? "Back to Dev Hub" : "Go Back"}
+        </Button>
       </div>
     );
   }
@@ -120,11 +125,11 @@ const CarpoolRideDetail = () => {
       <div className="flex items-center gap-4">
         <Button 
           variant="ghost" 
-          onClick={() => navigate("/carpool-rides")}
+          onClick={() => navigate(isDev ? "/dev" : "/carpool-rides")}
           icon={<ArrowLeft className="w-4 h-4" />}
           className="text-gray-500"
         >
-          Back
+          {isDev ? "Back to Dev Hub" : "Back"}
         </Button>
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
@@ -137,27 +142,29 @@ const CarpoolRideDetail = () => {
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${
-                activeTab === tab.id
-                  ? "border-[#39A300] text-[#39A300] font-semibold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-              } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Tabs Navigation (Dev Mode Only) */}
+      {isDev && (
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? "border-[#39A300] text-[#39A300] font-semibold"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
 
-      {activeTab === "overview" && (
+      {(!isDev || activeTab === "overview") && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Ride Info & Route */}
         <div className="lg:col-span-2 space-y-6">
@@ -347,8 +354,8 @@ const CarpoolRideDetail = () => {
       </div>
       )}
 
-      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP */}
-      {activeTab === "timeline" && (
+      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP (Dev Mode Only) */}
+      {isDev && activeTab === "timeline" && (
         <div className="space-y-4">
           <JourneyTimelineMap journeyType="carpool" journeyId={id} />
         </div>

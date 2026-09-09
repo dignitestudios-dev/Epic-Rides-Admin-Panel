@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   MapPin,
@@ -140,9 +140,12 @@ const InfoItem = ({ label, value, valueClass = "" }) => (
 const RideDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isDev = location.pathname.startsWith("/dev");
+
   const [loading, setLoading] = useState(true);
   const [rawData, setRawData] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "timeline"
+  const [activeTab, setActiveTab] = useState(isDev ? "timeline" : "overview"); // "overview" | "timeline"
 
   const fetchRideDetail = useCallback(async () => {
     try {
@@ -152,11 +155,11 @@ const RideDetail = () => {
       setRawData(data);
     } catch (error) {
       toast.error(error.message || "Failed to fetch ride details.");
-      navigate("/private-rides");
+      navigate(isDev ? "/dev" : "/private-rides");
     } finally {
       setLoading(false);
     }
-  }, [id, navigate]);
+  }, [id, navigate, isDev]);
 
   useEffect(() => {
     fetchRideDetail();
@@ -180,8 +183,8 @@ const RideDetail = () => {
     return (
       <div className="text-center py-12">
         <p className="text-gray-500 dark:text-gray-400">Ride details not found.</p>
-        <Button className="mt-4" onClick={() => navigate("/private-rides")}>
-          Go Back
+        <Button className="mt-4" onClick={() => navigate(isDev ? "/dev" : "/private-rides")}>
+          {isDev ? "Back to Dev Hub" : "Go Back"}
         </Button>
       </div>
     );
@@ -243,11 +246,11 @@ const RideDetail = () => {
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
-            onClick={() => navigate("/private-rides")}
+            onClick={() => navigate(isDev ? "/dev" : "/private-rides")}
             icon={<ArrowLeft className="w-4 h-4" />}
             className="text-gray-500"
           >
-            Back
+            {isDev ? "Back to Dev Hub" : "Back"}
           </Button>
           <div>
             <div className="flex items-center gap-3">
@@ -287,28 +290,30 @@ const RideDetail = () => {
         </Button>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${
-                activeTab === tab.id
-                  ? "border-[#39A300] text-[#39A300] font-semibold"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-              } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Tabs Navigation (Dev Mode Only) */}
+      {isDev && (
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-6">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`${
+                  activeTab === tab.id
+                    ? "border-[#39A300] text-[#39A300] font-semibold"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
+                } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
 
-      {/* TAB 1: OVERVIEW */}
-      {activeTab === "overview" && (
+      {/* OVERVIEW CONTENT (shown when not in dev mode OR when activeTab === "overview") */}
+      {(!isDev || activeTab === "overview") && (
         <div className="space-y-6">
           {/* Cancellation Alert Banner if Cancelled */}
           {(rideStatus === "cancelled" || rideStatus === "canceled") && (
@@ -807,8 +812,8 @@ const RideDetail = () => {
         </div>
       )}
 
-      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP */}
-      {activeTab === "timeline" && (
+      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP (Dev Mode Only) */}
+      {isDev && activeTab === "timeline" && (
         <div className="space-y-4">
           <JourneyTimelineMap journeyType="ride" journeyId={id} />
         </div>

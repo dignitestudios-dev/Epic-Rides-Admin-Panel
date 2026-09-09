@@ -6,7 +6,6 @@ import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import Modal from "../components/ui/Modal";
 import FilterBar from "../components/ui/FilterBar";
 
 import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
@@ -47,73 +46,6 @@ const paymentBadge = (status) => {
   }
 };
 
-const RideDetailDialog = ({ ride, onClose }) => {
-  const Row = ({ label, value }) => (
-    <div className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{label}</span>
-      <span className="text-sm font-medium text-gray-900 dark:text-white text-right break-words max-w-[60%]">
-        {value ?? "—"}
-      </span>
-    </div>
-  );
-
-  const Section = ({ title, children }) => (
-    <div className="mb-4">
-      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{title}</h4>
-      {children}
-    </div>
-  );
-
-  if (!ride) return null;
-
-  return (
-    <Modal isOpen={!!ride} onClose={onClose} title="Ride Details" size="md">
-      <div className="space-y-2 max-h-[65vh] overflow-y-auto pr-1">
-        <Section title="Ride Info">
-          <Row label="Ride ID" value={<span className="font-mono text-xs">{ride._id}</span>} />
-          <Row label="Status" value={statusBadge(ride.rideStatus)} />
-          <Row label="Ride Type" value={ride.rideType ? ride.rideType.charAt(0).toUpperCase() + ride.rideType.slice(1) : null} />
-          <Row label="Distance" value={ride.rideDistance ? `${ride.rideDistance.toFixed(2)} miles` : null} />
-          <Row label="Est. Duration" value={ride.averageTime ? `${ride.averageTime} min` : null} />
-          <Row label="Pickup" value={ride.pickupPoint?.placeName || ride.pickupPoint} />
-          <Row label="Dropoff" value={ride.dropOffPoint?.placeName || ride.dropOffPoint} />
-        </Section>
-
-        <Section title="Rider">
-          <Row label="Name" value={fullName(ride.user)} />
-          <Row label="Email" value={ride.user?.email} />
-          <Row label="Phone" value={ride.user?.phone ? formatPhoneNumber(ride.user.phone) : null} />
-        </Section>
-
-        <Section title="Driver">
-          <Row label="Name" value={fullName(ride.driver)} />
-          <Row label="Email" value={ride.driver?.email} />
-          <Row label="Phone" value={ride.driver?.phone ? formatPhoneNumber(ride.driver.phone) : null} />
-        </Section>
-
-        <Section title="Payment">
-          <Row label="Fare" value={ride.rideFare != null ? `$${ride.rideFare.toFixed(2)}` : null} />
-          <Row label="Method" value={ride.paymentMethod ? <span className="capitalize">{ride.paymentMethod.replace(/_/g, " ")}</span> : null} />
-          <Row label="Payment Status" value={paymentBadge(ride.paymentStatus)} />
-        </Section>
-
-        {ride.rideStatus === "cancelled" && (
-          <Section title="Cancellation">
-            <Row label="Cancelled By" value={ride.cancelledBy ? ride.cancelledBy.charAt(0).toUpperCase() + ride.cancelledBy.slice(1) : null} />
-            <Row label="Reason" value={ride.cancellationReason} />
-          </Section>
-        )}
-
-        <Section title="Timestamps">
-          <Row label="Booked At" value={ride.createdAt ? formatDateTime(ride.createdAt) : null} />
-          <Row label="Start Time" value={ride.startTime ? formatDateTime(ride.startTime) : null} />
-          <Row label="End Time" value={ride.endTime ? formatDateTime(ride.endTime) : null} />
-        </Section>
-      </div>
-    </Modal>
-  );
-};
-
 const PrivateRides = () => {
   const { hasPermission } = useAuth();
   const navigate = useNavigate();
@@ -125,10 +57,12 @@ const PrivateRides = () => {
   const [startDate, setStartDate] = usePersistentState("privaterides_startDate", "");
   const [endDate, setEndDate] = usePersistentState("privaterides_endDate", "");
   
-  const [selectedRide, setSelectedRide] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
-
   const debouncedSearch = useDebounce(search, 500);
+
+  const handleViewRide = (id) => {
+    navigate(`/private-rides/${id}`);
+  };
 
   const { rides, stats, loading, totalPages, totalData } = useGetRides(
     page,
@@ -290,7 +224,7 @@ const PrivateRides = () => {
           variant="ghost"
           size="sm"
           icon={<Eye className="w-4 h-4" />}
-          onClick={() => navigate(`/private-rides/${row._id || row.id}`)}
+          onClick={() => handleViewRide(row._id)}
         >
           View
         </Button>
@@ -418,12 +352,6 @@ const PrivateRides = () => {
           onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
         />
       </Card>
-
-      {/* Detail Dialog */}
-      <RideDetailDialog
-        ride={selectedRide}
-        onClose={() => setSelectedRide(null)}
-      />
     </div>
   );
 };
