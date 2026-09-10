@@ -2,7 +2,7 @@ import axios from "axios";
 import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
 // const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Development URL
 
 // Create an Axios instance
 const API = axios.create({
