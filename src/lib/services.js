@@ -1,11 +1,10 @@
 import axios from "axios";
 import { API_CONFIG, PAGINATION_CONFIG } from "../config/constants";
 
+// const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
+const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
+
 // Create an Axios instance
-
-const STAGING_BASE_URL = "https://api.epicridesapp.com/api/admin/"; // Production URL
-// const STAGING_BASE_URL = "https://api.staging.epicridesapp.com/api/admin/"; // Development URL
-
 const API = axios.create({
   baseURL: STAGING_BASE_URL,
   timeout: API_CONFIG.timeout,
@@ -501,6 +500,11 @@ const exportRides = (status, startDate = "", endDate = "") => {
   return API.get(url, { responseType: "blob" });
 };
 
+const getRideById = (id) => apiHandler(() => API.get(`/rides/${id}`));
+
+const getJourneyTimeline = (journeyType, id) =>
+  apiHandler(() => API.get(`/journeys/${journeyType}/${id}/timeline`));
+
 const getCarpoolRides = (
   page = 1,
   limit = 10,
@@ -734,6 +738,8 @@ export const api = {
   updateNotification,
   deleteNotification,
   getRides,
+  getRideById,
+  getJourneyTimeline,
   exportRides,
   getCarpoolRides,
   getCarpoolRideById,

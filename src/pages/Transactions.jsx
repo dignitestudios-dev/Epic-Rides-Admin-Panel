@@ -171,21 +171,24 @@ const Transactions = () => {
     {
       key: "status",
       label: "Status",
-      render: (value) => (
-        <Badge
-          variant={
-            value === "completed"
-              ? "success"
-              : value === "pending"
-              ? "warning"
-              : value === "failed"
-              ? "danger"
-              : "default"
-          }
-        >
-          {value}
-        </Badge>
-      ),
+      render: (value) => {
+        const s = (value || "").toLowerCase();
+        let variant = "default";
+        if (s === "completed" || s === "paid" || s === "succeeded" || s === "success") {
+          variant = "success";
+        } else if (s === "pending" || s === "processing" || s === "hold" || s === "in_escrow") {
+          variant = "warning";
+        } else if (s === "failed" || s === "declined" || s === "cancelled" || s === "canceled") {
+          variant = "danger";
+        } else if (s === "refunded" || s === "refund" || s === "reversed") {
+          variant = "info";
+        }
+        return (
+          <Badge variant={variant} className="capitalize">
+            {value}
+          </Badge>
+        );
+      },
     },
     {
       key: "createdAt",
