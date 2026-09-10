@@ -106,6 +106,10 @@ const CarpoolRideDetail = () => {
   const { carpoolDetails: ride, carpoolBookingDetails: bookings } = rideData;
   const { driver, startingPoint, destination, routes, vehicleDetails } = ride;
 
+  const totalCompletedFare = (bookings || [])
+    .filter((b) => b.status?.toLowerCase() === "completed")
+    .reduce((sum, b) => sum + (b.fareCharged || 0), 0);
+
   const tabs = [
     {
       id: "overview",
@@ -174,7 +178,7 @@ const CarpoolRideDetail = () => {
               <InfoItem label="Distance" value={ride.distance ? `${ride.distance.toFixed(2)} km` : "—"} />
               <InfoItem label="Est. Time" value={formatMinutes(ride.avgTime)} />
               <InfoItem label="Passengers" value={`${ride.maxPassengers - ride.availableSeats} / ${ride.maxPassengers} Booked`} />
-              <InfoItem label="Total Fare" value={`$${bookings?.reduce((sum, b) => sum + (b.fareCharged || 0), 0).toFixed(2) || "0.00"}`} />
+              <InfoItem label="Total Fare" value={`$${totalCompletedFare.toFixed(2)}`} />
               <InfoItem label="Created At" value={ride.createdAt ? formatDateTime(ride.createdAt) : "—"} />
             </div>
           </Card>
