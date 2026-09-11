@@ -26,7 +26,7 @@ import { formatPhoneNumber } from "../utils/helpers";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 10_000; // ms
-const ANIMATION_DURATION = 2500; // ms — smooth marker travel time
+const ANIMATION_DURATION = 5000; // ms — smooth, calm marker travel time
 // Default map center — Orlando, Florida
 const DEFAULT_CENTER = { lat: 28.5383, lng: -81.3792 };
 
@@ -174,13 +174,15 @@ const svgToDataUrl = (svg) =>
   `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 
 // ── Smooth marker animation hook ──────────────────────────────────────────────
-const easeInOutCubic = (t) =>
-  t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const easeInOutQuad = (t) =>
+  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-function useSmoothPositions(items, keyExtractor) {
+function useSmoothPositions(items, keyExtractor, trackedUid, mapRef) {
   const [positions, setPositions] = useState({});
   const rafRef = useRef({}); // per-item rAF id
   const currentPos = useRef({}); // per-item latest interpolated position
+  const trackedUidRef = useRef(trackedUid);
+  trackedUidRef.current = trackedUid;
 
   // Only cancel all animations on unmount
   useEffect(() => {
@@ -205,6 +207,9 @@ function useSmoothPositions(items, keyExtractor) {
         const pos = { lat: newLat, lng: newLng };
         currentPos.current[uid] = pos;
         setPositions((p) => ({ ...p, [uid]: pos }));
+        if (trackedUidRef.current === uid && mapRef?.current) {
+          mapRef.current.setCenter(pos);
+        }
         return;
       }
 
@@ -226,13 +231,18 @@ function useSmoothPositions(items, keyExtractor) {
 
       const step = (now) => {
         const t = Math.min((now - startTime) / ANIMATION_DURATION, 1);
-        const e = easeInOutCubic(t);
+        const e = easeInOutQuad(t);
         const lat = startLat + (newLat - startLat) * e;
         const lng = startLng + (newLng - startLng) * e;
         const pos = { lat, lng };
 
         currentPos.current[uid] = pos;
         setPositions((p) => ({ ...p, [uid]: pos }));
+
+        // Lockstep synchronous map centering on every frame for the tracked user
+        if (trackedUidRef.current === uid && mapRef?.current) {
+          mapRef.current.setCenter(pos);
+        }
 
         if (t < 1) {
           rafRef.current[uid] = requestAnimationFrame(step);
@@ -241,7 +251,7 @@ function useSmoothPositions(items, keyExtractor) {
 
       rafRef.current[uid] = requestAnimationFrame(step);
     });
-  }, [items, keyExtractor]);
+  }, [items, keyExtractor, mapRef]);
 
   return positions;
 }
@@ -838,7 +848,12 @@ const BirdsEyeView = () => {
   const allItems = useMemo(() => [...drivers, ...riders], [drivers, riders]);
 
   const keyExtractor = useCallback((item) => item._uid, []);
-  const smoothPositions = useSmoothPositions(allItems, keyExtractor);
+  const smoothPositions = useSmoothPositions(
+    allItems,
+    keyExtractor,
+    trackedUid,
+    mapRef
+  );
 
   const handleToggleTrack = useCallback(
     (item) => {
@@ -856,12 +871,12 @@ const BirdsEyeView = () => {
     [trackedUid, smoothPositions]
   );
 
-  // Center-following effect during live tracking
+  // Center-following fallback effect during live tracking
   useEffect(() => {
     if (!trackedUid || !mapRef.current) return;
     const currentTrackedPos = smoothPositions[trackedUid];
-    if (currentTrackedPos && mapRef.current.panTo) {
-      mapRef.current.panTo(currentTrackedPos);
+    if (currentTrackedPos && mapRef.current.setCenter) {
+      mapRef.current.setCenter(currentTrackedPos);
     }
   }, [trackedUid, smoothPositions]);
 
