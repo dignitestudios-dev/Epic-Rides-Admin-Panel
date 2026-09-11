@@ -11,40 +11,83 @@ const RideConfiguration = () => {
     useRideConfiguration();
 
   const [nearbyRadius, setNearbyRadius] = useState("");
-  const [error, setError] = useState("");
+  const [carpoolNearbyRadius, setCarpoolNearbyRadius] = useState("");
+  const [nearbyError, setNearbyError] = useState("");
+  const [carpoolError, setCarpoolError] = useState("");
 
-  const savedRadius = useMemo(() => {
+  const savedNearbyRadius = useMemo(() => {
     if (config?.nearbyRadius !== undefined && config?.nearbyRadius !== null) {
       return Number(config.nearbyRadius);
     }
     return "";
   }, [config]);
 
+  const savedCarpoolRadius = useMemo(() => {
+    if (
+      config?.carpoolNearbyRadius !== undefined &&
+      config?.carpoolNearbyRadius !== null
+    ) {
+      return Number(config.carpoolNearbyRadius);
+    }
+    return 0.31;
+  }, [config]);
+
   // Populate state once API returns config
   useEffect(() => {
-    if (config && config.nearbyRadius !== undefined) {
-      setNearbyRadius(config.nearbyRadius);
-      setError("");
+    if (config) {
+      if (config.nearbyRadius !== undefined && config.nearbyRadius !== null) {
+        setNearbyRadius(config.nearbyRadius);
+      }
+      if (
+        config.carpoolNearbyRadius !== undefined &&
+        config.carpoolNearbyRadius !== null
+      ) {
+        setCarpoolNearbyRadius(config.carpoolNearbyRadius);
+      } else {
+        setCarpoolNearbyRadius(0.31);
+      }
+      setNearbyError("");
+      setCarpoolError("");
     }
   }, [config]);
 
-  const currentVal = Number(nearbyRadius);
-  const isDirty = !loading && currentVal !== savedRadius;
-  const isValid = !isNaN(currentVal) && currentVal > 0;
+  const currentNearbyVal = Number(nearbyRadius);
+  const currentCarpoolVal = Number(carpoolNearbyRadius);
 
-  const handleChange = (e) => {
+  const isNearbyValid = !isNaN(currentNearbyVal) && currentNearbyVal > 0 && nearbyRadius !== "";
+  const isCarpoolValid = !isNaN(currentCarpoolVal) && currentCarpoolVal > 0 && carpoolNearbyRadius !== "";
+  const isValid = isNearbyValid && isCarpoolValid;
+
+  const isDirty =
+    !loading &&
+    (currentNearbyVal !== savedNearbyRadius ||
+      currentCarpoolVal !== savedCarpoolRadius);
+
+  const handleNearbyChange = (e) => {
     const val = e.target.value;
     setNearbyRadius(val);
     if (val === "" || isNaN(Number(val)) || Number(val) <= 0) {
-      setError("Please enter a valid radius greater than 0");
+      setNearbyError("Please enter a valid radius greater than 0");
     } else {
-      setError("");
+      setNearbyError("");
+    }
+  };
+
+  const handleCarpoolChange = (e) => {
+    const val = e.target.value;
+    setCarpoolNearbyRadius(val);
+    if (val === "" || isNaN(Number(val)) || Number(val) <= 0) {
+      setCarpoolError("Please enter a valid radius greater than 0");
+    } else {
+      setCarpoolError("");
     }
   };
 
   const handleReset = () => {
-    setNearbyRadius(savedRadius);
-    setError("");
+    setNearbyRadius(savedNearbyRadius);
+    setCarpoolNearbyRadius(savedCarpoolRadius);
+    setNearbyError("");
+    setCarpoolError("");
   };
 
   const handleSubmit = async (e) => {
@@ -52,7 +95,8 @@ const RideConfiguration = () => {
     if (!isValid || !isDirty) return;
 
     await updateConfig({
-      nearbyRadius: currentVal,
+      nearbyRadius: currentNearbyVal,
+      carpoolNearbyRadius: currentCarpoolVal,
     });
   };
 
@@ -65,7 +109,7 @@ const RideConfiguration = () => {
             Ride Configuration
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Manage nearby driver search radius
+            Manage search and matching radius configurations
           </p>
         </div>
         <div className="flex gap-2">
@@ -88,7 +132,7 @@ const RideConfiguration = () => {
             General Settings
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            Configure default ride parameters for driver discovery.
+            Configure search radius for private and carpool rides.
           </p>
         </div>
 
@@ -99,19 +143,34 @@ const RideConfiguration = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
-            <div>
-              <Input
-                label="Nearby Radius (miles)"
-                type="number"
-                min="1"
-                step="any"
-                value={nearbyRadius}
-                onChange={handleChange}
-                error={error}
-                placeholder="e.g. 5"
-                disabled={updating}
-                helperText="Sets the radius in miles within which available drivers receive ride requests."
-              />
+            <div className="space-y-4">
+              <div>
+                <Input
+                  label="Private Ride Radius (miles)"
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={nearbyRadius}
+                  onChange={handleNearbyChange}
+                  error={nearbyError}
+                  placeholder="e.g. 5"
+                  disabled={updating}
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Carpool Nearby Radius (miles)"
+                  type="number"
+                  min="0.01"
+                  step="any"
+                  value={carpoolNearbyRadius}
+                  onChange={handleCarpoolChange}
+                  error={carpoolError}
+                  placeholder="e.g. 0.75"
+                  disabled={updating}
+                />
+              </div>
             </div>
 
             {config?.updatedAt && (

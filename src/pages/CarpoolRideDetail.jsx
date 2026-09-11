@@ -14,12 +14,25 @@ import toast from "react-hot-toast";
 
 const fullName = (obj) => [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
 
+const formatTitleCase = (str) => {
+  if (!str) return "—";
+  return String(str)
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 const statusBadge = (status) => {
-  switch (status?.toLowerCase()) {
+  const s = status?.toLowerCase()?.trim();
+  switch (s) {
     case "cancelled":
+    case "canceled":
       return <Badge variant="danger">Cancelled</Badge>;
+    case "rejected":
+      return <Badge variant="danger">Rejected</Badge>;
     case "completed":
       return <Badge variant="success">Completed</Badge>;
+    case "accepted":
+      return <Badge variant="success">Accepted</Badge>;
     case "active":
     case "started":
       return <Badge variant="warning">Active</Badge>;
@@ -28,7 +41,7 @@ const statusBadge = (status) => {
     case "pending":
       return <Badge variant="default">Pending</Badge>;
     default:
-      return <Badge variant="default">{status || "—"}</Badge>;
+      return <Badge variant="default">{formatTitleCase(status)}</Badge>;
   }
 };
 

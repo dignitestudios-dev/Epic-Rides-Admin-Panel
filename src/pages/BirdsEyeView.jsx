@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, Marker, OverlayView } from "@react-google-maps/api";
 import { useNavigate } from "react-router-dom";
 import {
   Navigation,
@@ -331,172 +331,226 @@ const getStatusInfo = (rawStatus) => {
 };
 
 // ── Driver sidebar card ───────────────────────────────────────────────────────
-const DriverCard = React.memo(({ driver, isSelected, onLocate, onView }) => {
-  const name =
-    [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") || "Unknown";
-  const isLuxury = driver?.vehicleType?.toLowerCase() === "luxury";
-  const isOnTrip = !!driver?.activeRideId;
+const DriverCard = React.memo(
+  ({ driver, isSelected, isTracked, onToggleTrack, onView }) => {
+    const name =
+      [driver?.firstName, driver?.lastName].filter(Boolean).join(" ") ||
+      "Unknown";
+    const isLuxury = driver?.vehicleType?.toLowerCase() === "luxury";
+    const isOnTrip = !!driver?.activeRideId;
 
-  return (
-    <div
-      className={`p-3 rounded-xl border transition-all ${isSelected
-          ? "border-primary-400 bg-primary-50 shadow-sm"
-          : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+    return (
+      <div
+        className={`p-3 rounded-xl border transition-all relative overflow-hidden ${
+          isTracked
+            ? "border-primary-500 bg-primary-50/90 shadow-md ring-2 ring-primary-500/40"
+            : isSelected
+            ? "border-primary-300 bg-primary-50/40 shadow-sm"
+            : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
         }`}
-    >
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
-        <div className="relative flex-shrink-0">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-            {driver?.profilePicture ? (
-              <img
-                src={driver.profilePicture}
-                alt={name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            ) : (
-              <User className="w-5 h-5 text-gray-400" />
-            )}
+      >
+        {isTracked && (
+          <div className="absolute top-0 right-0 bg-primary-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+            Tracking Active
           </div>
-          {/* Status dot */}
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${isOnTrip ? "bg-blue-500" : "bg-green-500"
+        )}
+
+        <div className={`flex items-start gap-3 ${isTracked ? "pt-1" : ""}`}>
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div
+              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${
+                isTracked ? "ring-2 ring-primary-500 ring-offset-1" : ""
               }`}
-          />
-        </div>
+            >
+              {driver?.profilePicture ? (
+                <img
+                  src={driver.profilePicture}
+                  alt={name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                <User className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+            {/* Status dot */}
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                isOnTrip ? "bg-blue-500" : "bg-green-500"
+              }`}
+            />
+          </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
-            <Phone className="w-3 h-3" />
-            {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
-          </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <Badge
-              variant={isLuxury ? "warning" : "success"}
-              className="text-[10px] px-1.5 py-0.5"
-            >
-              {isLuxury ? "✦ Luxury" : "Economy"}
-            </Badge>
-            <Badge
-              variant={isOnTrip ? "info" : "success"}
-              className="text-[10px] px-1.5 py-0.5"
-            >
-              {isOnTrip ? "On Trip" : "Available"}
-            </Badge>
+          {/* Info */}
+          <div className="flex-1 min-w-0 pr-1">
+            <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+            <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+              <Phone className="w-3 h-3" />
+              {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
+            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge
+                variant={isLuxury ? "warning" : "success"}
+                className="text-[10px] px-1.5 py-0.5"
+              >
+                {isLuxury ? "✦ Luxury" : "Economy"}
+              </Badge>
+              <Badge
+                variant={isOnTrip ? "info" : "success"}
+                className="text-[10px] px-1.5 py-0.5"
+              >
+                {isOnTrip ? "On Trip" : "Available"}
+              </Badge>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 mt-2.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 text-xs"
-          icon={<Navigation className="w-3.5 h-3.5" />}
-          onClick={() => onLocate(driver)}
-        >
-          Locate
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 text-xs"
-          icon={<Eye className="w-3.5 h-3.5" />}
-          onClick={() => onView(driver)}
-        >
-          Details
-        </Button>
+        {/* Actions */}
+        <div className="flex gap-2 mt-2.5">
+          <Button
+            variant={isTracked ? "danger" : "ghost"}
+            size="sm"
+            className={`flex-1 text-xs ${
+              isTracked
+                ? "bg-red-500 hover:bg-red-600 text-white border-transparent"
+                : ""
+            }`}
+            icon={
+              isTracked ? (
+                <X className="w-3.5 h-3.5" />
+              ) : (
+                <Navigation className="w-3.5 h-3.5" />
+              )
+            }
+            onClick={() => onToggleTrack(driver)}
+          >
+            {isTracked ? "Stop Tracking" : "Track"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 text-xs"
+            icon={<Eye className="w-3.5 h-3.5" />}
+            onClick={() => onView(driver)}
+          >
+            Details
+          </Button>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 DriverCard.displayName = "DriverCard";
 
 // ── Rider sidebar card ────────────────────────────────────────────────────────
-const RiderCard = React.memo(({ rider, isSelected, onLocate, onView }) => {
-  const name =
-    [rider?.firstName, rider?.lastName].filter(Boolean).join(" ") || "Unknown";
-  const rawStatus = rider?.rideStatus || rider?.status;
-  const statusInfo = getStatusInfo(rawStatus);
+const RiderCard = React.memo(
+  ({ rider, isSelected, isTracked, onToggleTrack, onView }) => {
+    const name =
+      [rider?.firstName, rider?.lastName].filter(Boolean).join(" ") || "Unknown";
+    const rawStatus = rider?.rideStatus || rider?.status;
+    const statusInfo = getStatusInfo(rawStatus);
 
-  return (
-    <div
-      className={`p-3 rounded-xl border transition-all ${isSelected
-          ? "border-primary-400 bg-primary-50 shadow-sm"
-          : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+    return (
+      <div
+        className={`p-3 rounded-xl border transition-all relative overflow-hidden ${
+          isTracked
+            ? "border-primary-500 bg-primary-50/90 shadow-md ring-2 ring-primary-500/40"
+            : isSelected
+            ? "border-primary-300 bg-primary-50/40 shadow-sm"
+            : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
         }`}
-    >
-      <div className="flex items-start gap-3">
-        {/* Avatar */}
-        <div className="relative flex-shrink-0">
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-            {rider?.profilePicture ? (
-              <img
-                src={rider.profilePicture}
-                alt={name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = "none";
-                }}
-              />
-            ) : (
-              <User className="w-5 h-5 text-gray-400" />
-            )}
+      >
+        {isTracked && (
+          <div className="absolute top-0 right-0 bg-primary-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+            Tracking Active
           </div>
-          {/* Status dot */}
-          <span
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusInfo.dotBg}`}
-          />
-        </div>
+        )}
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
-            <Phone className="w-3 h-3" />
-            {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
-          </p>
-          <div className="flex items-center gap-2 mt-1.5">
-            <Badge
-              variant={statusInfo.badgeVariant}
-              className="text-[10px] px-1.5 py-0.5"
+        <div className={`flex items-start gap-3 ${isTracked ? "pt-1" : ""}`}>
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div
+              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${
+                isTracked ? "ring-2 ring-primary-500 ring-offset-1" : ""
+              }`}
             >
-              {statusInfo.label}
-            </Badge>
+              {rider?.profilePicture ? (
+                <img
+                  src={rider.profilePicture}
+                  alt={name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
+                />
+              ) : (
+                <User className="w-5 h-5 text-gray-400" />
+              )}
+            </div>
+            {/* Status dot */}
+            <span
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusInfo.dotBg}`}
+            />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0 pr-1">
+            <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
+            <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+              <Phone className="w-3 h-3" />
+              {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
+            </p>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Badge
+                variant={statusInfo.badgeVariant}
+                className="text-[10px] px-1.5 py-0.5"
+              >
+                {statusInfo.label}
+              </Badge>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 mt-2.5">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 text-xs"
-          icon={<Navigation className="w-3.5 h-3.5" />}
-          onClick={() => onLocate(rider)}
-        >
-          Locate
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="flex-1 text-xs"
-          icon={<Eye className="w-3.5 h-3.5" />}
-          onClick={() => onView(rider)}
-        >
-          Details
-        </Button>
+        {/* Actions */}
+        <div className="flex gap-2 mt-2.5">
+          <Button
+            variant={isTracked ? "danger" : "ghost"}
+            size="sm"
+            className={`flex-1 text-xs ${
+              isTracked
+                ? "bg-red-500 hover:bg-red-600 text-white border-transparent"
+                : ""
+            }`}
+            icon={
+              isTracked ? (
+                <X className="w-3.5 h-3.5" />
+              ) : (
+                <Navigation className="w-3.5 h-3.5" />
+              )
+            }
+            onClick={() => onToggleTrack(rider)}
+          >
+            {isTracked ? "Stop Tracking" : "Track"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-1 text-xs"
+            icon={<Eye className="w-3.5 h-3.5" />}
+            onClick={() => onView(rider)}
+          >
+            Details
+          </Button>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 RiderCard.displayName = "RiderCard";
 
 // ── Driver detail modal ───────────────────────────────────────────────────────
@@ -695,6 +749,7 @@ const BirdsEyeView = () => {
   const [loading, setLoading] = useState(true);
   const [liveTime, setLiveTime] = useState(new Date());
   const [selectedId, setSelectedId] = useState(null);
+  const [trackedUid, setTrackedUid] = useState(null);
   const [detailItem, setDetailItem] = useState(null);
   const [search, setSearch] = useState("");
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
@@ -785,22 +840,41 @@ const BirdsEyeView = () => {
   const keyExtractor = useCallback((item) => item._uid, []);
   const smoothPositions = useSmoothPositions(allItems, keyExtractor);
 
-  const handleLocate = useCallback(
+  const handleToggleTrack = useCallback(
     (item) => {
-      const pos = smoothPositions[item._uid];
-      if (!pos || !mapRef.current) return;
-
-      flyToMap(mapRef.current, pos, 16, 1500);
-
+      if (trackedUid === item._uid) {
+        setTrackedUid(null);
+        return;
+      }
+      setTrackedUid(item._uid);
       setSelectedId(item.id);
+      const pos = smoothPositions[item._uid];
+      if (pos && mapRef.current) {
+        flyToMap(mapRef.current, pos, 16, 1000);
+      }
     },
-    [smoothPositions]
+    [trackedUid, smoothPositions]
   );
 
+  // Center-following effect during live tracking
+  useEffect(() => {
+    if (!trackedUid || !mapRef.current) return;
+    const currentTrackedPos = smoothPositions[trackedUid];
+    if (currentTrackedPos && mapRef.current.panTo) {
+      mapRef.current.panTo(currentTrackedPos);
+    }
+  }, [trackedUid, smoothPositions]);
+
   const handleRecenter = useCallback(() => {
+    setTrackedUid(null);
     if (!mapRef.current) return;
     flyToMap(mapRef.current, DEFAULT_CENTER, 13, 1500);
   }, []);
+
+  const trackedEntity = useMemo(
+    () => (trackedUid ? allItems.find((i) => i._uid === trackedUid) : null),
+    [trackedUid, allItems]
+  );
 
   const filteredItems = useMemo(
     () =>
@@ -910,6 +984,8 @@ const BirdsEyeView = () => {
                   iconToUse = icons.rider;
                 }
 
+                const isTracked = item._uid === trackedUid;
+
                 return (
                   <Marker
                     key={item._uid}
@@ -921,7 +997,7 @@ const BirdsEyeView = () => {
                         .filter(Boolean)
                         .join(" ") || (item._type === "drivers" ? "Driver" : "Rider")
                     }
-                    zIndex={selectedId === item.id ? 100 : 1}
+                    zIndex={isTracked ? 99999 : selectedId === item.id ? 100 : 1}
                     onClick={() => {
                       if (!isVisible) return;
                       setSelectedId(item.id);
@@ -930,11 +1006,38 @@ const BirdsEyeView = () => {
                   />
                 );
               })}
+
+            {/* Floating Name Pill directly above the tracked vehicle/rider */}
+            {trackedUid && smoothPositions[trackedUid] && trackedEntity && (
+              <OverlayView
+                position={smoothPositions[trackedUid]}
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                getPixelPositionOffset={(width, height) => ({
+                  x: -(width / 2),
+                  y: -(height + 24),
+                })}
+              >
+                <div className="flex flex-col items-center pointer-events-none select-none drop-shadow-md">
+                  <div className="bg-gray-900/95 text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-primary-400 flex items-center gap-1.5 whitespace-nowrap shadow-lg">
+                    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
+                    <span>
+                      {[trackedEntity.firstName, trackedEntity.lastName]
+                        .filter(Boolean)
+                        .join(" ") || "User"}
+                    </span>
+                    <span className="bg-primary-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">
+                      Tracking
+                    </span>
+                  </div>
+                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-primary-400" />
+                </div>
+              </OverlayView>
+            )}
           </GoogleMap>
         )}
 
         {/* Top-left overlay pills */}
-        <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-none select-none">
+        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 select-none z-10">
           {/* Live + clock */}
           <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
@@ -949,11 +1052,33 @@ const BirdsEyeView = () => {
             <Users className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
             {activeItems.length} online
           </div>
+
+          {/* Active tracking indicator badge */}
+          {trackedUid && trackedEntity && (
+            <div className="bg-primary-600 text-white rounded-full pl-3 pr-2 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium animate-fadeIn">
+              <Navigation className="w-3.5 h-3.5 animate-pulse flex-shrink-0" />
+              <span>
+                Tracking:{" "}
+                <strong>
+                  {[trackedEntity.firstName, trackedEntity.lastName]
+                    .filter(Boolean)
+                    .join(" ") || "User"}
+                </strong>
+              </span>
+              <button
+                onClick={() => setTrackedUid(null)}
+                className="ml-1 p-0.5 bg-primary-700 hover:bg-primary-800 rounded-full transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+                title="Stop tracking"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Recenter button */}
         <button
-          className="absolute left-3 bottom-28 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+          className="absolute left-3 bottom-28 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
           onClick={handleRecenter}
           title="Center on default location"
         >
@@ -962,7 +1087,7 @@ const BirdsEyeView = () => {
 
         {/* Manual refresh */}
         <button
-          className="absolute left-3 bottom-16 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+          className="absolute left-3 bottom-16 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
           onClick={fetchData}
           title="Refresh now"
         >
@@ -990,6 +1115,7 @@ const BirdsEyeView = () => {
                 }`}
               onClick={() => {
                 setActiveTab("drivers");
+                setTrackedUid(null);
                 setSelectedId(null);
                 setDetailItem(null);
                 handleRecenter();
@@ -1004,6 +1130,7 @@ const BirdsEyeView = () => {
                 }`}
               onClick={() => {
                 setActiveTab("riders");
+                setTrackedUid(null);
                 setSelectedId(null);
                 setDetailItem(null);
                 handleRecenter();
@@ -1133,7 +1260,7 @@ const BirdsEyeView = () => {
               </p>
               {search && (
                 <button
-                  className="mt-2 text-xs text-primary-500 hover:underline"
+                  className="mt-2 text-xs text-primary-500 hover:underline cursor-pointer"
                   onClick={() => setSearch("")}
                 >
                   Clear search
@@ -1147,7 +1274,8 @@ const BirdsEyeView = () => {
                   key={item._uid}
                   driver={item}
                   isSelected={selectedId === item.id}
-                  onLocate={handleLocate}
+                  isTracked={trackedUid === item._uid}
+                  onToggleTrack={handleToggleTrack}
                   onView={(d) => {
                     setDetailItem(d);
                     setSelectedId(d.id);
@@ -1158,7 +1286,8 @@ const BirdsEyeView = () => {
                   key={item._uid}
                   rider={item}
                   isSelected={selectedId === item.id}
-                  onLocate={handleLocate}
+                  isTracked={trackedUid === item._uid}
+                  onToggleTrack={handleToggleTrack}
                   onView={(r) => {
                     setDetailItem(r);
                     setSelectedId(r.id);

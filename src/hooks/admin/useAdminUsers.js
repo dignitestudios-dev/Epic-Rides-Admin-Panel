@@ -9,7 +9,7 @@ const useAdminUsers = (page = 1, limit = 10, search = "", role = "", sort = "des
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({
     totalData: 0,
-    totalPages: 0,
+    totalPages: 1,
     currentPage: 1,
     limit: 10,
   });
@@ -24,12 +24,32 @@ const useAdminUsers = (page = 1, limit = 10, search = "", role = "", sort = "des
         signal,
       });
       if (!isCurrent()) return;
-      setAdmins(response.data || []);
+      
+      const adminList = Array.isArray(response?.data)
+        ? response.data
+        : (response?.data?.admins || response?.data?.results || response?.data?.data || []);
+      setAdmins(adminList);
+
+      const totalCount =
+        response?.pagination?.totalData ??
+        response?.pagination?.total ??
+        response?.data?.totalData ??
+        response?.data?.total ??
+        response?.total ??
+        response?.totalCount ??
+        adminList.length;
+
+      const calculatedPages =
+        response?.pagination?.totalPages ??
+        response?.data?.totalPages ??
+        response?.totalPages ??
+        (totalCount > 0 ? Math.ceil(totalCount / limit) : 1);
+
       setPagination({
-        totalData: response.pagination?.totalData || 0,
-        totalPages: response.pagination?.totalPages || 0,
-        currentPage: response.pagination?.currentPage || page,
-        limit: response.pagination?.limit || limit,
+        totalData: totalCount,
+        totalPages: Math.max(1, calculatedPages),
+        currentPage: response?.pagination?.currentPage || response?.data?.currentPage || page,
+        limit: response?.pagination?.limit || response?.data?.limit || limit,
       });
     } catch (err) {
       if (!isCurrent() || isAbortError(err)) return;
