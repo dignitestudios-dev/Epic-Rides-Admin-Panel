@@ -850,7 +850,7 @@ const BirdsEyeView = () => {
       setSelectedId(item.id);
       const pos = smoothPositions[item._uid];
       if (pos && mapRef.current) {
-        flyToMap(mapRef.current, pos, 16, 1000);
+        flyToMap(mapRef.current, pos, 18, 1000);
       }
     },
     [trackedUid, smoothPositions]
@@ -1014,22 +1014,21 @@ const BirdsEyeView = () => {
                 mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                 getPixelPositionOffset={(width, height) => ({
                   x: -(width / 2),
-                  y: -(height + 24),
+                  y: -(height + 48),
                 })}
               >
-                <div className="flex flex-col items-center pointer-events-none select-none drop-shadow-md">
-                  <div className="bg-gray-900/95 text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-primary-400 flex items-center gap-1.5 whitespace-nowrap shadow-lg">
+                <div className="flex flex-col items-center pointer-events-none select-none drop-shadow-lg">
+                  <div className="bg-gray-900/95 text-white text-xs font-semibold px-2.5 py-1 rounded-full border border-primary-400 flex items-center gap-1.5 whitespace-nowrap shadow-xl">
                     <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse flex-shrink-0" />
-                    <span>
+                    <span className="text-white font-medium">
                       {[trackedEntity.firstName, trackedEntity.lastName]
                         .filter(Boolean)
                         .join(" ") || "User"}
                     </span>
-                    <span className="bg-primary-600 text-[9px] font-bold text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider">
-                      Tracking
-                    </span>
                   </div>
-                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-primary-400" />
+                  {/* Pointer Stem & Tip pointing cleanly to the vehicle */}
+                  <div className="w-0.5 h-1.5 bg-primary-400" />
+                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-t-[5px] border-t-primary-400 -mt-[1px]" />
                 </div>
               </OverlayView>
             )}
