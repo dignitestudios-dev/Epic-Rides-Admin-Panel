@@ -25,14 +25,17 @@ const useAdminUsers = (page = 1, limit = 10, search = "", role = "", sort = "des
       });
       if (!isCurrent()) return;
       
+      const paginationObj = response?.data?.pagination || response?.pagination || {};
+      
       const adminList = Array.isArray(response?.data)
         ? response.data
         : (response?.data?.admins || response?.data?.results || response?.data?.data || []);
       setAdmins(adminList);
 
       const totalCount =
-        response?.pagination?.totalData ??
-        response?.pagination?.total ??
+        paginationObj.total ??
+        paginationObj.totalData ??
+        paginationObj.totalItems ??
         response?.data?.totalData ??
         response?.data?.total ??
         response?.total ??
@@ -40,16 +43,29 @@ const useAdminUsers = (page = 1, limit = 10, search = "", role = "", sort = "des
         adminList.length;
 
       const calculatedPages =
-        response?.pagination?.totalPages ??
+        paginationObj.totalPages ??
         response?.data?.totalPages ??
         response?.totalPages ??
         (totalCount > 0 ? Math.ceil(totalCount / limit) : 1);
 
+      const currentPageNum =
+        paginationObj.currentPage ??
+        paginationObj.page ??
+        response?.data?.currentPage ??
+        page;
+
+      const currentLimitNum =
+        paginationObj.limit ??
+        paginationObj.pageSize ??
+        paginationObj.page ??
+        response?.data?.limit ??
+        limit;
+
       setPagination({
         totalData: totalCount,
         totalPages: Math.max(1, calculatedPages),
-        currentPage: response?.pagination?.currentPage || response?.data?.currentPage || page,
-        limit: response?.pagination?.limit || response?.data?.limit || limit,
+        currentPage: currentPageNum,
+        limit: currentLimitNum,
       });
     } catch (err) {
       if (!isCurrent() || isAbortError(err)) return;

@@ -238,13 +238,13 @@ const DataTable = ({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3 mt-4">
         <div className="flex items-center space-x-2">
           <span className="text-sm text-gray-700 dark:text-gray-300">Show</span>
           <select
             name="pageSize"
             id="pageSize"
-            className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
+            className="block w-auto px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors duration-200"
             value={pageSize}
             onChange={(e) =>
               onPageSizeChange && onPageSizeChange(Number(e.target.value))
@@ -259,6 +259,12 @@ const DataTable = ({
           <span className="text-sm text-gray-700 dark:text-gray-300">
             entries
           </span>
+          {totalData > 0 && (
+            <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:inline ml-2">
+              (Showing {Math.min((currentPage - 1) * pageSize + 1, totalData)}–
+              {Math.min(currentPage * pageSize, totalData)} of {totalData})
+            </span>
+          )}
         </div>
         {totalPages > 1 && (
           <div className="flex items-center space-x-1">
