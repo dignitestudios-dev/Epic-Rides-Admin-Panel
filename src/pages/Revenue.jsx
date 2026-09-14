@@ -13,6 +13,7 @@ import {
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
+import Tabs from "../components/ui/Tabs";
 import DataTable from "../components/common/DataTable";
 import FilterBar from "../components/ui/FilterBar";
 import StatsCard from "../components/common/StatsCard";
@@ -22,6 +23,28 @@ import useGetSubscriptionRevenue from "../hooks/revenue/useGetSubscriptionRevenu
 import useGetWithdrawalRevenue from "../hooks/revenue/useGetWithdrawalRevenue";
 import useDebounce from "../hooks/global/useDebounce";
 import { useAuth } from "../contexts/AuthContext";
+
+const AVATAR_PALETTE = [
+  "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  "bg-pink-500/15 text-pink-400 border-pink-500/30",
+];
+
+const getInitials = (firstName, lastName) => {
+  const f = firstName ? firstName.charAt(0).toUpperCase() : "";
+  const l = lastName ? lastName.charAt(0).toUpperCase() : "";
+  return f + l || "D";
+};
+
+const getAvatarStyle = (name) => {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+};
 
 /* =========================
    DATE HELPERS
@@ -199,22 +222,39 @@ const Revenue = () => {
       label: "Driver Name",
       render: (_, row) => {
         const name = [row.driverFirstName, row.driverLastName].filter(Boolean).join(" ") || "—";
+        const initials = getInitials(row.driverFirstName, row.driverLastName);
+        const avatarStyle = getAvatarStyle(name);
         return (
-          <button
-            onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
-            className="text-primary-600 hover:underline font-medium text-left"
-          >
-            {name}
-          </button>
+          <div className="flex items-center gap-3 min-w-0" title={name}>
+            <div
+              className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[11px] shrink-0 ${avatarStyle}`}
+            >
+              {initials}
+            </div>
+            <button
+              onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
+              className="text-[#61CB08] hover:underline font-bold text-xs truncate text-left"
+            >
+              {name}
+            </button>
+          </div>
         );
       },
     },
-    { key: "email", label: "Email" },
+    {
+      key: "email",
+      label: "Email",
+      render: (v) => (
+        <span className="text-gray-600 dark:text-slate-300 font-mono text-xs">
+          {v || "—"}
+        </span>
+      ),
+    },
     {
       key: "subscriptionStatus",
       label: "Subscription Status",
       render: (v) => (
-        <Badge className="ml-10 capitalize" variant={v === "active" ? "success" : "danger"}>
+        <Badge className="capitalize" variant={v === "active" ? "success" : "danger"} dot>
           {v}
         </Badge>
       ),
@@ -222,17 +262,29 @@ const Revenue = () => {
     {
       key: "purchaseDate",
       label: "Purchase Date",
-      render: formatDate,
+      render: (v) => (
+        <span className="text-xs text-gray-500 dark:text-slate-400 font-mono">
+          {formatDate(v)}
+        </span>
+      ),
     },
     {
       key: "expiryDate",
       label: "Expiry Date",
-      render: formatDate,
+      render: (v) => (
+        <span className="text-xs text-gray-500 dark:text-slate-400 font-mono">
+          {formatDate(v)}
+        </span>
+      ),
     },
     {
       key: "amount",
       label: "Amount",
-      render: (v) => formatCurrency(v || 0),
+      render: (v) => (
+        <span className="text-xs font-bold text-gray-900 dark:text-white">
+          {formatCurrency(v || 0)}
+        </span>
+      ),
     },
   ];
 
@@ -242,30 +294,51 @@ const Revenue = () => {
       label: "Driver Name",
       render: (_, row) => {
         const name = [row.driverFirstName, row.driverLastName].filter(Boolean).join(" ") || "—";
+        const initials = getInitials(row.driverFirstName, row.driverLastName);
+        const avatarStyle = getAvatarStyle(name);
         return (
-          <button
-            onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
-            className="text-primary-600 hover:underline font-medium text-left"
-          >
-            {name}
-          </button>
+          <div className="flex items-center gap-3 min-w-0" title={name}>
+            <div
+              className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[11px] shrink-0 ${avatarStyle}`}
+            >
+              {initials}
+            </div>
+            <button
+              onClick={() => navigate(`/user-management/driver/${row.driverId}`)}
+              className="text-[#61CB08] hover:underline font-bold text-xs truncate text-left"
+            >
+              {name}
+            </button>
+          </div>
         );
       },
     },
     {
       key: "withdrawalAmount",
       label: "Withdrawal Amount",
-      render: (v) => formatCurrency(v || 0),
+      render: (v) => (
+        <span className="text-xs font-bold text-gray-900 dark:text-white">
+          {formatCurrency(v || 0)}
+        </span>
+      ),
     },
     {
       key: "adminCommission",
       label: "Admin Commission",
-      render: (v) => formatCurrency(v || 0),
+      render: (v) => (
+        <span className="text-xs font-bold text-[#61CB08]">
+          {formatCurrency(v || 0)}
+        </span>
+      ),
     },
     {
       key: "date",
       label: "Date",
-      render: formatDate,
+      render: (v) => (
+        <span className="text-xs text-gray-500 dark:text-slate-400 font-mono">
+          {formatDate(v)}
+        </span>
+      ),
     },
   ];
 
@@ -289,121 +362,121 @@ const Revenue = () => {
   const withDateDesc = getDayRangeDesc(withFilters.startDate, withFilters.endDate);
 
   return (
-    <div className="space-y-6 min-h-screen bg-gray-50/50">
-
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Revenue Management</h1>
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* ── HEADER ──────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Revenue Management
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              Fiscal Ops
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Monitor driver subscriptions, card processing fees, and financial ledger
+          </p>
+        </div>
         {hasPermission('downloadExcel') && (
-          <Button onClick={handleExport}>
-            Export CSV
+          <Button
+            variant="secondary"
+            icon={<Download className="w-3.5 h-3.5" />}
+            size="sm"
+            onClick={handleExport}
+          >
+            Export Ledger
           </Button>
         )}
       </div>
 
-      {/* TABS */}
-      <div className="flex border-b">
-        <button
-          onClick={() => handleTabChange("subscription")}
-          className={`px-4 py-2 ${
-            activeTab === "subscription"
-              ? "text-green-600 border-b-2 border-green-600"
-              : "text-gray-500"
-          }`}
-        >
-          Subscription Revenue
-        </button>
-        <button
-          onClick={() => handleTabChange("withdrawal")}
-          className={`px-4 py-2 ${
-            activeTab === "withdrawal"
-              ? "text-green-600 border-b-2 border-green-600"
-              : "text-gray-500"
-          }`}
-        >
-          Withdrawal
-        </button>
-      </div>
+      {/* ── SEGMENTED TABS ───────────────────────────────────────────────── */}
+      <Tabs
+        tabs={[
+          { key: "subscription", label: "Subscription Revenue", count: subTotalData },
+          { key: "withdrawal", label: "Withdrawals & Commission", count: withTotalData },
+        ]}
+        activeTab={activeTab}
+        onChange={handleTabChange}
+      />
 
-      {/* STATS CARDS */}
+      {/* ── STATS CARDS ──────────────────────────────────────────────────── */}
       {activeTab === "subscription" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
             title="Total Subscriptions"
             value={subStats?.totalSubscriptionsPurchased ?? "—"}
-            description={subDateDesc}
-            icon={<CreditCard />}
-            colored
+            description={subDateDesc || "All time active subscriptions"}
+            icon={<CreditCard className="w-4 h-4" />}
             index={0}
           />
           <StatsCard
             title="Active Subscriptions"
             value={subStats?.totalActiveSubscriptions ?? "—"}
-            description={subDateDesc}
-            icon={<CheckCircle />}
-            colored
-            index={3}
+            description={subDateDesc || "Currently active tiers"}
+            icon={<CheckCircle className="w-4 h-4" />}
+            index={1}
           />
           <StatsCard
             title="Expired Subscriptions"
             value={subStats?.totalExpiredSubscriptions ?? "—"}
-            description={subDateDesc}
-            icon={<XCircle />}
-            colored
-            index={4}
+            description={subDateDesc || "Needs renewal"}
+            icon={<XCircle className="w-4 h-4" />}
+            index={2}
           />
           <StatsCard
             title="Total Revenue"
             value={formatCurrency(subStats?.totalRevenue ?? 0)}
-            description={subDateDesc}
-            icon={<DollarSign />}
-            colored
-            index={1}
+            description={subDateDesc || "Gross subscription yield"}
+            icon={<DollarSign className="w-4 h-4" />}
+            index={3}
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <StatsCard
             title="Total Withdrawals Processed"
             value={withStats?.totalWithdrawalsProcessed ?? "—"}
-            description={withDateDesc}
-            icon={<ArrowDownCircle />}
-            colored
+            description={withDateDesc || "Completed driver payouts"}
+            icon={<ArrowDownCircle className="w-4 h-4" />}
             index={0}
           />
           <StatsCard
-            title="Total Card Fees"
+            title="Total Fee Commission"
             value={formatCurrency(withStats?.totalCommissionRevenue ?? 0)}
-            description={withDateDesc}
-            icon={<TrendingUp />}
-            colored
-            index={3}
+            description={withDateDesc || "Admin commission captured"}
+            icon={<TrendingUp className="w-4 h-4" />}
+            index={1}
           />
         </div>
       )}
 
-      {/* FILTERS */}
-      <Card>
+      {/* ── FILTERS ──────────────────────────────────────────────────────── */}
+      <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-4">
         {activeTab === "subscription" ? (
           <FilterBar
             searchable
             searchValue={subFilters.search}
             onSearchChange={(v) => updateSub("search", v)}
+            searchPlaceholder="Search by driver name or email..."
             filters={[
               {
                 key: "startDate",
+                label: "Start Date",
                 type: "date",
                 value: subFilters.startDate,
                 onChange: (v) => updateSub("startDate", v),
               },
               {
                 key: "endDate",
+                label: "End Date",
                 type: "date",
                 value: subFilters.endDate,
                 onChange: (v) => updateSub("endDate", v),
               },
               {
                 key: "status",
+                label: "Status",
                 type: "select",
                 value: subFilters.status?.target?.value,
                 onChange: (v) => updateSub("status", v),
@@ -427,15 +500,18 @@ const Revenue = () => {
             searchable
             searchValue={withFilters.search}
             onSearchChange={(v) => updateWith("search", v)}
+            searchPlaceholder="Search driver withdrawals..."
             filters={[
               {
                 key: "startDate",
+                label: "Start Date",
                 type: "date",
                 value: withFilters.startDate,
                 onChange: (v) => updateWith("startDate", v),
               },
               {
                 key: "endDate",
+                label: "End Date",
                 type: "date",
                 value: withFilters.endDate,
                 onChange: (v) => updateWith("endDate", v),
@@ -450,25 +526,26 @@ const Revenue = () => {
             }
           />
         )}
-      </Card>
+      </div>
 
-      {/* TABLE */}
-      <Card>
-        <DataTable
-          data={tableData}
-          columns={activeTab === "subscription" ? subColumns : withColumns}
-          loading={loading}
-          totalPages={totalPages}
-          totalData={totalData}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(s) => {
-            setPageSize(s);
-            setCurrentPage(1);
-          }}
-        />
-      </Card>
+      {/* ── TABLE ────────────────────────────────────────────────────────── */}
+      <DataTable
+        title={activeTab === "subscription" ? "Subscription Ledger" : "Withdrawal Records"}
+        subtitle={activeTab === "subscription" ? "Monthly & tier subscription payment ledger" : "Driver withdrawal requests & admin commission"}
+        data={tableData}
+        columns={activeTab === "subscription" ? subColumns : withColumns}
+        loading={loading}
+        totalPages={totalPages}
+        totalData={totalData}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(s) => {
+          setPageSize(s);
+          setCurrentPage(1);
+        }}
+        addButton={false}
+      />
     </div>
   );
 };

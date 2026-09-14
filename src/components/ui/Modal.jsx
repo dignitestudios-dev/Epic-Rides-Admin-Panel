@@ -67,29 +67,29 @@ const Modal = ({
         <div
           className={`inline-block w-full ${
             sizes[size]
-          } p-6 my-8 text-left align-middle transition-all duration-200 ease-out transform bg-white dark:bg-gray-800 shadow-xl rounded-lg ${
+          } p-5 sm:p-6 my-8 text-left align-middle transition-all duration-200 ease-out transform bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] shadow-2xl rounded-xl ${
             isAnimating
               ? "opacity-0 scale-95 translate-y-4"
               : "opacity-100 scale-100 translate-y-0"
           }`}
         >
           {(title || showCloseButton) && (
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-gray-100 dark:border-[#1f242b]">
               <div>
                 {title && (
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white tracking-tight">
                     {title}
                   </h3>
                 )}
               </div>
               {showCloseButton && (
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={onClose}
-                  icon={<X className="w-4 h-4" />}
-                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                />
+                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               )}
             </div>
           )}

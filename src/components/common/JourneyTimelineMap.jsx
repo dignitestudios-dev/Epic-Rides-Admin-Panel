@@ -31,6 +31,8 @@ import Modal from "../ui/Modal";
 import { api } from "../../lib/services";
 import { formatPhoneNumber } from "../../utils/helpers";
 import toast from "react-hot-toast";
+import { useTheme } from "../../contexts/ThemeContext";
+import { getMapOptions } from "../../config/mapStyles";
 
 // ── Default Constants ────────────────────────────────────────────────────────
 const DEFAULT_CENTER = { lat: 24.8607, lng: 67.0011 }; // Fallback Karachi Center
@@ -320,6 +322,16 @@ const JourneyTimelineMap = ({ journeyType = "ride", journeyId, className = "" })
 
   const mapRef = useRef(null);
   const containerRef = useRef(null);
+
+  const { isDark } = useTheme();
+  const mapOptions = useMemo(() => getMapOptions(isDark), [isDark]);
+
+  // Dynamically apply dark/light theme to existing map instance
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.setOptions(getMapOptions(isDark));
+    }
+  }, [isDark]);
 
   // Load Google Maps SDK
   const { isLoaded, loadError } = useJsApiLoader({
@@ -615,7 +627,7 @@ const JourneyTimelineMap = ({ journeyType = "ride", journeyId, className = "" })
                 mapContainerStyle={{ width: "100%", height: "100%" }}
                 center={markers[0]?.position || DEFAULT_CENTER}
                 zoom={14}
-                options={MAP_OPTIONS}
+                options={mapOptions}
                 onLoad={onMapLoad}
               >
                 {/* Location Checkpoint Markers */}

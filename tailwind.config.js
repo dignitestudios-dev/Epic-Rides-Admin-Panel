@@ -33,6 +33,17 @@ export default {
           900: 'rgb(var(--color-secondary-900) / <alpha-value>)',
           950: 'rgb(var(--color-secondary-950) / <alpha-value>)',
         },
+        // Enterprise Command Center surfaces (as in UI screenshots)
+        dark: {
+          bg: '#0d0f12',
+          surface: '#121519',
+          card: '#13161a',
+          cardElevated: '#181c22',
+          border: '#1f242b',
+          borderSubtle: '#181d24',
+          hover: '#1a1f26',
+          muted: '#8b949e',
+        },
         // Status colors
         success: {
           50: '#f0fdf4',
@@ -68,6 +79,7 @@ export default {
         'scale-in': 'scaleIn 0.2s ease-out',
         'spin': 'spin 1s linear infinite',
         'bounce-in': 'bounceIn 0.6s ease-out',
+        'pulse-subtle': 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
       keyframes: {
         fadeIn: {
@@ -92,10 +104,16 @@ export default {
           '70%': { transform: 'scale(0.9)' },
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
+        pulseSubtle: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.4' },
+        },
       },
       boxShadow: {
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         'card-hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        'glow-primary': '0 0 20px -5px rgba(97, 203, 8, 0.3)',
+        'glow-cyan': '0 0 20px -5px rgba(56, 189, 248, 0.3)',
       },
     },
   },

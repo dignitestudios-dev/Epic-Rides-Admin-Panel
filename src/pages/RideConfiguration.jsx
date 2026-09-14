@@ -101,15 +101,20 @@ const RideConfiguration = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Ride Configuration
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Manage search and matching radius configurations
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Ride Configuration
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              Dispatch Engine
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Manage search, dispatch matching, and pickup radius thresholds
           </p>
         </div>
         <div className="flex gap-2">
@@ -117,8 +122,8 @@ const RideConfiguration = () => {
             variant="secondary"
             onClick={fetchConfig}
             disabled={loading || updating}
-            className="flex items-center gap-1.5 text-sm"
-            icon={<RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />}
+            size="sm"
+            icon={<RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />}
           >
             Refresh
           </Button>
@@ -126,23 +131,23 @@ const RideConfiguration = () => {
       </div>
 
       {/* ── Configuration Card ──────────────────────────────────────────── */}
-      <Card className="p-6 rounded-xl border bg-white dark:bg-gray-800">
-        <div className="border-b border-gray-100 dark:border-gray-700 pb-4 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            General Settings
+      <Card className="p-6 rounded-xl border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a]">
+        <div className="border-b border-gray-100 dark:border-[#1f242b] pb-4 mb-6">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
+            General Dispatch Settings
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
             Configure search radius for private and carpool rides.
           </p>
         </div>
 
         {loading ? (
           <div className="py-12 flex flex-col items-center justify-center space-y-3">
-            <RefreshCw className="w-8 h-8 text-primary-500 animate-spin" />
-            <p className="text-sm text-gray-500">Loading configuration...</p>
+            <RefreshCw className="w-6 h-6 text-[#61CB08] animate-spin" />
+            <p className="text-xs text-gray-500 dark:text-slate-400">Loading configuration...</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
+          <form onSubmit={handleSubmit} className="space-y-5 max-w-xl">
             <div className="space-y-4">
               <div>
                 <Input
@@ -174,7 +179,7 @@ const RideConfiguration = () => {
             </div>
 
             {config?.updatedAt && (
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-slate-500">
                 Last updated: {formatDateTime(config.updatedAt)}
               </p>
             )}
@@ -186,9 +191,9 @@ const RideConfiguration = () => {
                 disabled={!isDirty || !isValid || updating}
                 icon={
                   updating ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <Save className="w-4 h-4" />
+                    <Save className="w-3.5 h-3.5" />
                   )
                 }
               >

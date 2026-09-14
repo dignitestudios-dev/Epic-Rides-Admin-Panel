@@ -32,6 +32,32 @@ import {
   Bar,
 } from "recharts";
 import { usePersistentState } from "../hooks/global/usePersistentState";
+import StatsCard from "../components/common/StatsCard";
+
+const AVATAR_PALETTE = [
+  "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  "bg-pink-500/15 text-pink-400 border-pink-500/30",
+];
+
+const getInitials = (name) => {
+  if (!name) return "U";
+  const parts = name.trim().split(" ");
+  if (parts.length >= 2) {
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+};
+
+const getAvatarStyle = (name) => {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+};
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState([
@@ -134,13 +160,27 @@ const Transactions = () => {
     {
       key: "userName",
       label: "Customer",
-
-      render: (value, transaction) => (
-        <div>
-          <p className="font-medium text-gray-900 dark:text-white">{value}</p>
-          <p className="text-sm text-gray-500">{transaction.userEmail}</p>
-        </div>
-      ),
+      render: (value, transaction) => {
+        const initials = getInitials(value);
+        const avatarStyle = getAvatarStyle(value);
+        return (
+          <div className="flex items-center gap-3 min-w-0" title={value}>
+            <div
+              className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[11px] shrink-0 ${avatarStyle}`}
+            >
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <span className="font-bold text-xs text-gray-900 dark:text-white truncate block">
+                {value}
+              </span>
+              <span className="text-[11px] text-gray-400 dark:text-slate-500 font-normal truncate block">
+                {transaction.userEmail}
+              </span>
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: "amount",
@@ -150,12 +190,12 @@ const Transactions = () => {
         <div className="text-right">
           <p
             className={`font-semibold ${
-              value < 0 ? "text-red-600" : "text-green-600"
+              value < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"
             }`}
           >
             {formatCurrency(Math.abs(value))}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono">
             Net: {formatCurrency(Math.abs(transaction.netAmount))}
           </p>
         </div>
@@ -165,7 +205,9 @@ const Transactions = () => {
       key: "type",
       label: "Type",
       render: (value) => (
-        <Badge variant={value === "refund" ? "warning" : "info"}>{value}</Badge>
+        <Badge variant={value === "refund" ? "warning" : "info"} className="capitalize">
+          {value}
+        </Badge>
       ),
     },
     {
@@ -184,7 +226,7 @@ const Transactions = () => {
           variant = "info";
         }
         return (
-          <Badge variant={variant} className="capitalize">
+          <Badge variant={variant} dot className="capitalize">
             {value}
           </Badge>
         );
@@ -195,8 +237,8 @@ const Transactions = () => {
       label: "Date",
       render: (value) => (
         <div>
-          <p className="text-sm">{new Date(value).toLocaleDateString()}</p>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs font-semibold text-gray-900 dark:text-white">{new Date(value).toLocaleDateString()}</p>
+          <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono">
             {new Date(value).toLocaleTimeString()}
           </p>
         </div>
@@ -206,19 +248,19 @@ const Transactions = () => {
       key: "actions",
       label: "Actions",
       render: (_, transaction) => (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => handleView(transaction)}
-            icon={<Eye className="w-4 h-4" />}
+            icon={<Eye className="w-3.5 h-3.5" />}
             title="View Details"
           />
           <Button
             variant="ghost"
             size="sm"
             onClick={() => handleDownloadReceipt(transaction)}
-            icon={<Download className="w-4 h-4" />}
+            icon={<Download className="w-3.5 h-3.5" />}
             title="Download Receipt"
           />
           {transaction.status === "completed" &&
@@ -227,7 +269,7 @@ const Transactions = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleRefund(transaction)}
-                icon={<RefreshCw className="w-4 h-4" />}
+                icon={<RefreshCw className="w-3.5 h-3.5" />}
                 title="Process Refund"
               />
             )}
@@ -298,91 +340,70 @@ const Transactions = () => {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Transactions
+              </h1>
+              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+                Ledger
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+              Review transaction history, settlements, customer charges, and refunds
+            </p>
+          </div>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Revenue
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  {formatCurrency(totalRevenue)}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Pending Amount
-                </p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {formatCurrency(pendingAmount)}
-                </p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Clock className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Refunds
-                </p>
-                <p className="text-2xl font-bold text-red-600">
-                  {formatCurrency(totalRefunds)}
-                </p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <RefreshCw className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Processing Fees
-                </p>
-                <p className="text-2xl font-bold text-gray-600">
-                  {formatCurrency(totalFees)}
-                </p>
-              </div>
-              <div className="p-3 bg-gray-100 rounded-lg">
-                <CreditCard className="w-6 h-6 text-gray-600" />
-              </div>
-            </div>
-          </Card>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Total Revenue"
+            value={formatCurrency(totalRevenue)}
+            icon={<DollarSign className="w-4 h-4" />}
+            index={0}
+          />
+          <StatsCard
+            title="Pending Amount"
+            value={formatCurrency(pendingAmount)}
+            icon={<Clock className="w-4 h-4" />}
+            index={1}
+          />
+          <StatsCard
+            title="Total Refunds"
+            value={formatCurrency(totalRefunds)}
+            icon={<RefreshCw className="w-4 h-4" />}
+            index={2}
+          />
+          <StatsCard
+            title="Processing Fees"
+            value={formatCurrency(totalFees)}
+            icon={<CreditCard className="w-4 h-4" />}
+            index={3}
+          />
         </div>
 
         {/* Revenue Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card className="p-4 border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a]">
             <Card.Header>
-              <Card.Title>Daily Revenue</Card.Title>
+              <Card.Title className="text-sm font-bold text-gray-900 dark:text-white">Daily Revenue</Card.Title>
             </Card.Header>
             <Card.Content>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#262c36" />
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value) =>
                       new Date(value).toLocaleDateString()
                     }
+                    tick={{ fontSize: 11 }}
                   />
-                  <YAxis />
+                  <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
                     formatter={(value) => [formatCurrency(value), "Revenue"]}
                     labelFormatter={(value) =>
@@ -392,37 +413,38 @@ const Transactions = () => {
                   <Line
                     type="monotone"
                     dataKey="revenue"
-                    fill={CHART_COLORS.secondary}
+                    stroke="#61CB08"
                     strokeWidth={2}
-                    dot={{ fill: CHART_COLORS.secondary, strokeWidth: 2, r: 4 }}
+                    dot={{ fill: "#61CB08", strokeWidth: 2, r: 4 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </Card.Content>
           </Card>
 
-          <Card>
+          <Card className="p-4 border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a]">
             <Card.Header>
-              <Card.Title>Daily Transactions</Card.Title>
+              <Card.Title className="text-sm font-bold text-gray-900 dark:text-white">Daily Transactions</Card.Title>
             </Card.Header>
             <Card.Content>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#262c36" />
                   <XAxis
                     dataKey="date"
                     tickFormatter={(value) =>
                       new Date(value).toLocaleDateString()
                     }
+                    tick={{ fontSize: 11 }}
                   />
-                  <YAxis />
+                  <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip
                     formatter={(value) => [value, "Transactions"]}
                     labelFormatter={(value) =>
                       new Date(value).toLocaleDateString()
                     }
                   />
-                  <Bar dataKey="transactions" fill={CHART_COLORS.primary} />
+                  <Bar dataKey="transactions" fill="#61CB08" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </Card.Content>
@@ -430,7 +452,7 @@ const Transactions = () => {
         </div>
 
         {/* Filters */}
-        <Card className="p-4">
+        <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-4">
           <FilterBar
             filters={[
               {
@@ -489,11 +511,12 @@ const Transactions = () => {
               })
             }
           />
-        </Card>
+        </div>
 
         {/* Transactions Table */}
         <DataTable
           title="Transaction History"
+          subtitle="Record of all customer payments, refunds, and fees"
           data={filteredTransactions}
           columns={columns}
           searchable={true}
@@ -512,12 +535,12 @@ const Transactions = () => {
           {selectedTransaction && (
             <div className="space-y-6">
               {/* Transaction Header */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-[#181d24] border border-gray-100 dark:border-[#1f242b] rounded-xl">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
                     {selectedTransaction.id}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                     {selectedTransaction.description}
                   </p>
                 </div>
@@ -531,87 +554,89 @@ const Transactions = () => {
                       ? "danger"
                       : "default"
                   }
+                  dot
+                  className="capitalize"
                 >
                   {selectedTransaction.status}
                 </Badge>
               </div>
 
               {/* Transaction Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border border-gray-100 dark:border-[#1f242b] bg-gray-50/50 dark:bg-[#181d24]/50 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300">
                     Customer Information
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Name
                       </label>
-                      <p className="text-gray-900 dark:text-white">
+                      <p className="text-xs font-bold text-gray-900 dark:text-white">
                         {selectedTransaction.userName}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Email
                       </label>
-                      <p className="text-gray-900 dark:text-white">
+                      <p className="text-xs text-gray-700 dark:text-slate-300 font-mono">
                         {selectedTransaction.userEmail}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         User ID
                       </label>
-                      <p className="text-gray-900 dark:text-white">
+                      <p className="text-xs text-gray-700 dark:text-slate-300 font-mono">
                         {selectedTransaction.userId}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                <div className="p-4 rounded-xl border border-gray-100 dark:border-[#1f242b] bg-gray-50/50 dark:bg-[#181d24]/50 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300">
                     Payment Information
                   </h4>
                   <div className="space-y-2">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Amount
                       </label>
                       <p
-                        className={`text-lg font-semibold ${
+                        className={`text-sm font-bold ${
                           selectedTransaction.amount < 0
-                            ? "text-red-600"
-                            : "text-green-600"
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-emerald-600 dark:text-emerald-400"
                         }`}
                       >
                         {formatCurrency(Math.abs(selectedTransaction.amount))}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Processing Fee
                       </label>
-                      <p className="text-gray-900 dark:text-white">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-slate-300 font-mono">
                         {formatCurrency(Math.abs(selectedTransaction.fees))}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Net Amount
                       </label>
-                      <p className="text-gray-900 dark:text-white font-semibold">
+                      <p className="text-xs text-gray-900 dark:text-white font-bold font-mono">
                         {formatCurrency(
                           Math.abs(selectedTransaction.netAmount)
                         )}
                       </p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">
+                      <label className="text-[11px] font-medium text-gray-400 dark:text-slate-500">
                         Stripe Transaction ID
                       </label>
-                      <p className="text-gray-900 dark:text-white font-mono text-sm">
+                      <p className="text-gray-900 dark:text-white font-mono text-xs">
                         {selectedTransaction.stripeTransactionId}
                       </p>
                     </div>
@@ -620,28 +645,28 @@ const Transactions = () => {
               </div>
 
               {/* Timeline */}
-              <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900 dark:text-white">
+              <div className="p-4 rounded-xl border border-gray-100 dark:border-[#1f242b] bg-gray-50/50 dark:bg-[#181d24]/50 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-slate-300">
                   Timeline
                 </h4>
                 <div className="space-y-3">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                     <div>
-                      <p className="text-sm font-medium">Transaction Created</p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white">Transaction Created</p>
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono">
                         {formatDateTime(selectedTransaction.createdAt)}
                       </p>
                     </div>
                   </div>
                   {selectedTransaction.completedAt && (
                     <div className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                       <div>
-                        <p className="text-sm font-medium">
+                        <p className="text-xs font-semibold text-gray-900 dark:text-white">
                           Transaction Completed
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-[11px] text-gray-400 dark:text-slate-500 font-mono">
                           {formatDateTime(selectedTransaction.completedAt)}
                         </p>
                       </div>
@@ -651,7 +676,7 @@ const Transactions = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t">
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-100 dark:border-[#1f242b]">
                 <Button
                   variant="outline"
                   onClick={() => handleDownloadReceipt(selectedTransaction)}

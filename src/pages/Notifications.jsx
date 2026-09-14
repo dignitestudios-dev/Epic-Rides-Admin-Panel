@@ -115,15 +115,15 @@ const UserPicker = ({ type, selectedId, onChange }) => {
   const filtered = users;
 
   return (
-    <div className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 dark:border-[#1f242b] rounded-xl overflow-hidden bg-white dark:bg-[#13161a]">
       {/* Search */}
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100 dark:border-[#1f242b] bg-gray-50 dark:bg-[#181d24]">
         <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={`Search ${type}s...`}
-          className="flex-1 text-sm bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
+          className="flex-1 text-xs bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400"
         />
         {search && (
           <button type="button" onClick={() => setSearch("")}>
@@ -140,11 +140,11 @@ const UserPicker = ({ type, selectedId, onChange }) => {
       >
         {loading ? (
           <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span className="text-sm">Loading...</span>
+            <Loader2 className="w-4 h-4 animate-spin text-[#61CB08]" />
+            <span className="text-xs">Loading...</span>
           </div>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-sm text-gray-400 py-6">No {type}s found.</p>
+          <p className="text-center text-xs text-gray-400 py-6">No {type}s found.</p>
         ) : (
           <>
             {filtered.map((u) => {
@@ -154,30 +154,36 @@ const UserPicker = ({ type, selectedId, onChange }) => {
                 <div
                   key={id}
                   onClick={() => onChange(isSelected ? null : id)}
-                  className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer border-b border-gray-50 dark:border-gray-700 last:border-0 transition-colors ${isSelected
-                      ? "bg-primary-50 dark:bg-primary-900/20"
-                      : "hover:bg-gray-50 dark:hover:bg-gray-700"
-                    }`}
+                  className={`flex items-center gap-3 px-3 py-2 cursor-pointer border-b border-gray-50 dark:border-[#1f242b] last:border-0 transition-colors ${
+                    isSelected
+                      ? "bg-[#61CB08]/10 text-gray-900 dark:text-white"
+                      : "hover:bg-gray-50 dark:hover:bg-[#181d24]"
+                  }`}
                 >
                   {/* Radio indicator */}
-                  <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "border-primary-600 bg-primary-600" : "border-gray-300"
-                    }`}>
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  <div
+                    className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                      isSelected ? "border-[#61CB08] bg-[#61CB08]" : "border-gray-300 dark:border-gray-600"
+                    }`}
+                  >
+                    {isSelected && <div className="w-1 h-1 rounded-full bg-black" />}
                   </div>
-                  <div className="w-7 h-7 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-xs shrink-0">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-[10px] shrink-0">
                     {[u.firstName, u.lastName].filter(Boolean).join(" ").charAt(0).toUpperCase() || "?"}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}</p>
-                    <p className="text-xs text-gray-400 truncate">{u.email || "—"}</p>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
+                      {[u.firstName, u.lastName].filter(Boolean).join(" ") || "—"}
+                    </p>
+                    <p className="text-[11px] text-gray-400 truncate">{u.email || "—"}</p>
                   </div>
                 </div>
               );
             })}
             {loadingMore && (
               <div className="flex items-center justify-center py-3 gap-2 text-gray-400">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                <span className="text-xs">Loading more...</span>
+                <Loader2 className="w-3 h-3 animate-spin text-[#61CB08]" />
+                <span className="text-[11px]">Loading more...</span>
               </div>
             )}
           </>
@@ -186,8 +192,8 @@ const UserPicker = ({ type, selectedId, onChange }) => {
 
       {/* Footer */}
       {selectedId && (
-        <div className="px-3 py-2 bg-primary-50 dark:bg-primary-900/20 border-t border-gray-100 dark:border-gray-700">
-          <p className="text-xs font-semibold text-primary-700 dark:text-primary-300">
+        <div className="px-3 py-1.5 bg-[#61CB08]/10 border-t border-[#61CB08]/20">
+          <p className="text-[11px] font-bold text-[#61CB08]">
             1 recipient selected
           </p>
         </div>
@@ -453,12 +459,17 @@ const Notifications = () => {
     {
       key: "recipientType",
       label: "Recipient Type",
-      render: (val) => (
-        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
-          {recipientIcon(val)}
-          {val || "—"}
-        </div>
-      ),
+      render: (val) => {
+        const type = val?.toLowerCase() || "";
+        const isDriver = type === "driver" || type === "drivers";
+        const isRider = type === "rider" || type === "riders";
+        const variant = isDriver ? "primary" : isRider ? "info" : "purple";
+        return (
+          <Badge variant={variant} dot>
+            {val || "—"}
+          </Badge>
+        );
+      },
     },
     {
       key: "dateAndTime",
@@ -472,14 +483,16 @@ const Notifications = () => {
         </button>
       ),
       render: (val) => (
-        <div className="text-sm text-gray-600">{val ? formatDateTime(val) : "—"}</div>
+        <div className="text-sm text-gray-600 dark:text-gray-400">{val ? formatDateTime(val) : "—"}</div>
       ),
     },
     {
       key: "status",
       label: "Status",
       render: (val) => (
-        <Badge variant={statusVariant(val)}>{val || "Unknown"}</Badge>
+        <Badge variant={statusVariant(val)} dot>
+          {val || "Unknown"}
+        </Badge>
       ),
     },
     {
@@ -501,28 +514,34 @@ const Notifications = () => {
     },
   ];
 
-  // ── Render ────────────────────────────────────────────────────────────────────
-
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Send and manage push notifications to riders and drivers.
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Notifications
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              Broadcast Engine
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Send, schedule, and manage push notifications to riders and drivers
           </p>
         </div>
         <div className="flex items-center gap-2">
           {hasPermission('downloadExcel') && (
-            <Button variant="outline" icon={<Download className="w-4 h-4" />} onClick={handleExport}>
+            <Button variant="secondary" icon={<Download className="w-3.5 h-3.5" />} size="sm" onClick={handleExport}>
               Export CSV
             </Button>
           )}
           {hasPermission('sendNotifications') && (
             <Button
               variant="primary"
-              icon={<Plus className="w-4 h-4" />}
+              size="sm"
+              icon={<Plus className="w-3.5 h-3.5" />}
               onClick={() => { reset(); setSelectedUserId(null); setShowCreateModal(true); }}
             >
               Send Notification
@@ -531,33 +550,25 @@ const Notifications = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <FilterBar
-          searchable
-          searchValue={search}
-          onSearchChange={(val) => { setSearch(val); setPage(1); }}
-          searchPlaceholder="Search by title..."
-          onClear={() => { setSearch(""); setPage(1); }}
-        />
-      </div>
-
       {/* Table */}
-      <Card className="overflow-hidden">
-        <DataTable
-          title="Notification History"
-          data={notifications}
-          columns={columns}
-          loading={loading}
-          totalPages={totalPages}
-          totalData={totalData}
-          currentPage={page}
-          onPageChange={setPage}
-          onPageSizeChange={(s) => { setLimit(s); setPage(1); }}
-          pageSize={limit}
-          addButton={false}
-        />
-      </Card>
+      <DataTable
+        title="Notification History"
+        subtitle="Log of broadcast and scheduled notification dispatches"
+        data={notifications}
+        columns={columns}
+        loading={loading}
+        totalPages={totalPages}
+        totalData={totalData}
+        currentPage={page}
+        onPageChange={setPage}
+        onPageSizeChange={(s) => { setLimit(s); setPage(1); }}
+        pageSize={limit}
+        searchable
+        searchTerm={search}
+        onSearch={(val) => { setSearch(val); setPage(1); }}
+        searchPlaceholder="Search notifications by title..."
+        addButton={false}
+      />
 
       {/* ── Create / Send Modal ───────────────────────────────────────────────── */}
       <Modal

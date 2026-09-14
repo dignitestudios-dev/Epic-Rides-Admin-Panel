@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Eye, MapPin, User, Car, Download, XCircle, CheckCircle2 } from "lucide-react";
+import { Eye, MapPin, User, Car, Download, XCircle, CheckCircle2, ArrowRight } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import FilterBar from "../components/ui/FilterBar";
+import Tabs from "../components/ui/Tabs";
+import StatsCard from "../components/common/StatsCard";
 
 import { formatDate, formatDateTime, formatPhoneNumber } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,34 +17,6 @@ import { api } from "../lib/services";
 import toast from "react-hot-toast";
 
 const fullName = (obj) => [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
-
-const statusBadge = (status) => {
-  switch (status) {
-    case "cancelled":
-      return <Badge variant="danger">Cancelled</Badge>;
-    case "completed":
-      return <Badge variant="success">Completed</Badge>;
-    case "ongoing":
-      return <Badge variant="warning">Ongoing</Badge>;
-    default:
-      return <Badge variant="default">{status || "—"}</Badge>;
-  }
-};
-
-const paymentBadge = (status) => {
-  if (!status) return <Badge variant="default">—</Badge>;
-  const formatted = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-  switch (status.toLowerCase()) {
-    case "paid":
-      return <Badge variant="success">{formatted}</Badge>;
-    case "pending":
-      return <Badge variant="warning">{formatted}</Badge>;
-    case "failed":
-      return <Badge variant="danger">{formatted}</Badge>;
-    default:
-      return <Badge variant="default">{formatted}</Badge>;
-  }
-};
 
 const PrivateRides = () => {
   const { hasPermission } = useAuth();
@@ -121,6 +93,11 @@ const PrivateRides = () => {
     }
   };
 
+  const tabs = [
+    { key: "completed", label: "Completed Rides", icon: <CheckCircle2 className="w-3.5 h-3.5 text-[#61CB08]" /> },
+    { key: "cancelled", label: "Cancelled Rides", icon: <XCircle className="w-3.5 h-3.5 text-rose-500" /> },
+  ];
+
   const columns = [
     {
       key: "pickupPoint",
@@ -128,7 +105,7 @@ const PrivateRides = () => {
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-          <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+          <span className="truncate text-xs font-semibold text-gray-800 dark:text-slate-200">
             {typeof val === 'string' ? val : val?.placeName || "—"}
           </span>
         </div>
@@ -139,8 +116,8 @@ const PrivateRides = () => {
       label: "Dropoff Location",
       render: (val) => (
         <div className="flex items-center gap-2 max-w-[200px]">
-          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-          <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+          <MapPin className="w-3.5 h-3.5 text-[#61CB08] shrink-0" />
+          <span className="truncate text-xs text-gray-700 dark:text-slate-300">
             {typeof val === 'string' ? val : val?.placeName || "—"}
           </span>
         </div>
@@ -150,15 +127,19 @@ const PrivateRides = () => {
       key: "user",
       label: "Rider",
       render: (val) => (
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
-            <User className="w-3.5 h-3.5 text-primary-600" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-[#61CB08]/15 border border-[#61CB08]/30 flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-bold text-[#61CB08]">
+              {(val?.firstName?.[0] || "R").toUpperCase()}
+            </span>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 truncate">
+              {val?.phone ? formatPhoneNumber(val.phone) : val?.email || ""}
+            </p>
           </div>
         </div>
       ),
@@ -167,15 +148,19 @@ const PrivateRides = () => {
       key: "driver",
       label: "Driver",
       render: (val) => (
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-            <Car className="w-3.5 h-3.5 text-gray-500" />
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-500/30 flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-bold text-sky-400">
+              {(val?.firstName?.[0] || "D").toUpperCase()}
+            </span>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
               {fullName(val)}
             </p>
-            <p className="text-xs text-gray-400">{val?.phone ? formatPhoneNumber(val.phone) : ""}</p>
+            <p className="text-[11px] text-gray-400 dark:text-slate-500 truncate">
+              {val?.phone ? formatPhoneNumber(val.phone) : val?.email || ""}
+            </p>
           </div>
         </div>
       ),
@@ -184,16 +169,16 @@ const PrivateRides = () => {
       key: "rideType",
       label: "Type",
       render: (val) => (
-        <span className="text-sm capitalize text-gray-700 dark:text-gray-300">
-          {val || "—"}
-        </span>
+        <Badge variant={val === "luxury" ? "purple" : "info"} className="capitalize">
+          {val || "Standard"}
+        </Badge>
       ),
     },
     {
       key: "rideFare",
       label: "Fare",
       render: (val) => (
-        <span className="text-sm font-medium text-gray-900 dark:text-white">
+        <span className="text-xs font-bold text-gray-900 dark:text-white">
           {val != null ? `$${val.toFixed(2)}` : "—"}
         </span>
       ),
@@ -202,52 +187,58 @@ const PrivateRides = () => {
       key: "cancelledBy",
       label: "Cancelled By",
       render: (val) => (
-        <span className="text-sm capitalize text-gray-700 dark:text-gray-300">
+        <Badge variant="danger" className="capitalize">
           {val || "—"}
-        </span>
+        </Badge>
       ),
     }] : []),
     {
       key: "createdAt",
       label: "Date",
       render: (val) => (
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500 dark:text-slate-400">
           {val ? formatDate(val) : "—"}
         </span>
       ),
     },
     {
-      key: "_id",
+      key: "actions",
       label: "",
       render: (_, row) => (
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Eye className="w-4 h-4" />}
+        <button
           onClick={() => handleViewRide(row._id)}
+          className="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+          title="View Ride Details"
         >
-          View
-        </Button>
+          <ArrowRight className="w-4 h-4" />
+        </button>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Private Ride
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            View and manage your private ride records
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Private Rides
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              {totalData || 0} rides
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            View and manage all active, completed and cancelled private ride records
           </p>
         </div>
+
         {hasPermission('downloadExcel') && (
           <Button
-            variant="primary"
-            icon={<Download className="w-4 h-4" />}
+            variant="outline"
+            size="sm"
+            icon={<Download className="w-3.5 h-3.5" />}
             onClick={handleExport}
             disabled={isExporting}
           >
@@ -256,104 +247,79 @@ const PrivateRides = () => {
         )}
       </div>
 
-      <div className="flex border-b border-gray-200">
-        <button
-          onClick={() => handleTabChange("completed")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-            activeTab === "completed"
-              ? "text-[#39A300] border-b-2 border-[#39A300]"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <CheckCircle2 className="w-4 h-4" />
-            Completed Rides
-          </div>
-        </button>
-        <button
-          onClick={() => handleTabChange("cancelled")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-            activeTab === "cancelled"
-              ? "text-[#39A300] border-b-2 border-[#39A300]"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <XCircle className="w-4 h-4" />
-            Cancelled Rides
-          </div>
-        </button>
-      </div>
+      {/* Segment Tabs */}
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-              Total {activeTab === "completed" ? "Completed" : "Cancelled"} Rides
-            </p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {stats.totalRides ?? "—"}
-            </p>
-          </Card>
-          <Card className="p-4">
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Revenue</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              ${stats.totalRevenue != null ? stats.totalRevenue.toFixed(2) : "0.00"}
-            </p>
-          </Card>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <StatsCard
+            title={`Total ${activeTab === "completed" ? "Completed" : "Cancelled"}`}
+            value={stats.totalRides != null ? stats.totalRides.toLocaleString() : "0"}
+            index={0}
+          />
+          <StatsCard
+            title="Revenue"
+            value={stats.totalRevenue != null ? `$${stats.totalRevenue.toFixed(2)}` : "$0.00"}
+            index={1}
+          />
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <FilterBar
-          filters={[
-            {
-              key: "startDate",
-              label: "Start Date",
-              type: "date",
-              value: startDate,
-              onChange: (val) => { setStartDate(val); setPage(1); },
-            },
-            {
-              key: "endDate",
-              label: "End Date",
-              type: "date",
-              value: endDate,
-              onChange: (val) => { setEndDate(val); setPage(1); },
-            },
-          ]}
-          onClear={() => {
-            setSearch("");
-            setStartDate("");
-            setEndDate("");
-            setPage(1);
-          }}
-        />
-      </div>
-
-      <Card className="overflow-hidden">
-        <DataTable
-          data={rides}
-          columns={columns}
-          title={`${activeTab === "cancelled" ? "Cancelled" : "Completed"} Rides`}
-          loading={loading}
-          searchable
-          searchTerm={search}
-          searchPlaceholder="Search by rider or driver..."
-          onSearch={handleSearchChange}
-          addButton={false}
-          exportable={false}
-          totalPages={totalPages}
-          totalData={totalData}
-          currentPage={page}
-          pageSize={limit}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
-        />
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        data={rides}
+        columns={columns}
+        title={`${activeTab === "cancelled" ? "Cancelled" : "Completed"} Private Rides`}
+        subtitle="Route records, passenger fares, and driver assignments"
+        loading={loading}
+        searchable
+        searchTerm={search}
+        searchPlaceholder="Search by rider, driver or location..."
+        onSearch={handleSearchChange}
+        addButton={false}
+        exportable={false}
+        totalPages={totalPages}
+        totalData={totalData}
+        currentPage={page}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
+      >
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+            className="px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a] text-gray-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#61CB08]"
+            title="Start date"
+          />
+          <input
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+            className="px-2 py-1 text-xs rounded-md border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a] text-gray-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#61CB08]"
+            title="End date"
+          />
+          {(startDate || endDate || search) && (
+            <button
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+                setSearch("");
+                setPage(1);
+              }}
+              className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-white px-1.5 py-1"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </DataTable>
     </div>
   );
 };
 
 export default PrivateRides;
+

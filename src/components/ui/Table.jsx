@@ -16,13 +16,13 @@ const Table = ({
   columns = [],
   loading = false,
   className = "",
-  defaultMaxWidth = "200px",
+  defaultMaxWidth = "240px",
 }) => {
   return (
-    <div className={`overflow-x-auto ${className} max-h-[70vh] relative`}>
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="sticky top-0 left-0 bg-white dark:bg-gray-900 z-10">
-          <tr className="shadow-sm shadow-gray-300 dark:shadow-black">
+    <div className={`overflow-x-auto ${className} max-h-[72vh] relative select-text`}>
+      <table className="min-w-full divide-y divide-gray-200/80 dark:divide-[#1f242b]">
+        <thead className="sticky top-0 left-0 bg-[#f8f9fa]/95 dark:bg-[#101317]/95 backdrop-blur z-10 border-b border-gray-200/80 dark:border-[#1f242b]">
+          <tr>
             {columns.map((column) => {
               const isActionCol =
                 column.key === "actions" ||
@@ -38,8 +38,8 @@ const Table = ({
                 <th
                   key={column.key}
                   style={maxWidth ? { maxWidth } : undefined}
-                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider ${
-                    isActionCol ? "whitespace-nowrap" : "max-w-[200px]"
+                  className={`px-4 py-3 text-left text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider ${
+                    isActionCol ? "whitespace-nowrap" : "max-w-[240px]"
                   } ${column.headerClassName || ""}`}
                   title={column.label}
                 >
@@ -51,11 +51,11 @@ const Table = ({
             })}
           </tr>
         </thead>
-        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+        <tbody className="bg-white dark:bg-[#13161a] divide-y divide-gray-100 dark:divide-[#1a1f26]">
           {data.map((row, index) => (
             <tr
-              key={row.id || index}
-              className="hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-gray-900"
+              key={row._id || row.id || index}
+              className="hover:bg-gray-50 dark:hover:bg-[#181d24] transition-colors group"
             >
               {columns.map((column) => {
                 const isActionCol =
@@ -78,10 +78,10 @@ const Table = ({
                   <td
                     key={column.key}
                     style={maxWidth ? { maxWidth } : undefined}
-                    className={`px-6 py-4 text-sm text-gray-900 dark:text-gray-100 ${
+                    className={`px-4 py-3 text-xs text-gray-800 dark:text-slate-200 ${
                       isActionCol
                         ? "whitespace-nowrap"
-                        : "max-w-[200px] overflow-hidden"
+                        : "max-w-[240px] overflow-hidden"
                     } ${column.className || ""}`}
                     title={titleText || undefined}
                   >
@@ -90,7 +90,7 @@ const Table = ({
                     ) : (
                       <div
                         style={maxWidth ? { maxWidth } : undefined}
-                        className="truncate max-w-[200px] min-w-0 [&_.flex]:min-w-0 [&_.flex]:max-w-full [&_.flex>span]:truncate [&_.flex>div]:min-w-0 [&_.flex>div>p]:truncate [&_.flex>*:first-child]:shrink-0"
+                        className="truncate max-w-[240px] min-w-0 [&_.flex]:min-w-0 [&_.flex]:max-w-full [&_.flex>span]:truncate [&_.flex>div]:min-w-0 [&_.flex>div>p]:truncate [&_.flex>*:first-child]:shrink-0"
                       >
                         {cellValue ?? "—"}
                       </div>
@@ -102,9 +102,9 @@ const Table = ({
           ))}
         </tbody>
       </table>
-      {data.length === 0 && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          No data available
+      {data.length === 0 && !loading && (
+        <div className="text-center py-12 text-xs text-gray-400 dark:text-slate-500">
+          No records found
         </div>
       )}
     </div>

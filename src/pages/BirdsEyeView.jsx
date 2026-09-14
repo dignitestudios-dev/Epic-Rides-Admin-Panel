@@ -23,6 +23,8 @@ import Badge from "../components/ui/Badge";
 import Modal from "../components/ui/Modal";
 import { api } from "../lib/services";
 import { formatPhoneNumber } from "../utils/helpers";
+import { useTheme } from "../contexts/ThemeContext";
+import { getMapOptions } from "../config/mapStyles";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const POLL_INTERVAL = 10_000; // ms
@@ -353,15 +355,15 @@ const DriverCard = React.memo(
       <div
         className={`p-3 rounded-xl border transition-all relative overflow-hidden ${
           isTracked
-            ? "border-primary-500 bg-primary-50/90 shadow-md ring-2 ring-primary-500/40"
+            ? "border-[#61CB08] bg-[#61CB08]/10 dark:bg-[#61CB08]/10 shadow-md ring-2 ring-[#61CB08]/30"
             : isSelected
-            ? "border-primary-300 bg-primary-50/40 shadow-sm"
-            : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+            ? "border-[#61CB08]/50 bg-[#61CB08]/5 dark:bg-[#61CB08]/5 shadow-xs"
+            : "border-gray-200/80 dark:border-[#1f242b] bg-white dark:bg-[#13161a] hover:border-gray-300 dark:hover:border-[#2a313c] hover:shadow-xs"
         }`}
       >
         {isTracked && (
-          <div className="absolute top-0 right-0 bg-primary-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+          <div className="absolute top-0 right-0 bg-[#61CB08] text-black text-[9px] font-black px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-black animate-ping" />
             Tracking Active
           </div>
         )}
@@ -370,8 +372,8 @@ const DriverCard = React.memo(
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <div
-              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${
-                isTracked ? "ring-2 ring-primary-500 ring-offset-1" : ""
+              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
+                isTracked ? "ring-2 ring-[#61CB08] ring-offset-1" : ""
               }`}
             >
               {driver?.profilePicture ? (
@@ -389,29 +391,29 @@ const DriverCard = React.memo(
             </div>
             {/* Status dot */}
             <span
-              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                isOnTrip ? "bg-blue-500" : "bg-green-500"
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#13161a] ${
+                isOnTrip ? "bg-sky-500" : "bg-[#61CB08]"
               }`}
             />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0 pr-1">
-            <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-            <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{name}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
               <Phone className="w-3 h-3" />
               {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <Badge
-                variant={isLuxury ? "warning" : "success"}
-                className="text-[10px] px-1.5 py-0.5"
+                variant={isLuxury ? "purple" : "info"}
+                dot
               >
-                {isLuxury ? "✦ Luxury" : "Economy"}
+                {isLuxury ? "Luxury" : "Economy"}
               </Badge>
               <Badge
                 variant={isOnTrip ? "info" : "success"}
-                className="text-[10px] px-1.5 py-0.5"
+                dot
               >
                 {isOnTrip ? "On Trip" : "Available"}
               </Badge>
@@ -426,7 +428,7 @@ const DriverCard = React.memo(
             size="sm"
             className={`flex-1 text-xs ${
               isTracked
-                ? "bg-red-500 hover:bg-red-600 text-white border-transparent"
+                ? "bg-rose-500 hover:bg-rose-600 text-white border-transparent"
                 : ""
             }`}
             icon={
@@ -468,15 +470,15 @@ const RiderCard = React.memo(
       <div
         className={`p-3 rounded-xl border transition-all relative overflow-hidden ${
           isTracked
-            ? "border-primary-500 bg-primary-50/90 shadow-md ring-2 ring-primary-500/40"
+            ? "border-[#61CB08] bg-[#61CB08]/10 dark:bg-[#61CB08]/10 shadow-md ring-2 ring-[#61CB08]/30"
             : isSelected
-            ? "border-primary-300 bg-primary-50/40 shadow-sm"
-            : "border-gray-100 bg-white hover:border-gray-200 hover:shadow-sm"
+            ? "border-[#61CB08]/50 bg-[#61CB08]/5 dark:bg-[#61CB08]/5 shadow-xs"
+            : "border-gray-200/80 dark:border-[#1f242b] bg-white dark:bg-[#13161a] hover:border-gray-300 dark:hover:border-[#2a313c] hover:shadow-xs"
         }`}
       >
         {isTracked && (
-          <div className="absolute top-0 right-0 bg-primary-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+          <div className="absolute top-0 right-0 bg-[#61CB08] text-black text-[9px] font-black px-2 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-xs uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-black animate-ping" />
             Tracking Active
           </div>
         )}
@@ -485,8 +487,8 @@ const RiderCard = React.memo(
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <div
-              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center ${
-                isTracked ? "ring-2 ring-primary-500 ring-offset-1" : ""
+              className={`w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center ${
+                isTracked ? "ring-2 ring-[#61CB08] ring-offset-1" : ""
               }`}
             >
               {rider?.profilePicture ? (
@@ -504,21 +506,21 @@ const RiderCard = React.memo(
             </div>
             {/* Status dot */}
             <span
-              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusInfo.dotBg}`}
+              className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#13161a] ${statusInfo.dotBg}`}
             />
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0 pr-1">
-            <p className="text-sm font-semibold text-gray-900 truncate">{name}</p>
-            <p className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
+            <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{name}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 truncate flex items-center gap-1 mt-0.5">
               <Phone className="w-3 h-3" />
               {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <Badge
                 variant={statusInfo.badgeVariant}
-                className="text-[10px] px-1.5 py-0.5"
+                dot
               >
                 {statusInfo.label}
               </Badge>
@@ -533,7 +535,7 @@ const RiderCard = React.memo(
             size="sm"
             className={`flex-1 text-xs ${
               isTracked
-                ? "bg-red-500 hover:bg-red-600 text-white border-transparent"
+                ? "bg-rose-500 hover:bg-rose-600 text-white border-transparent"
                 : ""
             }`}
             icon={
@@ -579,7 +581,7 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
       <div className="space-y-4">
         {/* Profile row */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
             {driver?.profilePicture ? (
               <img
                 src={driver.profilePicture}
@@ -591,16 +593,16 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
             )}
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">{name}</h3>
-            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">{name}</h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
               {driver?.phone ? formatPhoneNumber(driver.phone) : "—"}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <Badge variant={isLuxury ? "warning" : "success"}>
-                {isLuxury ? "✦ Luxury" : "Economy"}
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <Badge variant={isLuxury ? "purple" : "info"} dot>
+                {isLuxury ? "Luxury" : "Economy"}
               </Badge>
-              <Badge variant={isOnTrip ? "info" : "success"}>
+              <Badge variant={isOnTrip ? "info" : "success"} dot>
                 {isOnTrip ? "On Trip" : "Available"}
               </Badge>
             </div>
@@ -609,26 +611,26 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
 
         {/* Vehicle details */}
         {vd && (
-          <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-            <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
-              <Car className="w-4 h-4" /> Vehicle Details
+          <div className="bg-gray-50 dark:bg-[#181d24] rounded-xl p-3.5 space-y-2 text-sm border border-gray-100 dark:border-[#222831]">
+            <p className="font-semibold text-gray-700 dark:text-slate-300 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <Car className="w-4 h-4 text-[#61CB08]" /> Vehicle Details
             </p>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 text-sm">
-              <span className="font-medium text-gray-500">Make</span>
-              <span>{vd?.make || "—"}</span>
-              <span className="font-medium text-gray-500">Model</span>
-              <span>{vd?.model || "—"}</span>
-              <span className="font-medium text-gray-500">Year</span>
-              <span>{vd?.yearOfManufacture || "—"}</span>
-              <span className="font-medium text-gray-500">Color</span>
-              <span className="capitalize">{vd?.color || "—"}</span>
-              <span className="font-medium text-gray-500">Plate</span>
-              <span>{vd?.licensePlateNumber || "—"}</span>
-              <span className="font-medium text-gray-500">Doc Status</span>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-600 dark:text-slate-400 text-xs sm:text-sm">
+              <span className="font-medium text-gray-500 dark:text-slate-400">Make</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{vd?.make || "—"}</span>
+              <span className="font-medium text-gray-500 dark:text-slate-400">Model</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{vd?.model || "—"}</span>
+              <span className="font-medium text-gray-500 dark:text-slate-400">Year</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{vd?.yearOfManufacture || "—"}</span>
+              <span className="font-medium text-gray-500 dark:text-slate-400">Color</span>
+              <span className="capitalize text-gray-900 dark:text-white font-semibold">{vd?.color || "—"}</span>
+              <span className="font-medium text-gray-500 dark:text-slate-400">Plate</span>
+              <span className="text-gray-900 dark:text-white font-semibold">{vd?.licensePlateNumber || "—"}</span>
+              <span className="font-medium text-gray-500 dark:text-slate-400">Doc Status</span>
               <span>
                 <Badge
                   variant={vd?.status === "approved" ? "success" : "warning"}
-                  className="text-xs"
+                  dot
                 >
                   {vd?.status || "—"}
                 </Badge>
@@ -638,23 +640,22 @@ const DriverDetailModal = ({ driver, isOpen, onClose }) => {
         )}
 
         {/* Location */}
-        <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" /> Current Location
+        <div className="bg-gray-50 dark:bg-[#181d24] rounded-xl p-3 text-sm border border-gray-100 dark:border-[#222831]">
+          <p className="font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-rose-500" /> Current Location
           </p>
-          <p className="text-gray-700 font-mono text-xs">
+          <p className="text-gray-700 dark:text-slate-200 font-mono text-xs">
             {driver?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
             {driver?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-[#1f242b]">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
           <Button
-            variant="primary"
             onClick={() => {
               onClose();
               if (driver?.id) navigate(`/user-management/driver/${driver.id}`);
@@ -683,7 +684,7 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
       <div className="space-y-4">
         {/* Profile row */}
         <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 border-2 border-gray-200 dark:border-gray-700">
             {rider?.profilePicture ? (
               <img
                 src={rider.profilePicture}
@@ -695,13 +696,13 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
             )}
           </div>
           <div>
-            <h3 className="text-base font-bold text-gray-900">{name}</h3>
-            <p className="text-sm text-gray-500 flex items-center gap-1 mt-0.5">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">{name}</h3>
+            <p className="text-sm text-gray-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
               <Phone className="w-3.5 h-3.5" />
               {rider?.phone ? formatPhoneNumber(rider.phone) : "—"}
             </p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <Badge variant={statusInfo.badgeVariant}>
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              <Badge variant={statusInfo.badgeVariant} dot>
                 {statusInfo.label}
               </Badge>
             </div>
@@ -709,36 +710,35 @@ const RiderDetailModal = ({ rider, isOpen, onClose }) => {
         </div>
 
         {/* Pickup Info */}
-        <div className="bg-gray-50 rounded-xl p-3.5 space-y-2 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-700 flex items-center gap-1.5 text-xs uppercase tracking-wide">
-            <MapPin className="w-4 h-4" /> Pickup Details
+        <div className="bg-gray-50 dark:bg-[#181d24] rounded-xl p-3.5 space-y-2 text-sm border border-gray-100 dark:border-[#222831]">
+          <p className="font-semibold text-gray-700 dark:text-slate-300 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+            <MapPin className="w-4 h-4 text-[#61CB08]" /> Pickup Details
           </p>
-          <div className="text-gray-600 text-sm">
+          <div className="text-gray-600 dark:text-slate-400 text-xs sm:text-sm">
             <p>
-              <span className="font-medium text-gray-500 mr-2">Place: </span>
-              {rider?.pickupPlaceName || "—"}
+              <span className="font-medium text-gray-500 dark:text-slate-400 mr-2">Place: </span>
+              <span className="text-gray-900 dark:text-white font-semibold">{rider?.pickupPlaceName || "—"}</span>
             </p>
           </div>
         </div>
 
         {/* Location */}
-        <div className="bg-gray-50 rounded-xl p-3 text-sm border border-gray-100">
-          <p className="font-semibold text-gray-500 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-            <MapPin className="w-3.5 h-3.5" /> Current Location
+        <div className="bg-gray-50 dark:bg-[#181d24] rounded-xl p-3 text-sm border border-gray-100 dark:border-[#222831]">
+          <p className="font-semibold text-gray-500 dark:text-slate-400 text-xs uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+            <MapPin className="w-3.5 h-3.5 text-rose-500" /> Current Location
           </p>
-          <p className="text-gray-700 font-mono text-xs">
+          <p className="text-gray-700 dark:text-slate-200 font-mono text-xs">
             {rider?.location?.coordinates?.[1]?.toFixed(6) ?? "—"},{" "}
             {rider?.location?.coordinates?.[0]?.toFixed(6) ?? "—"}
           </p>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-[#1f242b]">
           <Button variant="ghost" onClick={onClose}>
             Close
           </Button>
           <Button
-            variant="primary"
             onClick={() => {
               onClose();
               if (rider?.id) navigate(`/user-management/rider/${rider.id}`);
@@ -766,6 +766,16 @@ const BirdsEyeView = () => {
 
   const mapRef = useRef(null);
   const pollRef = useRef(null);
+
+  const { isDark } = useTheme();
+  const mapOptions = useMemo(() => getMapOptions(isDark), [isDark]);
+
+  // Dynamically apply dark/light theme to existing map instance
+  useEffect(() => {
+    if (mapRef.current) {
+      mapRef.current.setOptions(getMapOptions(isDark));
+    }
+  }, [isDark]);
 
   // Load Google Maps SDK
   const { isLoaded, loadError } = useJsApiLoader({
@@ -980,7 +990,7 @@ const BirdsEyeView = () => {
             mapContainerStyle={{ width: "100%", height: "100%" }}
             center={mapCenter}
             zoom={13}
-            options={MAP_OPTIONS}
+            options={mapOptions}
             onLoad={(map) => {
               mapRef.current = map;
             }}
@@ -1053,16 +1063,16 @@ const BirdsEyeView = () => {
         {/* Top-left overlay pills */}
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 select-none z-10">
           {/* Live + clock */}
-          <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700">
+          <div className="bg-white dark:bg-[#101726] border border-gray-200 dark:border-[#1b2538] rounded-full px-3 py-1.5 shadow-md flex items-center gap-2 text-xs font-medium text-gray-700 dark:text-gray-200">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
             Live
-            <span className="text-gray-400">
+            <span className="text-gray-400 dark:text-gray-500">
               · {liveTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           </div>
 
           {/* Online count */}
-          <div className="bg-white rounded-full px-3 py-1.5 shadow-md flex items-center gap-1.5 text-xs font-medium text-gray-700">
+          <div className="bg-white dark:bg-[#101726] border border-gray-200 dark:border-[#1b2538] rounded-full px-3 py-1.5 shadow-md flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-200">
             <Users className="w-3.5 h-3.5 text-primary-500 flex-shrink-0" />
             {activeItems.length} online
           </div>
@@ -1092,40 +1102,40 @@ const BirdsEyeView = () => {
 
         {/* Recenter button */}
         <button
-          className="absolute left-3 bottom-28 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+          className="absolute left-3 bottom-28 w-10 h-10 bg-white dark:bg-[#101726] border border-gray-200 dark:border-[#1b2538] rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#162032] active:scale-95 transition-all cursor-pointer"
           onClick={handleRecenter}
           title="Center on default location"
         >
-          <MapPin className="w-4.5 h-4.5 text-primary-600" />
+          <MapPin className="w-4.5 h-4.5 text-primary-500" />
         </button>
 
         {/* Manual refresh */}
         <button
-          className="absolute left-3 bottom-16 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all cursor-pointer"
+          className="absolute left-3 bottom-16 w-10 h-10 bg-white dark:bg-[#101726] border border-gray-200 dark:border-[#1b2538] rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 dark:hover:bg-[#162032] active:scale-95 transition-all cursor-pointer"
           onClick={fetchData}
           title="Refresh now"
         >
-          <RefreshCw className="w-4 h-4 text-gray-600" />
+          <RefreshCw className="w-4 h-4 text-gray-600 dark:text-gray-300" />
         </button>
       </div>
 
       {/* ── Sidebar ──────────────────────────────────────────────────── */}
-      <div className="w-72 bg-white border-l border-gray-200 flex flex-col flex-shrink-0">
+      <div className="w-72 bg-white dark:bg-[#101726] border-l border-gray-200 dark:border-[#1b2538] flex flex-col flex-shrink-0">
         {/* Header */}
-        <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+        <div className="px-4 pt-4 pb-3 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base font-bold text-gray-900">Birds Eye View</h2>
-            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full border border-gray-100">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">Birds Eye View</h2>
+            <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/60 px-2 py-0.5 rounded-full border border-gray-100 dark:border-gray-700">
               Auto-refresh 10s
             </span>
           </div>
 
           {/* Tabs */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
+          <div className="flex bg-gray-100 dark:bg-[#0c111d] rounded-xl p-1 border border-transparent dark:border-[#1b2538]">
             <button
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "drivers"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === "drivers"
+                  ? "bg-white dark:bg-[#101726] text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 }`}
               onClick={() => {
                 setActiveTab("drivers");
@@ -1138,9 +1148,9 @@ const BirdsEyeView = () => {
               Drivers ({data.totalDrivers || data.drivers.length})
             </button>
             <button
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${activeTab === "riders"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+              className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-colors ${activeTab === "riders"
+                  ? "bg-white dark:bg-[#101726] text-gray-900 dark:text-white shadow-sm"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 }`}
               onClick={() => {
                 setActiveTab("riders");
@@ -1157,36 +1167,36 @@ const BirdsEyeView = () => {
           {/* Quick stats */}
           {activeTab === "drivers" ? (
             <div className="flex gap-2 mt-2.5">
-              <div className="flex-1 bg-green-50 rounded-lg px-2.5 py-1.5 text-center border border-green-100">
-                <p className="text-xs text-green-600 font-medium">Economy</p>
-                <p className="text-lg font-bold text-green-700">{driverStats.economy}</p>
+              <div className="flex-1 bg-sky-50 dark:bg-sky-950/20 rounded-lg px-2.5 py-2 text-center border border-sky-100 dark:border-sky-900/30">
+                <p className="text-[11px] text-sky-600 dark:text-sky-400 font-semibold">Economy</p>
+                <p className="text-lg font-bold text-sky-700 dark:text-sky-300">{driverStats.economy}</p>
               </div>
-              <div className="flex-1 bg-amber-50 rounded-lg px-2.5 py-1.5 text-center border border-amber-100">
-                <p className="text-xs text-amber-600 font-medium">Luxury</p>
-                <p className="text-lg font-bold text-amber-700">{driverStats.luxury}</p>
+              <div className="flex-1 bg-purple-50 dark:bg-purple-950/20 rounded-lg px-2.5 py-2 text-center border border-purple-100 dark:border-purple-900/30">
+                <p className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold">Luxury</p>
+                <p className="text-lg font-bold text-purple-700 dark:text-purple-300">{driverStats.luxury}</p>
               </div>
-              <div className="flex-1 bg-blue-50 rounded-lg px-2.5 py-1.5 text-center border border-blue-100">
-                <p className="text-xs text-blue-600 font-medium">Total</p>
-                <p className="text-lg font-bold text-blue-700">{driverStats.total}</p>
+              <div className="flex-1 bg-[#61CB08]/10 rounded-lg px-2.5 py-2 text-center border border-[#61CB08]/20">
+                <p className="text-[11px] text-[#61CB08] font-semibold">Total</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{driverStats.total}</p>
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-4 gap-1 mt-2.5">
-              <div className="bg-gray-50 rounded-lg p-1.5 text-center border border-gray-200">
-                <p className="text-[10px] text-gray-500 font-medium truncate">Idle</p>
-                <p className="text-sm font-bold text-gray-700">{riderStats.idle}</p>
+            <div className="grid grid-cols-4 gap-1.5 mt-2.5">
+              <div className="bg-gray-50 dark:bg-[#181d24] rounded-lg p-1.5 text-center border border-gray-200 dark:border-[#222831]">
+                <p className="text-[10px] text-gray-500 dark:text-gray-400 font-medium truncate">Idle</p>
+                <p className="text-sm font-bold text-gray-700 dark:text-gray-200">{riderStats.idle}</p>
               </div>
-              <div className="bg-amber-50 rounded-lg p-1.5 text-center border border-amber-100">
-                <p className="text-[10px] text-amber-600 font-medium truncate">Req.</p>
-                <p className="text-sm font-bold text-amber-700">{riderStats.requested}</p>
+              <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-1.5 text-center border border-amber-100 dark:border-amber-900/30">
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium truncate">Req.</p>
+                <p className="text-sm font-bold text-amber-700 dark:text-amber-300">{riderStats.requested}</p>
               </div>
-              <div className="bg-green-50 rounded-lg p-1.5 text-center border border-green-100">
-                <p className="text-[10px] text-green-600 font-medium truncate">Acc.</p>
-                <p className="text-sm font-bold text-green-700">{riderStats.accepted}</p>
+              <div className="bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-1.5 text-center border border-emerald-100 dark:border-emerald-900/30">
+                <p className="text-[10px] text-emerald-600 dark:text-[#61CB08] font-medium truncate">Acc.</p>
+                <p className="text-sm font-bold text-emerald-700 dark:text-[#61CB08]">{riderStats.accepted}</p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-1.5 text-center border border-blue-100">
-                <p className="text-[10px] text-blue-600 font-medium truncate">Trip</p>
-                <p className="text-sm font-bold text-blue-700">{riderStats.onTrip}</p>
+              <div className="bg-sky-50 dark:bg-sky-950/20 rounded-lg p-1.5 text-center border border-sky-100 dark:border-sky-900/30">
+                <p className="text-[10px] text-sky-600 dark:text-sky-400 font-medium truncate">Trip</p>
+                <p className="text-sm font-bold text-sky-700 dark:text-sky-300">{riderStats.onTrip}</p>
               </div>
             </div>
           )}
@@ -1197,49 +1207,41 @@ const BirdsEyeView = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, phone or status…"
-            className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+            className="mt-3 w-full rounded-lg border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a] px-3.5 py-2.5 text-sm text-gray-800 dark:text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#61CB08]/20 focus:border-[#61CB08] transition-all shadow-xs"
           />
         </div>
 
         {/* Legend */}
-        <div className="px-4 py-2.5 border-b border-gray-100 flex-shrink-0">
+        <div className="px-4 py-2.5 border-b border-gray-100 dark:border-[#1f242b] flex-shrink-0 bg-gray-50/50 dark:bg-[#0c111d]">
           {activeTab === "drivers" ? (
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-green-700">
-                <span className="w-2 h-2 rounded-sm bg-green-500 flex-shrink-0" />
+            <div className="flex flex-wrap gap-1.5">
+              <Badge variant="info" dot>
                 Economy
-              </span>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-amber-700">
-                <span className="w-2 h-2 rounded-sm bg-amber-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="purple" dot>
                 Luxury
-              </span>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2.5 py-1 text-[11px] font-medium text-blue-700">
-                <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="info" dot>
                 On Trip
-              </span>
-              <span className="inline-flex items-center gap-1.5 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2.5 py-1 text-[11px] font-medium text-gray-600">
-                <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="success" dot>
                 Available
-              </span>
+              </Badge>
             </div>
           ) : (
             <div className="flex flex-wrap gap-1.5">
-              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-gray-50 border border-gray-200 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                <span className="w-1.5 h-1.5 rounded-full bg-gray-400 flex-shrink-0" />
+              <Badge variant="default" dot>
                 Idle
-              </span>
-              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-amber-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="warning" dot>
                 Requested
-              </span>
-              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-green-50 border border-green-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-green-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="success" dot>
                 Accepted
-              </span>
-              <span className="inline-flex items-center gap-1 whitespace-nowrap bg-blue-50 border border-blue-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+              </Badge>
+              <Badge variant="info" dot>
                 On Trip
-              </span>
+              </Badge>
             </div>
           )}
         </div>

@@ -28,6 +28,29 @@ import { useApp } from "../contexts/AppContext";
 import StatsCard from "../components/common/StatsCard";
 import { usePersistentState } from "../hooks/global/usePersistentState";
 
+const AVATAR_PALETTE = [
+  "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+  "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  "bg-pink-500/15 text-pink-400 border-pink-500/30",
+];
+
+const getInitials = (firstName, lastName, email) => {
+  const f = firstName ? firstName.charAt(0).toUpperCase() : "";
+  const l = lastName ? lastName.charAt(0).toUpperCase() : "";
+  if (f || l) return f + l;
+  return (email || "U").slice(0, 2).toUpperCase();
+};
+
+const getAvatarStyle = (name) => {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+};
+
 const Orders = () => {
   const [currentPage, setCurrentPage] = usePersistentState("orders_currentPage", 1);
   const [pageSize, setPageSize] = usePersistentState("orders_pageSize", PAGINATION_CONFIG.defaultPageSize);
@@ -141,32 +164,43 @@ const Orders = () => {
       label: "Order ID",
 
       render: (value) => (
-        <span className="font-mono text-sm font-medium">{value}</span>
+        <span className="font-mono text-xs font-semibold text-gray-900 dark:text-white">{value}</span>
       ),
     },
     {
       key: "contact",
       label: "Customer",
 
-      render: (value, order) => (
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary-100/30 rounded-full flex items-center justify-center">
-            <span className="text-primary-600 font-medium text-sm">
-              {value?.email?.charAt(0).toUpperCase()}
-            </span>
+      render: (value, order) => {
+        const customerName =
+          order?.orderType === "delivery" && order?.delivery?.firstName
+            ? `${order?.delivery?.firstName} ${order?.delivery?.lastName}`
+            : value?.email?.split("@")[0] || "Customer";
+        const initials = getInitials(
+          order?.delivery?.firstName,
+          order?.delivery?.lastName,
+          value?.email
+        );
+        const avatarStyle = getAvatarStyle(customerName);
+
+        return (
+          <div className="flex items-center gap-3 min-w-0" title={customerName}>
+            <div
+              className={`w-7 h-7 rounded-full border flex items-center justify-center font-bold text-[11px] shrink-0 ${avatarStyle}`}
+            >
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-xs text-gray-900 dark:text-white truncate">
+                {customerName}
+              </p>
+              <p className="text-[11px] text-gray-400 dark:text-slate-500 font-normal truncate">
+                {value?.email || "—"}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="font-medium text-gray-900 dark:text-white">
-              {order?.orderType === "delivery" && order?.delivery?.firstName
-                ? `${order?.delivery?.firstName} ${order?.delivery?.lastName}`
-                : ""}
-            </p>
-            <p className="font-medium text-gray-500 dark:text-gray-300">
-              <a href={`mailto:${value?.email}`}>{value?.email}</a>
-            </p>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "products",
@@ -424,24 +458,40 @@ const Orders = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Orders Management
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              Fulfillment Ops
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Track customer merchandise orders, shipping rates, and fulfillment lifecycle
+          </p>
+        </div>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {orderStats?.map((stat, index) => (
           <StatsCard
             key={index}
             title={stat.title}
             value={stat.value}
             description={stat.description}
-            icon={stat.icon ? <stat.icon /> : null}
-            colored
+            icon={stat.icon ? <stat.icon className="w-4 h-4" /> : null}
             index={index}
           />
         ))}
       </div>
 
       {/* Filters */}
-      <Card className="p-4">
+      <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-4">
         <FilterBar
           filters={formattedFilters}
           onClear={() => {
@@ -449,11 +499,12 @@ const Orders = () => {
             setSearch("");
           }}
         />
-      </Card>
+      </div>
 
       {/* Orders Table */}
       <DataTable
-        title="Orders Management"
+        title="Merchandise Orders"
+        subtitle="Chronological list of store orders and fulfillment tracking"
         data={orders}
         columns={columns}
         onExport={handleOrdersExport}

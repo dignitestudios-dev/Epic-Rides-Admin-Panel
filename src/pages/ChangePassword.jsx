@@ -100,13 +100,13 @@ const ChangePassword = () => {
 
       {/* Header */}
       <div className="text-center pt-8">
-        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-primary-500/30 dark:bg-primary-900/10 mb-4">
-          <Shield className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-[#61CB08]/10 border border-[#61CB08]/20 mb-4">
+          <Shield className="h-6 w-6 text-[#61CB08]" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
           Change Password
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
           Update your password to keep your account secure
         </p>
       </div>
@@ -226,66 +226,70 @@ const ChangePassword = () => {
 
             {/* Password Requirements */}
             {watchNewPassword && (
-              <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="font-medium text-gray-900 dark:text-white mb-3">
+              <div className="p-3.5 bg-gray-50 dark:bg-[#181d24] border border-gray-100 dark:border-[#222831] rounded-lg">
+                <p className="text-xs font-bold text-gray-900 dark:text-white mb-2.5">
                   Password Requirements:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div
-                    className={`flex items-center text-sm ${watchNewPassword.length >=
-                        SECURITY_CONFIG.passwordMinLength
-                        ? "text-green-600"
+                    className={`flex items-center text-xs ${
+                      watchNewPassword.length >= SECURITY_CONFIG.passwordMinLength
+                        ? "text-[#61CB08]"
                         : "text-gray-400"
-                      }`}
+                    }`}
                   >
-                    <CheckCircle className="w-3 h-3 mr-2" />
+                    <CheckCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                     At least {SECURITY_CONFIG.passwordMinLength} characters
                   </div>
 
                   {SECURITY_CONFIG.passwordRequireUppercase && (
                     <div
-                      className={`flex items-center text-sm ${/[A-Z]/.test(watchNewPassword)
-                          ? "text-green-600"
+                      className={`flex items-center text-xs ${
+                        /[A-Z]/.test(watchNewPassword)
+                          ? "text-[#61CB08]"
                           : "text-gray-400"
-                        }`}
+                      }`}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                       One uppercase letter
                     </div>
                   )}
 
                   {SECURITY_CONFIG.passwordRequireLowercase && (
                     <div
-                      className={`flex items-center text-sm ${/[a-z]/.test(watchNewPassword)
-                          ? "text-green-600"
+                      className={`flex items-center text-xs ${
+                        /[a-z]/.test(watchNewPassword)
+                          ? "text-[#61CB08]"
                           : "text-gray-400"
-                        }`}
+                      }`}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                       One lowercase letter
                     </div>
                   )}
 
                   {SECURITY_CONFIG.passwordRequireNumbers && (
                     <div
-                      className={`flex items-center text-sm ${/\d/.test(watchNewPassword)
-                          ? "text-green-600"
+                      className={`flex items-center text-xs ${
+                        /\d/.test(watchNewPassword)
+                          ? "text-[#61CB08]"
                           : "text-gray-400"
-                        }`}
+                      }`}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                       One number
                     </div>
                   )}
 
                   {SECURITY_CONFIG.passwordRequireSpecialChars && (
                     <div
-                      className={`flex items-center text-sm ${/[!@#$%^&*(),.?":{}|<>]/.test(watchNewPassword)
-                          ? "text-green-600"
+                      className={`flex items-center text-xs ${
+                        /[!@#$%^&*(),.?":{}|<>]/.test(watchPassword)
+                          ? "text-[#61CB08]"
                           : "text-gray-400"
-                        }`}
+                      }`}
                     >
-                      <CheckCircle className="w-3 h-3 mr-2" />
+                      <CheckCircle className="w-3.5 h-3.5 mr-1.5 shrink-0" />
                       One special character
                     </div>
                   )}
@@ -312,30 +316,30 @@ const ChangePassword = () => {
           <Card.Title>Security Tips</Card.Title>
         </Card.Header>
         <Card.Content>
-          <div className="space-y-3 text-sm text-gray-600 dark:text-gray-400">
-            <div className="flex items-start space-x-3">
-              <CheckCircle className="icon" />
+          <div className="space-y-2.5 text-xs text-gray-600 dark:text-slate-400">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle className="w-3.5 h-3.5 text-[#61CB08] shrink-0 mt-0.5" />
               <p>Use a unique password that you don't use for other accounts</p>
             </div>
 
-            <div className="flex items-start space-x-3">
-              <CheckCircle className="icon" />
+            <div className="flex items-start gap-2.5">
+              <CheckCircle className="w-3.5 h-3.5 text-[#61CB08] shrink-0 mt-0.5" />
               <p>
                 Include a mix of uppercase letters, lowercase letters, numbers,
                 and symbols
               </p>
             </div>
 
-            <div className="flex items-start space-x-3">
-              <CheckCircle className="icon" />
+            <div className="flex items-start gap-2.5">
+              <CheckCircle className="w-3.5 h-3.5 text-[#61CB08] shrink-0 mt-0.5" />
               <p>
                 Avoid using personal information like your name, birthday, or
                 address
               </p>
             </div>
 
-            <div className="flex items-start space-x-3">
-              <CheckCircle className="icon" />
+            <div className="flex items-start gap-2.5">
+              <CheckCircle className="w-3.5 h-3.5 text-[#61CB08] shrink-0 mt-0.5" />
               <p>
                 Consider using a password manager to generate and store strong
                 passwords

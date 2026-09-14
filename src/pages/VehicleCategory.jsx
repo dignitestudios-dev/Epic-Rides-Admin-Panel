@@ -1,10 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Edit,
   Trash2,
   Car,
-  ShieldCheck,
-  ShieldX,
   Plus,
   Loader2,
 } from "lucide-react";
@@ -15,16 +13,15 @@ import Modal from "../components/ui/Modal";
 import Input from "../components/ui/Input";
 import TextArea from "../components/ui/TextArea";
 import Select from "../components/ui/Select";
+import Tabs from "../components/ui/Tabs";
+import StatsCard from "../components/common/StatsCard";
 import { useForm, Controller } from "react-hook-form";
 import { formatDate } from "../utils/helpers";
-import Card from "../components/ui/Card";
-import FilterBar from "../components/ui/FilterBar";
 import { PAGINATION_CONFIG } from "../config/constants";
 import useGetAllVehicleTypes from "../hooks/vehicle-types/useGetAllVehicleTypes";
 import useCreateVehicleType from "../hooks/vehicle-types/useCreateVehicleType";
 import useVehicleTypeActions from "../hooks/vehicle-types/useVehicleTypeActions";
 import useDebounce from "../hooks/global/useDebounce";
-import { useEffect } from "react";
 
 const VehicleCategoryManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,7 +35,7 @@ const VehicleCategoryManagement = () => {
       currentPage,
       pageSize,
       debouncedSearch,
-      rideType?.target?.value,
+      rideType,
     );
 
   // Reset page when search or rideType changes
@@ -75,23 +72,43 @@ const VehicleCategoryManagement = () => {
     formState: { errors },
   } = useForm({ defaultValues });
 
+  const tabs = [
+    { key: "", label: "All Vehicles", count: totalData },
+    { key: "economy", label: "Economy" },
+    { key: "luxury", label: "Luxury" },
+  ];
+
+  const handleTabChange = (key) => {
+    setRideType(key);
+    setCurrentPage(1);
+  };
+
   const columns = [
-    // {
-    //   key: "make",
-    //   label: "Make",
-    //   render: (value) => <span className="capitalize">{value}</span>,
-    // },
     {
       key: "model",
-      label: "Model",
-      render: (value) => <span className="capitalize">{value}</span>,
+      label: "Vehicle Model",
+      render: (value, vehicle) => (
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-sky-500/15 border border-sky-500/30 flex items-center justify-center shrink-0">
+            <Car className="w-3.5 h-3.5 text-sky-400" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-900 dark:text-white capitalize">
+              {value || "—"}
+            </p>
+            <p className="text-[10px] text-gray-400 font-mono">
+              {vehicle._id}
+            </p>
+          </div>
+        </div>
+      ),
     },
     {
       key: "rideType",
       label: "Ride Type",
       render: (value) => (
-        <Badge variant={ "secondary"}>
-          <span className="capitalize">{value}</span>
+        <Badge variant={value === "luxury" ? "purple" : "info"} className="capitalize">
+          {value}
         </Badge>
       ),
     },
@@ -99,7 +116,7 @@ const VehicleCategoryManagement = () => {
       key: "isActive",
       label: "Status",
       render: (isActive) => (
-        <Badge variant={isActive ? "success" : "danger"}>
+        <Badge variant={isActive ? "success" : "danger"} dot>
           {isActive ? "Active" : "Inactive"}
         </Badge>
       ),
@@ -108,37 +125,43 @@ const VehicleCategoryManagement = () => {
       key: "notes",
       label: "Notes",
       render: (value) => (
-        <span className="text-xs text-gray-500 max-w-[200px] truncate block">
-          {value || "N/A"}
+        <span className="text-xs text-gray-500 dark:text-slate-400 max-w-[200px] truncate block">
+          {value || "—"}
         </span>
       ),
     },
     {
       key: "createdAt",
-      label: "Created At",
-      render: (value) => formatDate(value),
+      label: "Created",
+      render: (value) => (
+        <span className="text-xs text-gray-500 dark:text-slate-400">
+          {formatDate(value)}
+        </span>
+      ),
     },
     {
       key: "actions",
       label: "Actions",
       render: (_, vehicle) => (
-        <div className="flex items-center space-x-2">
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className="flex items-center space-x-1">
+          <button
             onClick={() => handleEdit(vehicle)}
-            icon={<Edit className="w-4 h-4" />}
-          />
-          <Button
-            variant="ghost"
-            size="sm"
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+            title="Edit vehicle"
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
             onClick={() => {
               setVehicleToDelete(vehicle);
               setShowDeleteModal(true);
             }}
             disabled={loadingActions}
-            icon={<Trash2 className="w-4 h-4 text-red-500" />}
-          />
+            className="p-1.5 rounded-md text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            title="Delete vehicle"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },
@@ -188,7 +211,6 @@ const VehicleCategoryManagement = () => {
 
   const onSubmit = async (data) => {
     try {
-      // Check for duplicate model name on the frontend
       const isDuplicate = vehicleTypes?.some(
         (v) => v.model.toLowerCase().trim() === data.model.toLowerCase().trim() && v._id !== editingVehicle?._id
       );
@@ -204,9 +226,9 @@ const VehicleCategoryManagement = () => {
       if (editingVehicle) {
         const payload = {
           rideType: data.rideType,
-          isActive: data.isActive === "true",
+          isActive: data.isActive === "true" || data.isActive === true,
           notes: data.notes,
-          model:data.model
+          model: data.model
         };
         const success = await updateVehicleType(editingVehicle._id, payload);
         if (success) {
@@ -216,7 +238,7 @@ const VehicleCategoryManagement = () => {
       } else {
         const payload = {
           ...data,
-          isActive: data.isActive === "true",
+          isActive: data.isActive === "true" || data.isActive === true,
         };
         const success = await createVehicleType(payload);
         if (success) {
@@ -230,57 +252,46 @@ const VehicleCategoryManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Vehicle Category Management
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage vehicle types and mapping for your fleet
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Vehicle Category Management
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              {totalData || 0} models
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Manage vehicle model mapping and service classes for your fleet
           </p>
         </div>
         <Button
           onClick={handleAdd}
-          icon={<Plus className="w-4 h-4" />}
-          className="bg-green-600 hover:bg-green-700"
+          size="sm"
+          icon={<Plus className="w-3.5 h-3.5" />}
         >
-          Create Vehicle
+          Add Vehicle
         </Button>
       </div>
 
-      <Card className="p-4">
-        <FilterBar
-          filters={[
-            {
-              key: "rideType",
-              label: "Ride Type",
-              type: "select",
-              value: rideType?.target?.value,
-              onChange: setRideType,
-              options: [
-                { value: "economy", label: "Economy" },
-                { value: "luxury", label: "Luxury" },
-                // { value: "carpool", label: "Car Pool" },
-              ],
-            },
-          ]}
-          onClear={() => {
-            setSearch("");
-            setRideType("");
-          }}
-          searchPlaceholder="Search by model..."
-          searchable={true}
-          searchValue={search}
-          onSearchChange={setSearch}
-        />
-      </Card>
+      {/* Segment Tabs */}
+      <Tabs tabs={tabs} activeTab={rideType} onChange={handleTabChange} />
 
+      {/* Data Table */}
       <DataTable
-        title="Vehicle Types"
+        title="Vehicle Registry"
+        subtitle="Catalog of authorized vehicle models by ride type"
         loading={loading}
         data={vehicleTypes}
         columns={columns}
+        searchable
+        searchTerm={search}
+        searchPlaceholder="Search by model..."
+        onSearch={setSearch}
+        addButton={false}
         pageSize={pageSize}
         onPageSizeChange={handlePageSizeChange}
         currentPage={currentPage}
@@ -294,15 +305,15 @@ const VehicleCategoryManagement = () => {
         isOpen={showModal}
         onClose={handleModalClose}
         title={editingVehicle ? "Edit Vehicle" : "Create Vehicle"}
-        size="lg"
+        size="md"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input
               label="Model"
               placeholder="e.g. Camry"
               {...register("model", { required: "Model is required" })}
-              disabled={loadingCreate || loadingActions }
+              disabled={loadingCreate || loadingActions}
               error={errors.model?.message}
             />
 
@@ -314,11 +325,11 @@ const VehicleCategoryManagement = () => {
                 <Select
                   label="Ride Type"
                   options={[
-                    { value: "luxury", label: "Luxury" },
                     { value: "economy", label: "Economy" },
+                    { value: "luxury", label: "Luxury" },
                   ]}
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(e) => field.onChange(e.target.value)}
                   disabled={loadingCreate || loadingActions}
                   error={fieldState.error?.message}
                 />
@@ -326,22 +337,24 @@ const VehicleCategoryManagement = () => {
             />
 
             {editingVehicle && (
-              <Controller
-                name="isActive"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    label="Status"
-                    options={[
-                      { value: "true", label: "Active" },
-                      { value: "false", label: "Inactive" },
-                    ]}
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={loadingCreate || loadingActions}
-                  />
-                )}
-              />
+              <div className="sm:col-span-2">
+                <Controller
+                  name="isActive"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      label="Status"
+                      options={[
+                        { value: "true", label: "Active" },
+                        { value: "false", label: "Inactive" },
+                      ]}
+                      value={String(field.value)}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      disabled={loadingCreate || loadingActions}
+                    />
+                  )}
+                />
+              </div>
             )}
           </div>
 
@@ -355,10 +368,11 @@ const VehicleCategoryManagement = () => {
             error={errors.notes?.message}
           />
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-2.5 pt-4 border-t border-gray-100 dark:border-[#1f242b]">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               disabled={loadingCreate || loadingActions}
               onClick={handleModalClose}
             >
@@ -366,11 +380,14 @@ const VehicleCategoryManagement = () => {
             </Button>
             <Button
               type="submit"
+              size="sm"
               disabled={loadingCreate || loadingActions}
-              className="min-w-[120px]"
             >
               {loadingCreate || loadingActions ? (
-                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                <div className="flex items-center gap-1.5">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving...</span>
+                </div>
               ) : editingVehicle ? (
                 "Update Vehicle"
               ) : (
@@ -386,26 +403,26 @@ const VehicleCategoryManagement = () => {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         title="Delete Vehicle"
-        size="md"
+        size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600">
-            Are you sure you want to delete this vehicle? This action cannot be
-            undone.
+          <p className="text-xs text-gray-600 dark:text-slate-400">
+            Are you sure you want to delete this vehicle? This action cannot be undone.
           </p>
           {vehicleToDelete && (
-            <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
-              <p className="text-sm font-medium text-gray-900 capitalize">
+            <div className="bg-gray-50 dark:bg-[#181d24] p-3 rounded-lg border border-gray-200 dark:border-[#1f242b]">
+              <p className="text-xs font-bold text-gray-900 dark:text-white capitalize">
                 {vehicleToDelete.model}
               </p>
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-[11px] text-gray-500 dark:text-slate-400 capitalize mt-0.5">
                 Ride Type: {vehicleToDelete.rideType}
               </p>
             </div>
           )}
-          <div className="flex justify-end space-x-3 pt-2">
+          <div className="flex justify-end space-x-2.5 pt-3 border-t border-gray-100 dark:border-[#1f242b]">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowDeleteModal(false)}
               disabled={loadingActions}
             >
@@ -413,12 +430,12 @@ const VehicleCategoryManagement = () => {
             </Button>
             <Button
               variant="danger"
+              size="sm"
               onClick={confirmDelete}
               disabled={loadingActions}
-              className="bg-red-600 hover:bg-red-700 text-white"
             >
               {loadingActions ? (
-                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
                 "Delete"
               )}
@@ -431,3 +448,4 @@ const VehicleCategoryManagement = () => {
 };
 
 export default VehicleCategoryManagement;
+

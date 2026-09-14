@@ -22,6 +22,8 @@ import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Select from "../components/ui/Select";
 import Modal from "../components/ui/Modal";
+import Badge from "../components/ui/Badge";
+import Tabs from "../components/ui/Tabs";
 import ConfirmModal from "../components/global/ConfirmModal";
 import { FLORIDA_CITIES } from "../config/constants";
 import { formatPercent } from "../utils/helpers";
@@ -535,64 +537,44 @@ const RideRates = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-gray-950 via-gray-900 to-indigo-950 p-6 text-white shadow-xl">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-400">
-          <Building2 className="h-4 w-4" />
-          <span>Fare & Pricing Engine</span>
-        </div>
-        <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Ride Rates & City Pricing</h1>
-            <p className="mt-2 max-w-2xl text-sm text-gray-300">
-              Configure city-based fixed mileage bracket pricing or fall back to global per-mile rates. Peak surcharge windows use <span className="font-mono text-indigo-300">America/New_York</span> timezone.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-xl bg-white/10 px-4 py-2 text-xs font-medium backdrop-blur-sm">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Ride Rates &amp; City Pricing
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
               ⚡ {peakWindows.length} Active Peak Window{peakWindows.length === 1 ? "" : "s"}
-            </div>
-            <Button
-              onClick={handleOpenCreateCity}
-              icon={<Plus className="h-4 w-4" />}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg"
-            >
-              Add City Rate
-            </Button>
+            </span>
           </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Configure city-based fixed mileage bracket pricing or fall back to global per-mile rates (America/New_York)
+          </p>
         </div>
-
-        {/* Tab Selection */}
-        <div className="mt-6 flex border-b border-gray-800/80">
-          <button
-            onClick={() => setActiveTab("city")}
-            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "city"
-                ? "border-indigo-500 text-indigo-400"
-                : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <Building2 className="h-4 w-4" />
-            City-Based Pricing ({cityRates.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("global")}
-            className={`flex items-center gap-2 border-b-2 px-5 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "global"
-                ? "border-indigo-500 text-indigo-400"
-                : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
-          >
-            <Globe className="h-4 w-4" />
-            Global Fallback Rates ({globalRates.length})
-          </button>
-        </div>
+        <Button
+          onClick={handleOpenCreateCity}
+          icon={<Plus className="w-3.5 h-3.5" />}
+          size="sm"
+        >
+          Add City Rate
+        </Button>
       </div>
+
+      {/* Tabs */}
+      <Tabs
+        tabs={[
+          { key: "city", label: "City-Based Pricing", count: cityRates.length },
+          { key: "global", label: "Global Fallback Rates", count: globalRates.length },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* Tab Content: City-Based Pricing */}
       {activeTab === "city" && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Search Filter Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="w-full sm:max-w-md">
@@ -612,7 +594,6 @@ const RideRates = () => {
                     </button>
                   ) : null
                 }
-                className="bg-white dark:bg-gray-800"
               />
             </div>
             {searchCity && (
@@ -624,13 +605,13 @@ const RideRates = () => {
 
           {/* Loading State */}
           {loading && !cityRates.length ? (
-            <div className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-12 text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-              <RefreshCcw className="h-5 w-5 animate-spin text-indigo-500" />
+            <div className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-12 text-gray-500 shadow-sm dark:border-[#1f242b] dark:bg-[#13161a]">
+              <RefreshCcw className="h-5 w-5 animate-spin text-[#61CB08]" />
               <span>Loading city rates...</span>
             </div>
           ) : cityRates.length === 0 ? (
-            <Card className="border border-dashed border-gray-300 p-12 text-center dark:border-gray-800">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400">
+            <Card className="border border-dashed border-gray-300 dark:border-[#1f242b] p-12 text-center bg-white dark:bg-[#13161a]">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-[#61CB08]">
                 <MapPin className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
@@ -653,15 +634,15 @@ const RideRates = () => {
               </div>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {sortedCityRates.map((rate) => {
                 const rateId = rate._id || rate.id;
                 return (
                   <Card
                     key={rateId || `${rate.city}-${rate.rideType}`}
-                    className={`border shadow-sm transition-all ${
+                    className={`border transition-all ${
                       rate.isActive
-                        ? "border-gray-200 dark:border-gray-800"
+                        ? "border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a]"
                         : "border-amber-200 bg-amber-50/20 dark:border-amber-900/40 dark:bg-amber-950/10"
                     }`}
                   >
@@ -669,25 +650,25 @@ const RideRates = () => {
                       {/* Top info */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
                             <Building2 className="h-5 w-5" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{rate.city}</h2>
-                              <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+                              <h2 className="text-base font-bold text-gray-900 dark:text-white">{rate.city}</h2>
+                              <Badge variant="primary" className="uppercase">
                                 {rate.rideType}
-                              </span>
+                              </Badge>
                             </div>
-                            <div className="mt-1 flex items-center gap-2 text-xs">
+                            <div className="mt-1 flex items-center gap-2">
                               {rate.isActive ? (
-                                <span className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
-                                  <CheckCircle2 className="h-3.5 w-3.5" /> Active Pricing
-                                </span>
+                                <Badge variant="success" dot>
+                                  Active Pricing
+                                </Badge>
                               ) : (
-                                <span className="inline-flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
-                                  <XCircle className="h-3.5 w-3.5" /> Inactive (Falls back to Global)
-                                </span>
+                                <Badge variant="warning" dot>
+                                  Inactive (Fallback)
+                                </Badge>
                               )}
                             </div>
                           </div>
@@ -701,8 +682,8 @@ const RideRates = () => {
                             disabled={togglingCityIds.has(rateId)}
                             onClick={() => handleToggleCityActive(rate)}
                             title={rate.isActive ? "Deactivate city rate" : "Activate city rate"}
-                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed ${
-                              rate.isActive ? "bg-indigo-600 dark:bg-indigo-500" : "bg-gray-300 dark:bg-gray-700"
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#61CB08] focus:ring-offset-2 disabled:cursor-not-allowed ${
+                              rate.isActive ? "bg-[#61CB08]" : "bg-gray-300 dark:bg-gray-700"
                             }`}
                           >
                             <span
@@ -715,7 +696,7 @@ const RideRates = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEditCity(rate)}
-                            icon={<Edit2 className="h-4 w-4" />}
+                            icon={<Edit2 className="h-3.5 w-3.5" />}
                           >
                             Edit
                           </Button>
@@ -723,7 +704,7 @@ const RideRates = () => {
                             variant="danger"
                             size="sm"
                             onClick={() => setDeleteCityTarget(rate)}
-                            icon={<Trash2 className="h-4 w-4" />}
+                            icon={<Trash2 className="h-3.5 w-3.5" />}
                           >
                             Delete
                           </Button>
@@ -731,22 +712,22 @@ const RideRates = () => {
                       </div>
 
                       {/* Mileage Brackets Display */}
-                      <div className="mt-5 space-y-2">
-                        <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                      <div className="mt-4 space-y-2">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
                           Fixed Bracket Prices
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           {rate.brackets?.map((b, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center justify-between rounded-xl border border-gray-100 bg-gray-50 px-3.5 py-2.5 dark:border-gray-800 dark:bg-gray-800/60"
+                              className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-[#1f242b] dark:bg-[#181d24]"
                             >
                               <div>
-                                <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                <span className="text-xs font-semibold text-gray-700 dark:text-slate-300">
                                   {b.minMiles} – {b.maxMiles != null ? `${b.maxMiles} miles` : "21+ miles"}
                                 </span>
                               </div>
-                              <span className="text-sm font-bold text-gray-900 dark:text-white">
+                              <span className="text-xs font-bold text-gray-900 dark:text-white">
                                 ${Number(b.price ?? 0).toFixed(2)}
                               </span>
                             </div>
@@ -755,12 +736,12 @@ const RideRates = () => {
                       </div>
 
                       {/* Peak Surcharge Info */}
-                      <div className="mt-4 rounded-xl bg-indigo-50/70 px-4 py-3 dark:bg-indigo-950/40">
+                      <div className="mt-3 rounded-lg bg-[#61CB08]/10 border border-[#61CB08]/20 px-3.5 py-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+                          <span className="text-xs font-bold uppercase tracking-wider text-[#61CB08]">
                             Peak Surcharge Per Mile
                           </span>
-                          <span className="text-base font-bold text-gray-900 dark:text-white">
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">
                             ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mile
                           </span>
                         </div>
@@ -776,24 +757,25 @@ const RideRates = () => {
 
       {/* Tab Content: Global Fallback Rates */}
       {activeTab === "global" && (
-        <div className="space-y-6">
-          <div className="rounded-xl border border-blue-200 bg-blue-50/50 p-4 text-sm text-blue-800 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300">
-            💡 Global rates serve as fallback pricing whenever a city has no active city rate record configured for a ride type or when the pickup city is omitted.
+        <div className="space-y-4">
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 p-3.5 text-xs text-blue-800 dark:text-blue-300 flex items-center gap-2">
+            <span>💡</span>
+            <span>Global rates serve as fallback pricing whenever a city has no active city rate record configured for a ride type or when the pickup city is omitted.</span>
           </div>
 
           {loading && !globalRates.length ? (
-            <div className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-12 text-gray-500 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-              <RefreshCcw className="h-5 w-5 animate-spin text-indigo-500" />
+            <div className="flex items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white p-12 text-gray-500 shadow-sm dark:border-[#1f242b] dark:bg-[#13161a]">
+              <RefreshCcw className="h-5 w-5 animate-spin text-[#61CB08]" />
               <span>Loading global fallback rates...</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {sortedGlobalRates.map((rate) => (
-                <Card key={rate.rideType} className="border border-gray-200 shadow-sm dark:border-gray-800">
+                <Card key={rate.rideType} className="border border-gray-200 shadow-sm dark:border-[#1f242b] bg-white dark:bg-[#13161a]">
                   <Card.Content>
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
+                        <h2 className="text-base font-bold text-gray-900 dark:text-white capitalize">
                           {rate.rideType} (Global Fallback)
                         </h2>
                       </div>
@@ -801,29 +783,29 @@ const RideRates = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenEditGlobal(rate)}
-                        icon={<Edit2 className="h-4 w-4" />}
+                        icon={<Edit2 className="h-3.5 w-3.5" />}
                       >
                         Edit Rate
                       </Button>
                     </div>
 
-                    <div className="mt-5 space-y-3">
-                      <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <div className="mt-4 space-y-2">
+                      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">
                         Per-Mile Rate Brackets
                       </div>
                       {rate.brackets?.map((bracket, index) => (
                         <div
                           key={`${rate.rideType}-${index}`}
-                          className="flex items-center justify-between rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60"
+                          className="flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 dark:border-[#1f242b] dark:bg-[#181d24]"
                         >
                           <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            <div className="text-xs font-semibold text-gray-900 dark:text-white">
                               {bracket.minMiles} to {bracket.maxMiles ?? "unlimited"} miles
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">Bracket {index + 1}</div>
+                            <div className="text-[11px] text-gray-400 dark:text-slate-500">Bracket {index + 1}</div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                            <div className="text-xs font-bold text-gray-900 dark:text-white">
                               ${Number(bracket.ratePerMile).toFixed(2)} / mile
                             </div>
                           </div>
@@ -831,16 +813,16 @@ const RideRates = () => {
                       ))}
                     </div>
 
-                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <div className="rounded-xl bg-indigo-50 px-4 py-3 dark:bg-indigo-950/40">
-                        <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Peak surcharge</div>
-                        <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+                    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="rounded-lg bg-[#61CB08]/10 border border-[#61CB08]/20 px-3.5 py-2.5">
+                        <div className="text-[11px] font-bold uppercase text-[#61CB08]">Peak surcharge</div>
+                        <div className="mt-0.5 text-base font-bold text-gray-900 dark:text-white">
                           ${Number(rate.peakSurchargePerMile || 0).toFixed(2)} / mile
                         </div>
                       </div>
-                      <div className="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-800/60">
-                        <div className="text-xs uppercase text-gray-500 dark:text-gray-400">Global Discount</div>
-                        <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+                      <div className="rounded-lg bg-gray-50 border border-gray-100 px-3.5 py-2.5 dark:border-[#1f242b] dark:bg-[#181d24]">
+                        <div className="text-[11px] font-bold uppercase text-gray-500 dark:text-slate-400">Global Discount</div>
+                        <div className="mt-0.5 text-base font-bold text-gray-900 dark:text-white">
                           {formatPercent(rate.discountPercentage)}
                         </div>
                       </div>
@@ -920,8 +902,8 @@ const RideRates = () => {
                 role="switch"
                 aria-checked={watchCityIsActive}
                 onClick={() => setCityValue("isActive", !watchCityIsActive, { shouldDirty: true })}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  watchCityIsActive ? "bg-indigo-600 dark:bg-indigo-500" : "bg-gray-300 dark:bg-gray-700"
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#61CB08] focus:ring-offset-2 ${
+                  watchCityIsActive ? "bg-[#61CB08]" : "bg-gray-300 dark:bg-gray-700"
                 }`}
               >
                 <span
@@ -952,11 +934,11 @@ const RideRates = () => {
               ].map((bracket) => (
                 <div
                   key={bracket.index}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-gray-800 dark:bg-gray-800/50"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3.5 dark:border-[#1f242b] dark:bg-[#181d24]"
                 >
                   <div className="min-w-[150px]">
                     <div className="text-sm font-bold text-gray-900 dark:text-white">{bracket.label}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500 dark:text-slate-400">
                       Range: {bracket.min} to {bracket.max != null ? bracket.max : "Unlimited"} miles
                     </div>
                   </div>
@@ -997,7 +979,7 @@ const RideRates = () => {
             <Button type="button" variant="outline" onClick={handleCloseCityModal}>
               Cancel
             </Button>
-            <Button type="submit" loading={loading} className="bg-indigo-600 hover:bg-indigo-500 text-white">
+            <Button type="submit" variant="primary" loading={loading}>
               {editingCityRate ? "Save City Pricing" : "Create City Pricing"}
             </Button>
           </div>

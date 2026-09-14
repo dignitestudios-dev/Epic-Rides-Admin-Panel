@@ -6,9 +6,12 @@ import {
   Activity,
   Calendar,
   Download,
+  BarChart3,
 } from "lucide-react";
+import StatsCard from "../components/common/StatsCard";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import Badge from "../components/ui/Badge";
 import { formatCurrency, formatPercent } from "../utils/helpers";
 import {
   LineChart,
@@ -54,9 +57,9 @@ const Analytics = () => {
   ]);
 
   const [deviceData] = useState([
-    { name: "Desktop", value: 45, color: CHART_COLORS.primary },
-    { name: "Mobile", value: 35, color: CHART_COLORS.secondary },
-    { name: "Tablet", value: 20, color: CHART_COLORS.info },
+    { name: "Desktop", value: 45, color: "#61CB08" },
+    { name: "Mobile", value: 35, color: "#3b82f6" },
+    { name: "Tablet", value: 20, color: "#a855f7" },
   ]);
 
   const [trafficSources] = useState([
@@ -76,7 +79,6 @@ const Analytics = () => {
   ]);
 
   const handleExport = () => {
-    // Generate CSV export
     const csvData = [
       ["Date", "Total Users", "New Users", "Active Users"],
       ...userGrowthData.map((row) => [
@@ -117,17 +119,18 @@ const Analytics = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Analytics Dashboard
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-[#61CB08]" />
+            Analytics Overview
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Track your application's performance and user engagement
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            System performance, conversion funnel, and growth telemetry
           </p>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <Select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
@@ -137,292 +140,257 @@ const Analytics = () => {
               { value: "90d", label: "Last 90 days" },
               { value: "1y", label: "Last year" },
             ]}
-            className="px-3 py-2 text-sm"
           />
           <Button
             variant="outline"
             onClick={handleExport}
             icon={<Download className="w-4 h-4" />}
           >
-            Export Report
+            Export
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Users
-              </p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {totalUsers.toLocaleString()}
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                +{userGrowthRate} growth
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Users className="w-8 h-8 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                New Users Today
-              </p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {newUsersToday}
-              </p>
-              <p className="text-sm text-green-600 mt-1">+12% from yesterday</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <TrendingUp className="w-8 h-8 text-green-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Active Users
-              </p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {activeUsersToday.toLocaleString()}
-              </p>
-              <p className="text-sm text-green-600 mt-1">+8% from last week</p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <Activity className="w-8 h-8 text-purple-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Avg Monthly Revenue
-              </p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {formatCurrency(avgRevenue)}
-              </p>
-              <p className="text-sm text-green-600 mt-1">
-                +15% from last month
-              </p>
-            </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <DollarSign className="w-8 h-8 text-orange-600" />
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total Users"
+          value={totalUsers.toLocaleString()}
+          icon={<Users className="w-5 h-5" />}
+          change={userGrowthRate}
+          changeType="increase"
+          colored
+          index={0}
+        />
+        <StatsCard
+          title="New Users Today"
+          value={newUsersToday.toLocaleString()}
+          icon={<TrendingUp className="w-5 h-5" />}
+          change="+12%"
+          changeType="increase"
+          colored
+          index={1}
+        />
+        <StatsCard
+          title="Active Daily Users"
+          value={activeUsersToday.toLocaleString()}
+          icon={<Activity className="w-5 h-5" />}
+          change="+8%"
+          changeType="increase"
+          colored
+          index={2}
+        />
+        <StatsCard
+          title="Avg Monthly Revenue"
+          value={formatCurrency(avgRevenue)}
+          icon={<DollarSign className="w-5 h-5" />}
+          change="+15%"
+          changeType="increase"
+          colored
+          index={3}
+        />
       </div>
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* User Growth Chart */}
-        <Card>
-          <Card.Header>
-            <Card.Title>User Growth Over Time</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={userGrowthData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(value) =>
-                    new Date(value).toLocaleDateString()
-                  }
-                />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(value) =>
-                    new Date(value).toLocaleDateString()
-                  }
-                  formatter={(value, name) => [value.toLocaleString(), name]}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="users"
-                  stackId="1"
-                  stroke={CHART_COLORS.primary}
-                  fill={CHART_COLORS.primary}
-                  fillOpacity={0.6}
-                  name="Total Users"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="activeUsers"
-                  stackId="2"
-                  stroke={CHART_COLORS.secondary}
-                  fill={CHART_COLORS.secondary}
-                  fillOpacity={0.6}
-                  name="Active Users"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Card.Content>
-        </Card>
+        <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
+            User Growth Over Time
+          </h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={userGrowthData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#88888820" />
+              <XAxis
+                dataKey="date"
+                tickFormatter={(value) =>
+                  new Date(value).toLocaleDateString([], { month: "short", day: "numeric" })
+                }
+                tick={{ fontSize: 11, fill: "#888" }}
+              />
+              <YAxis tick={{ fontSize: 11, fill: "#888" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#181d24", borderColor: "#2b323c", borderRadius: 8, color: "#fff" }}
+                labelFormatter={(value) =>
+                  new Date(value).toLocaleDateString()
+                }
+                formatter={(value, name) => [value.toLocaleString(), name]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Area
+                type="monotone"
+                dataKey="users"
+                stackId="1"
+                stroke="#61CB08"
+                fill="#61CB08"
+                fillOpacity={0.25}
+                name="Total Users"
+              />
+              <Area
+                type="monotone"
+                dataKey="activeUsers"
+                stackId="2"
+                stroke="#3b82f6"
+                fill="#3b82f6"
+                fillOpacity={0.2}
+                name="Active Users"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Revenue Chart */}
-        <Card>
-          <Card.Header>
-            <Card.Title>Monthly Revenue</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend />
-                <Bar
-                  dataKey="subscriptions"
-                  stackId="a"
-                  fill={CHART_COLORS.primary}
-                  name="Subscriptions"
-                />
-                <Bar
-                  dataKey="oneTime"
-                  stackId="a"
-                  fill={CHART_COLORS.secondary}
-                  name="One-time Payments"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card.Content>
-        </Card>
+        <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
+            Monthly Revenue Distribution
+          </h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={revenueData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#88888820" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#888" }} />
+              <YAxis tickFormatter={(value) => `$${value / 1000}k`} tick={{ fontSize: 11, fill: "#888" }} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#181d24", borderColor: "#2b323c", borderRadius: 8, color: "#fff" }}
+                formatter={(value) => formatCurrency(value)}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+              <Bar
+                dataKey="subscriptions"
+                stackId="a"
+                fill="#61CB08"
+                radius={[0, 0, 0, 0]}
+                name="Subscriptions"
+              />
+              <Bar
+                dataKey="oneTime"
+                stackId="a"
+                fill="#3b82f6"
+                radius={[4, 4, 0, 0]}
+                name="Ride Bookings"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Device Usage */}
-        <Card>
-          <Card.Header>
-            <Card.Title>Device Usage</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={deviceData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {deviceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card.Content>
-        </Card>
+        <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
+            Device Breakdown
+          </h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <PieChart>
+              <Pie
+                data={deviceData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={80}
+                paddingAngle={4}
+                dataKey="value"
+              >
+                {deviceData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{ backgroundColor: "#181d24", borderColor: "#2b323c", borderRadius: 8, color: "#fff" }}
+                formatter={(val, name) => [`${val}%`, name]}
+              />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
 
         {/* Traffic Sources */}
-        <Card>
-          <Card.Header>
-            <Card.Title>Traffic Sources</Card.Title>
-          </Card.Header>
-          <Card.Content>
-            <div className="space-y-4">
-              {trafficSources.map((source, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-primary-500"></div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      {source.source}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {source.visitors.toLocaleString()}
-                    </span>
-                    <div className="w-20 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-primary-500 h-2 rounded-full"
-                        style={{ width: `${source.percentage}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white w-8">
-                      {source.percentage}%
-                    </span>
-                  </div>
+        <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">
+            Traffic Acquisition Sources
+          </h3>
+          <div className="space-y-4 pt-2">
+            {trafficSources.map((source, index) => (
+              <div key={index} className="flex items-center justify-between text-sm">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#61CB08]" />
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {source.source}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </Card.Content>
-        </Card>
+                <div className="flex items-center space-x-4">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {source.visitors.toLocaleString()} visits
+                  </span>
+                  <div className="w-24 bg-gray-100 dark:bg-[#1f242b] rounded-full h-2">
+                    <div
+                      className="bg-[#61CB08] h-2 rounded-full transition-all"
+                      style={{ width: `${source.percentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white w-8 text-right">
+                    {source.percentage}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Top Pages Table */}
-      <Card>
-        <Card.Header>
-          <Card.Title>Top Pages</Card.Title>
-        </Card.Header>
-        <Card.Content>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th className="px-6 py-3">Page</th>
-                  <th className="px-6 py-3">Page Views</th>
-                  <th className="px-6 py-3">Unique Views</th>
-                  <th className="px-6 py-3">Bounce Rate</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topPages.map((page, index) => (
-                  <tr
-                    key={index}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                  >
-                    <td
-                      className="px-6 py-4 font-medium text-gray-900 dark:text-white max-w-[200px] truncate"
-                      title={page.page}
+      <div className="bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl overflow-hidden shadow-sm">
+        <div className="p-4 border-b border-gray-200 dark:border-[#1f242b]">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+            Top Application Screen Views
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="text-[11px] uppercase tracking-wider text-gray-500 dark:text-gray-400 bg-gray-50/75 dark:bg-[#181d24]/75 border-b border-gray-200 dark:border-[#1f242b]">
+              <tr>
+                <th className="px-6 py-3 font-semibold">Page / Screen</th>
+                <th className="px-6 py-3 font-semibold">Page Views</th>
+                <th className="px-6 py-3 font-semibold">Unique Views</th>
+                <th className="px-6 py-3 font-semibold">Bounce Rate</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-[#1f242b]">
+              {topPages.map((page, index) => (
+                <tr
+                  key={index}
+                  className="hover:bg-gray-50/50 dark:hover:bg-[#181d24]/50 transition-colors"
+                >
+                  <td className="px-6 py-3.5 font-medium text-gray-900 dark:text-white font-mono text-xs">
+                    {page.page}
+                  </td>
+                  <td className="px-6 py-3.5 text-gray-600 dark:text-gray-300">
+                    {page.views.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-3.5 text-gray-600 dark:text-gray-300">
+                    {page.uniqueViews.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-3.5">
+                    <Badge
+                      variant={
+                        page.bounceRate < 30
+                          ? "success"
+                          : page.bounceRate < 40
+                          ? "warning"
+                          : "danger"
+                      }
+                      dot
+                      className="text-[10px]"
                     >
-                      {page.page}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {page.views.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 text-gray-600 dark:text-gray-400">
-                      {page.uniqueViews.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          page.bounceRate < 30
-                            ? "bg-green-100 text-green-800"
-                            : page.bounceRate < 40
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {page.bounceRate}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card.Content>
-      </Card>
+                      {page.bounceRate}%
+                    </Badge>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

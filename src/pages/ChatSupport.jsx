@@ -8,12 +8,41 @@ import {
   Video,
   MoreVertical,
   Paperclip,
+  CheckCircle2,
+  Clock,
+  Inbox,
 } from "lucide-react";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
+import StatsCard from "../components/common/StatsCard";
 import { formatDateTime } from "../utils/helpers";
+
+const AVATAR_PALETTE = [
+  { bg: "bg-emerald-500/15", text: "text-emerald-500", border: "border-emerald-500/30" },
+  { bg: "bg-blue-500/15", text: "text-blue-500", border: "border-blue-500/30" },
+  { bg: "bg-amber-500/15", text: "text-amber-500", border: "border-amber-500/30" },
+  { bg: "bg-purple-500/15", text: "text-purple-500", border: "border-purple-500/30" },
+  { bg: "bg-rose-500/15", text: "text-rose-500", border: "border-rose-500/30" },
+  { bg: "bg-cyan-500/15", text: "text-cyan-500", border: "border-cyan-500/30" },
+];
+
+function getAvatarColors(name = "") {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+function getInitials(name = "") {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return (parts[0] || "?").slice(0, 2).toUpperCase();
+}
 
 const ChatSupport = () => {
   const [selectedChat, setSelectedChat] = useState(null);
@@ -21,7 +50,7 @@ const ChatSupport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef(null);
 
-  const [chats] = useState([
+  const [chats, setChats] = useState([
     {
       id: 1,
       userId: 1,
@@ -176,7 +205,6 @@ const ChatSupport = () => {
       isAdmin: true,
     };
 
-    // Update the selected chat with new message
     const updatedChat = {
       ...selectedChat,
       messages: [...selectedChat.messages, newMessage],
@@ -185,6 +213,9 @@ const ChatSupport = () => {
     };
 
     setSelectedChat(updatedChat);
+    setChats((prev) =>
+      prev.map((c) => (c.id === updatedChat.id ? updatedChat : c))
+    );
     setMessage("");
   };
 
@@ -205,9 +236,9 @@ const ChatSupport = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "online":
-        return "bg-green-500";
+        return "bg-emerald-500";
       case "away":
-        return "bg-yellow-500";
+        return "bg-amber-500";
       case "offline":
         return "bg-gray-400";
       default:
@@ -218,82 +249,58 @@ const ChatSupport = () => {
   const totalChats = chats.length;
   const activeChats = chats.filter((chat) => chat.status === "online").length;
   const unreadMessages = chats.reduce((sum, chat) => sum + chat.unreadCount, 0);
-  const avgResponseTime = "2.5 min"; // This would be calculated from actual data
 
   return (
     <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          Support Inbox
+        </h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          Real-time customer and driver support chat center
+        </p>
+      </div>
+
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Chats
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {totalChats}
-              </p>
-            </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Active Chats
-              </p>
-              <p className="text-2xl font-bold text-green-600">{activeChats}</p>
-            </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <User className="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Unread Messages
-              </p>
-              <p className="text-2xl font-bold text-red-600">
-                {unreadMessages}
-              </p>
-            </div>
-            <div className="p-3 bg-red-100 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-red-600" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Avg Response Time
-              </p>
-              <p className="text-2xl font-bold text-purple-600">
-                {avgResponseTime}
-              </p>
-            </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <MessageSquare className="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total Conversations"
+          value={totalChats}
+          icon={<MessageSquare className="w-5 h-5" />}
+          colored
+          index={0}
+        />
+        <StatsCard
+          title="Active Online"
+          value={activeChats}
+          icon={<User className="w-5 h-5" />}
+          colored
+          index={1}
+        />
+        <StatsCard
+          title="Unread Messages"
+          value={unreadMessages}
+          icon={<Inbox className="w-5 h-5" />}
+          colored
+          index={2}
+        />
+        <StatsCard
+          title="Avg Response Time"
+          value="< 2 mins"
+          icon={<Clock className="w-5 h-5" />}
+          colored
+          index={3}
+        />
       </div>
 
       {/* Chat Interface */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[640px]">
         {/* Chat List */}
-        <Card className="lg:col-span-1">
-          <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Chat Support
+        <div className="lg:col-span-4 bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl flex flex-col overflow-hidden shadow-sm">
+          <div className="p-4 border-b border-gray-200 dark:border-[#1f242b]">
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+              Conversations ({filteredChats.length})
             </h3>
             <Input
               placeholder="Search conversations..."
@@ -303,127 +310,146 @@ const ChatSupport = () => {
             />
           </div>
 
-          <div className="overflow-y-auto h-[500px]">
-            {filteredChats.map((chat) => (
-              <div
-                key={chat.id}
-                onClick={() => setSelectedChat(chat)}
-                className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedChat?.id === chat.id
-                    ? "bg-primary-500 dark:bg-primary-500/80"
-                    : ""
-                  }`}
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-gray-600 font-medium">
-                        {chat.userName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div
-                      className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(
-                        chat.status
-                      )}`}
-                    ></div>
-                  </div>
+          <div className="overflow-y-auto flex-1 divide-y divide-gray-100 dark:divide-[#1f242b]">
+            {filteredChats.map((chat) => {
+              const avatar = getAvatarColors(chat.userName);
+              const isSelected = selectedChat?.id === chat.id;
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {chat.userName}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(chat.lastMessageTime).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={`p-3.5 cursor-pointer transition-colors ${
+                    isSelected
+                      ? "bg-[#61CB08]/10 dark:bg-[#61CB08]/15 border-l-4 border-[#61CB08]"
+                      : "hover:bg-gray-50 dark:hover:bg-[#181d24]"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="relative shrink-0">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs border ${avatar.bg} ${avatar.text} ${avatar.border}`}
+                      >
+                        {getInitials(chat.userName)}
+                      </div>
+                      <div
+                        className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#13161a] ${getStatusColor(
+                          chat.status
+                        )}`}
+                      />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                        {chat.lastMessage}
-                      </p>
-                      {chat.unreadCount > 0 && (
-                        <Badge variant="danger" className="text-xs">
-                          {chat.unreadCount}
-                        </Badge>
-                      )}
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                          {chat.userName}
+                        </p>
+                        <p className="text-[11px] text-gray-400">
+                          {new Date(chat.lastMessageTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between mt-0.5">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[180px]">
+                          {chat.lastMessage}
+                        </p>
+                        {chat.unreadCount > 0 && (
+                          <Badge variant="danger" dot className="text-[10px]">
+                            {chat.unreadCount}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+              );
+            })}
+            {filteredChats.length === 0 && (
+              <div className="p-8 text-center text-gray-400 text-sm">
+                No conversations found
               </div>
-            ))}
+            )}
           </div>
-        </Card>
+        </div>
 
         {/* Chat Messages */}
-        <Card className="lg:col-span-2">
+        <div className="lg:col-span-8 bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-xl flex flex-col overflow-hidden shadow-sm">
           {selectedChat ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-gray-600 font-medium">
-                          {selectedChat.userName.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div
-                        className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${getStatusColor(
-                          selectedChat.status
-                        )}`}
-                      ></div>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {selectedChat.userName}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {selectedChat.userEmail}
-                      </p>
-                    </div>
+              <div className="p-4 border-b border-gray-200 dark:border-[#1f242b] flex items-center justify-between bg-gray-50/50 dark:bg-[#181d24]/50">
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    {(() => {
+                      const avatar = getAvatarColors(selectedChat.userName);
+                      return (
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-xs border ${avatar.bg} ${avatar.text} ${avatar.border}`}
+                        >
+                          {getInitials(selectedChat.userName)}
+                        </div>
+                      );
+                    })()}
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white dark:border-[#13161a] ${getStatusColor(
+                        selectedChat.status
+                      )}`}
+                    />
                   </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                      {selectedChat.userName}
+                    </h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {selectedChat.userEmail}
+                    </p>
+                  </div>
+                </div>
 
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Phone className="w-4 h-4" />}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Video className="w-4 h-4" />}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<MoreVertical className="w-4 h-4" />}
-                    />
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Phone className="w-3.5 h-3.5" />}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Video className="w-3.5 h-3.5" />}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    icon={<MoreVertical className="w-4 h-4" />}
+                  />
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 h-[400px]">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/30 dark:bg-[#0f1216]">
                 {selectedChat.messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={`flex ${msg.isAdmin ? "justify-end" : "justify-start"
-                      }`}
+                    className={`flex ${
+                      msg.isAdmin ? "justify-end" : "justify-start"
+                    }`}
                   >
                     <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${msg.isAdmin
-                          ? "bg-primary-600 text-white"
-                          : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
-                        }`}
+                      className={`max-w-xs lg:max-w-md px-3.5 py-2.5 rounded-xl shadow-xs text-sm ${
+                        msg.isAdmin
+                          ? "bg-[#61CB08] text-black font-medium rounded-br-xs"
+                          : "bg-white dark:bg-[#181d24] text-gray-900 dark:text-white border border-gray-200/80 dark:border-[#222831] rounded-bl-xs"
+                      }`}
                     >
-                      <p className="text-sm">{msg.message}</p>
+                      <p className="leading-relaxed">{msg.message}</p>
                       <p
-                        className={`text-xs mt-1 ${msg.isAdmin ? "text-primary-100" : "text-gray-500"
-                          }`}
+                        className={`text-[10px] mt-1 text-right ${
+                          msg.isAdmin
+                            ? "text-black/60 font-medium"
+                            : "text-gray-400"
+                        }`}
                       >
                         {new Date(msg.timestamp).toLocaleTimeString([], {
                           hour: "2-digit",
@@ -437,27 +463,28 @@ const ChatSupport = () => {
               </div>
 
               {/* Message Input */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="p-3 border-t border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a]">
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="ghost"
                     size="sm"
-                    icon={<Paperclip className="w-4 h-4" />}
+                    icon={<Paperclip className="w-4 h-4 text-gray-400" />}
                   />
                   <div className="flex-1">
-                    <textarea
+                    <input
+                      type="text"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      rows={1}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                      placeholder="Type a response... (Press Enter to send)"
+                      className="w-full px-3.5 py-2 bg-gray-50 dark:bg-[#181d24] border border-gray-200 dark:border-[#1f242b] rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#61CB08] focus:border-[#61CB08]"
                     />
                   </div>
                   <Button
                     onClick={handleSendMessage}
                     disabled={!message.trim()}
-                    icon={<Send className="w-4 h-4" />}
+                    variant="primary"
+                    icon={<Send className="w-3.5 h-3.5" />}
                   >
                     Send
                   </Button>
@@ -466,18 +493,20 @@ const ChatSupport = () => {
             </>
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              <div className="text-center p-6">
+                <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-gray-100 dark:bg-[#181d24] flex items-center justify-center text-gray-400">
+                  <MessageSquare className="w-6 h-6" />
+                </div>
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
                   Select a conversation
                 </h3>
-                <p className="text-gray-500">
-                  Choose a chat from the list to start messaging
+                <p className="text-xs text-gray-400 max-w-xs">
+                  Choose a support thread from the left sidebar to start messaging.
                 </p>
               </div>
             </div>
           )}
-        </Card>
+        </div>
       </div>
     </div>
   );

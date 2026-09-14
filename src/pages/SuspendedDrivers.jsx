@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { UserX, ShieldOff, Search, Clock, RotateCcw, AlertTriangle, List, Eye } from "lucide-react";
+import { UserX, ShieldOff, Clock, RotateCcw, AlertTriangle, List, ArrowRight } from "lucide-react";
 
 import DataTable from "../components/common/DataTable";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
 import Modal from "../components/ui/Modal";
-import FilterBar from "../components/ui/FilterBar";
+import Tabs from "../components/ui/Tabs";
 
 import { formatDateTime } from "../utils/helpers";
 import { useAuth } from "../contexts/AuthContext";
@@ -18,16 +17,28 @@ import toast from "react-hot-toast";
 
 const fullName = (obj) => [obj?.firstName, obj?.lastName].filter(Boolean).join(" ") || "—";
 
+const AVATAR_PALETTE = [
+  "bg-rose-500/15 text-rose-400 border-rose-500/30",
+  "bg-amber-500/15 text-amber-400 border-amber-500/30",
+  "bg-purple-500/15 text-purple-400 border-purple-500/30",
+];
+
+const getInitials = (firstName, lastName) => {
+  const f = firstName ? firstName.charAt(0).toUpperCase() : "";
+  const l = lastName ? lastName.charAt(0).toUpperCase() : "";
+  return f + l || "D";
+};
+
 const typeBadge = (type) => {
   switch (type) {
     case "cancellation":
-      return <Badge variant="warning">Auto (Cancellations)</Badge>;
+      return <Badge variant="warning" dot>Auto (Cancellations)</Badge>;
     case "admin_manual":
-      return <Badge variant="danger">Admin (Timed)</Badge>;
+      return <Badge variant="danger" dot>Admin (Timed)</Badge>;
     case "admin_permanent":
-      return <Badge variant="danger">Permanent</Badge>;
+      return <Badge variant="danger" dot>Permanent</Badge>;
     default:
-      return <Badge variant="default">{type || "—"}</Badge>;
+      return <Badge variant="default" dot>{type || "—"}</Badge>;
   }
 };
 
@@ -91,103 +102,87 @@ const SuspensionDetailDialog = ({ selectedData, onClose, onRefresh }) => {
   };
 
   const Row = ({ label, value }) => (
-    <div className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-      <span className="text-sm text-gray-500 dark:text-gray-400 shrink-0">{label}</span>
-      <span className="text-sm font-medium text-gray-900 dark:text-white text-right break-words max-w-[60%]">
+    <div className="flex justify-between gap-4 py-2 border-b border-gray-100 dark:border-[#1f242b] last:border-0 text-xs">
+      <span className="text-gray-500 dark:text-slate-400 shrink-0">{label}</span>
+      <span className="font-semibold text-gray-900 dark:text-white text-right break-words max-w-[65%]">
         {value ?? "—"}
       </span>
     </div>
   );
 
   return (
-    <Modal isOpen={!!selectedData} onClose={onClose} title="Suspension Details" size="md">
-      <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+    <>
+      <Modal
+        isOpen={!!selectedData}
+        onClose={onClose}
+        title="Suspension Record Details"
+        size="md"
+      >
         {loading ? (
-          <div className="py-8 text-center text-sm text-gray-500">Loading details...</div>
-        ) : !details ? (
-          <div className="py-8 text-center text-sm text-red-500">Could not load details.</div>
+          <div className="py-12 text-center text-xs text-gray-400">
+            Loading suspension details...
+          </div>
         ) : (
-          <>
-            <div className="mb-4">
-              <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Driver Info</h4>
-              <Row label="Name" value={fullName(details.driver)} />
-              <Row label="Email" value={details.driver?.email} />
-              <Row label="Status" value={details.isSuspended ? <Badge variant="danger">Suspended</Badge> : <Badge variant="success">Active</Badge>} />
+          <div className="space-y-4">
+            <div className="rounded-lg border border-gray-100 dark:border-[#1f242b] p-3 bg-gray-50/50 dark:bg-[#101317]">
+              <Row label="Driver Name" value={details?.driverName || fullName(selectedData?.driver)} />
+              <Row label="Driver Email" value={details?.driverEmail || selectedData?.driver?.email} />
+              <Row label="Suspension Type" value={typeBadge(details?.suspensionType || selectedData?.suspensionType)} />
+              <Row label="Reason" value={details?.reason || selectedData?.reason} />
+              <Row label="Time Remaining" value={formatRemainingTime(details?.remainingSeconds ?? selectedData?.remainingSeconds)} />
+              <Row label="Suspended At" value={formatDateTime(details?.suspendedAt || selectedData?.suspendedAt)} />
             </div>
 
-            {details.suspensions?.map((suspension, idx) => (
-              <div key={idx} className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
-                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Record #{idx + 1}
-                </h4>
-                <Row label="Type" value={typeBadge(suspension.suspensionType)} />
-                <Row label="Reason" value={suspension.reason === "admin_deactivated" ? "Deactivated by Admin" : suspension.reason === "ride_cancellations" ? "Ride Cancelled" : suspension.reason} />
-                <Row label="Suspended At" value={suspension.suspendedAt ? formatDateTime(suspension.suspendedAt) : "—"} />
-                <Row label="Time Left" value={formatRemainingTime(suspension.remainingSeconds)} />
-                
-                {suspension.suspensionType === "cancellation" && (
-                  <>
-                    <Row label="Cancellations" value={`${suspension.cancellationCount} / ${suspension.maxCancellations}`} />
-                  </>
-                )}
-                {suspension.suspendedByAdminId && (
-                  <Row label="Admin ID" value={<span className="font-mono text-xs">{suspension.suspendedByAdminId}</span>} />
-                )}
-              </div>
-            ))}
-          </>
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100 dark:border-[#1f242b]">
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Close
+              </Button>
+              <Button
+                variant="success"
+                size="sm"
+                icon={<RotateCcw className="w-3.5 h-3.5" />}
+                onClick={handleUnsuspend}
+                disabled={unsuspendLoading}
+              >
+                Unsuspend Driver
+              </Button>
+            </div>
+          </div>
         )}
-      </div>
-      
-      {details?.isSuspended && (
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-          <Button 
-            variant="danger" 
-            icon={<RotateCcw className="w-4 h-4" />}
-            onClick={handleUnsuspend}
-            loading={unsuspendLoading}
-          >
-            Unsuspend Driver
-          </Button>
-        </div>
-      )}
+      </Modal>
 
-      {/* Unsuspend Confirmation Modal for Dialog */}
       <Modal
         isOpen={confirmUnsuspend}
         onClose={() => setConfirmUnsuspend(false)}
         title="Confirm Unsuspend"
         size="sm"
       >
-        <p className="text-sm text-gray-500 mb-6">
-          Are you sure you want to unsuspend this driver? This clears all active suspensions.
+        <p className="text-xs text-gray-600 dark:text-slate-300 mb-5">
+          Are you sure you want to lift the suspension for this driver? Their platform access will be restored immediately.
         </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setConfirmUnsuspend(false)} disabled={unsuspendLoading}>
+        <div className="flex justify-end gap-2.5">
+          <Button variant="ghost" size="sm" onClick={() => setConfirmUnsuspend(false)}>
             Cancel
           </Button>
           <Button
             variant="success"
+            size="sm"
             loading={unsuspendLoading}
-            disabled={unsuspendLoading}
             onClick={confirmUnsuspendAction}
           >
-            Yes, Unsuspend
+            Confirm Unsuspend
           </Button>
         </div>
       </Modal>
-    </Modal>
+    </>
   );
 };
 
 const SuspendedDrivers = () => {
-  const { hasPermission } = useAuth();
-  
-  const [activeTab, setActiveTab] = usePersistentState("suspendeddrivers_activeTab", "all");
-  const [search, setSearch] = usePersistentState("suspendeddrivers_search", "");
-  const [page, setPage] = usePersistentState("suspendeddrivers_page", 1);
-  const [limit, setLimit] = usePersistentState("suspendeddrivers_limit", 10);
-  
+  const [activeTab, setActiveTab] = usePersistentState("suspended_drivers_activeTab", "all");
+  const [search, setSearch] = usePersistentState("suspended_drivers_search", "");
+  const [page, setPage] = usePersistentState("suspended_drivers_page", 1);
+  const [limit, setLimit] = usePersistentState("suspended_drivers_limit", 10);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [unsuspendLoading, setUnsuspendLoading] = useState(false);
   const [confirmUnsuspend, setConfirmUnsuspend] = useState(null);
@@ -216,18 +211,12 @@ const SuspendedDrivers = () => {
     setPage(1);
   };
 
-  const handleSearchChange = (val) => {
-    setSearch(val);
-    setPage(1);
-  };
-
   const handleUnsuspendQuick = (driverId) => {
     setConfirmUnsuspend(driverId);
   };
 
   const confirmUnsuspendAction = async () => {
     if (!confirmUnsuspend) return;
-    
     setUnsuspendLoading(true);
     try {
       await api.unsuspendDriver(confirmUnsuspend);
@@ -241,23 +230,36 @@ const SuspendedDrivers = () => {
     }
   };
 
+  const tabs = [
+    { key: "all", label: "All Suspensions", count: totalData || 0 },
+    { key: "cancellation", label: "Auto (Cancellations)" },
+    { key: "admin_permanent", label: "Permanent" },
+  ];
+
   const columns = [
     {
       key: "driver",
       label: "Driver",
-      render: (val) => (
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-            <UserX className="w-4 h-4 text-red-600 dark:text-red-400" />
+      render: (val) => {
+        const name = fullName(val);
+        const initials = getInitials(val?.firstName, val?.lastName);
+
+        return (
+          <div className="flex items-center gap-3 min-w-0" title={name}>
+            <div className="w-7 h-7 rounded-full bg-rose-500/15 border border-rose-500/30 flex items-center justify-center font-bold text-[11px] text-rose-400 shrink-0">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <span className="font-bold text-xs text-gray-900 dark:text-white truncate block">
+                {name}
+              </span>
+              <span className="text-[11px] text-gray-400 dark:text-slate-500 font-mono truncate block">
+                {val?.email || "—"}
+              </span>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">
-              {fullName(val)}
-            </p>
-            <p className="text-xs text-gray-400">{val?.email}</p>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       key: "suspensionType",
@@ -268,7 +270,7 @@ const SuspendedDrivers = () => {
       key: "reason",
       label: "Reason",
       render: (val) => (
-        <span className="text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate block" title={val}>
+        <span className="text-xs text-gray-700 dark:text-slate-300 max-w-[200px] truncate block" title={val}>
           {val === "admin_deactivated" ? "Deactivated by Admin" : val === "ride_cancellations" ? "Ride Cancelled" : (val || "—")}
         </span>
       ),
@@ -277,7 +279,7 @@ const SuspendedDrivers = () => {
       key: "remainingSeconds",
       label: "Time Left",
       render: (val) => (
-        <div className="flex items-center gap-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-700 dark:text-slate-300">
           <Clock className="w-3.5 h-3.5 text-gray-400" />
           {formatRemainingTime(val)}
         </div>
@@ -285,118 +287,83 @@ const SuspendedDrivers = () => {
     },
     {
       key: "suspendedAt",
-      label: "Date",
+      label: "Suspended Date",
       render: (val) => (
-        <span className="text-sm text-gray-500 dark:text-gray-400">
+        <span className="text-xs text-gray-500 dark:text-slate-400 font-mono">
           {val ? formatDateTime(val) : "—"}
         </span>
       ),
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "",
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => setSelectedRecord(row)}>
-            Details
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="text-gray-600 hover:text-green-600 hover:border-green-600 border-gray-200"
-            icon={<RotateCcw className="w-3.5 h-3.5" />} 
+        <div className="flex items-center gap-1.5">
+          <button
             onClick={() => handleUnsuspendQuick(row.driverId)}
             disabled={unsuspendLoading}
+            className="px-2 py-1 rounded-md text-xs font-semibold text-emerald-600 dark:text-[#61CB08] hover:bg-emerald-50 dark:hover:bg-[#181d24] transition-colors"
+            title="Unsuspend driver"
           >
             Unsuspend
-          </Button>
+          </button>
+          <button
+            onClick={() => setSelectedRecord(row)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+            title="View full suspension details"
+          >
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 max-w-[1600px] mx-auto pb-12">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Suspended Drivers
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Monitor and manage driver suspensions across the platform
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Suspended Drivers
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/10 text-rose-500 border border-rose-500/20">
+              {totalData || 0} suspended
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Monitor cancellation infractions, safety suspensions, and reinstate driver access
           </p>
         </div>
       </div>
 
-      <div className="flex border-b border-gray-200 overflow-x-auto">
-        <button
-          onClick={() => handleTabChange("all")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "all"
-              ? "text-red-600 border-b-2 border-red-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <List className="w-4 h-4" />
-            All Suspensions
-          </div>
-        </button>
-        <button
-          onClick={() => handleTabChange("cancellation")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "cancellation"
-              ? "text-red-600 border-b-2 border-red-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <AlertTriangle className="w-4 h-4" />
-            Auto (Cancellations)
-          </div>
-        </button>
-        <button
-          onClick={() => handleTabChange("admin_permanent")}
-          className={`px-6 py-3 text-sm font-medium transition-colors relative whitespace-nowrap ${
-            activeTab === "admin_permanent"
-              ? "text-red-600 border-b-2 border-red-600"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          <div className="flex items-center gap-2 text-base">
-            <ShieldOff className="w-4 h-4" />
-            Permanent
-          </div>
-        </button>
-      </div>
+      {/* Tabs */}
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
 
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <FilterBar
-          searchable
-          searchValue={search}
-          searchPlaceholder="Search by driver name or email..."
-          onSearchChange={setSearch}
-          onClear={() => setSearch("")}
-        />
-      </div>
-
-      <Card className="overflow-hidden">
-        <DataTable
-          data={drivers}
-          columns={columns}
-          title="Suspended Drivers List"
-          loading={loading || unsuspendLoading}
-          addButton={false}
-          exportable={false}
-          totalPages={totalPages}
-          totalData={totalData}
-          currentPage={page}
-          pageSize={limit}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => { setLimit(size); setPage(1); }}
-        />
-      </Card>
+      {/* Data Table */}
+      <DataTable
+        title="Suspended Accounts"
+        subtitle="Active and permanent driver suspension records"
+        data={drivers}
+        columns={columns}
+        loading={loading || unsuspendLoading}
+        searchable
+        searchTerm={search}
+        onSearch={setSearch}
+        searchPlaceholder="Search by driver name or email..."
+        addButton={false}
+        exportable={false}
+        totalPages={totalPages}
+        totalData={totalData}
+        currentPage={page}
+        pageSize={limit}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setLimit(size);
+          setPage(1);
+        }}
+      />
 
       {/* Detail Dialog */}
       <SuspensionDetailDialog
@@ -412,15 +379,21 @@ const SuspendedDrivers = () => {
         title="Confirm Unsuspend"
         size="sm"
       >
-        <p className="text-sm text-gray-500 mb-6">
-          Are you sure you want to unsuspend this driver?
+        <p className="text-xs text-gray-600 dark:text-slate-300 mb-5">
+          Are you sure you want to unsuspend this driver? Their platform access will be restored immediately.
         </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="outline" onClick={() => setConfirmUnsuspend(null)} disabled={unsuspendLoading}>
+        <div className="flex justify-end gap-2.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmUnsuspend(null)}
+            disabled={unsuspendLoading}
+          >
             Cancel
           </Button>
           <Button
             variant="success"
+            size="sm"
             loading={unsuspendLoading}
             disabled={unsuspendLoading}
             onClick={confirmUnsuspendAction}

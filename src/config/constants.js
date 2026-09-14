@@ -11,27 +11,27 @@ export const APP_CONFIG = {
 
 // Global Color Configuration - Dynamic Theme System
 export const COLOR_CONFIG = {
-  // Primary color (required) - Main brand color
+  // Primary color (required) - Main brand color (Epic Lime)
   primary: {
-    name: "Pink",
+    name: "Epic Lime",
     hex: "#61CB08",
-    rgb: "198, 13, 249",
-    enabled: true, // Set to false to disable secondary color
+    rgb: "97 203 8",
+    enabled: true,
   },
-  // Secondary color (optional) - Accent color
+  // Secondary color (optional) - Accent color (Sky Blue)
   secondary: {
-    name: "Yellow",
-    hex: "#ebc501",
-    rgb: "97, 50, 234",
+    name: "Sky Blue",
+    hex: "#0284c7",
+    rgb: "2 132 199",
     enabled: true,
   },
 };
 
 // Theme Options Configuration
 export const THEME_OPTIONS = {
-  enableThemeToggle: true, // Set to false to disable theme switching
-  defaultTheme: "light", // 'light' or 'dark'
-  forceTheme: "light", // Set to 'light' or 'dark' to force a single theme (disables toggle)
+  enableThemeToggle: true, // Allow dark/light mode switching
+  defaultTheme: "dark", // Command Center default dark mode
+  forceTheme: null, // Allow theme toggle
   enableSecondaryColor: COLOR_CONFIG.secondary.enabled,
   // Theme persistence
   persistTheme: true, // Save theme preference to localStorage
@@ -104,195 +104,163 @@ export const DATE_CONFIG = {
   timezone: "UTC",
 };
 
-// Navigation Menu Items
-export const MENU_ITEMS = [
+// Enterprise Grouped Navigation Architecture
+export const MENU_SECTIONS = [
   {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: "LayoutDashboard",
-    path: "/dashboard",
-    children: [],
-  },
-  {
-    id: "user-management",
-    label: "User Management",
-    icon: "User",
-    path: "/user-management",
-    children: [
-      // {
-      //   id: "riders",
-      //   label: "Riders",
-      //   path: "/riders",
-      // },
-      // {
-      //   id: "drivers",
-      //   label: "Drivers",
-      //   path: "/drivers",
-      // },
+    id: "operate",
+    title: "OPERATE",
+    items: [
+      {
+        id: "dashboard",
+        label: "Command Center",
+        icon: "LayoutDashboard",
+        path: "/dashboard",
+      },
+      {
+        id: "birds-eye-view",
+        label: "Live Operations",
+        icon: "Radio",
+        path: "/birds-eye-view",
+        permission: "birdsEye",
+      },
+      {
+        id: "private-rides",
+        label: "Private Rides",
+        icon: "Car",
+        path: "/private-rides",
+      },
+      {
+        id: "carpool-rides",
+        label: "Carpool Rides",
+        icon: "Users",
+        path: "/carpool-rides",
+      },
     ],
   },
   {
-    id: "driver-management",
-    label: "Driver Requests ",
-    icon: "User",
-    path: "/driver-requests",
-    children: [],
-  },
-  {
-    id: "suspended-drivers",
-    label: "Suspended Drivers",
-    icon: "UserX",
-    path: "/suspended-drivers",
-    children: [],
-  },
-  {
-    id: "rewarded-balance-history",
-    label: "Rewarded Balance",
-    icon: "Coins",
-    path: "/rewarded-balance-history",
-    children: [],
-  },
-  {
-    id: "admin-management",
-    label: "Admin Management",
-    icon: "ShieldAlert",
-    path: "/admin-users",
-    children: [],
-  },
-  {
-    id: "vehicle-category",
-    label: "Vehicle Category",
-    icon: "Car",
-    path: "/vehicle-category",
-    children: [],
-  },
-  // {
-  //   id: "content-management",
-  //   label: "Content Management",
-  //   icon: "FileText",
-  //   path: "/content-management",
-  //   children: [],
-  // },
-  {
-    id: "reports",
-    label: "Reports",
-    icon: "Info",
-    path: "/reports",
-    children: [],
-  },
-  // {
-  //   id: "reports",
-  //   label: "Reports Management",
-  //   icon: "FileSpreadsheet",
-  //   path: "/reports-management",
-  //   children: [],
-  // },
-  {
-    id: "notifications",
-    label: "Notifications",
-    icon: "Bell",
-    path: "/notifications",
-    children: [],
+    id: "marketplace",
+    title: "MARKETPLACE",
+    items: [
+      {
+        id: "riders",
+        label: "Riders",
+        icon: "User",
+        path: "/user-management?tab=rider",
+      },
+      {
+        id: "drivers",
+        label: "Drivers",
+        icon: "UserCheck",
+        path: "/user-management?tab=driver",
+      },
+      {
+        id: "driver-management",
+        label: "Driver Requests",
+        icon: "FileCheck",
+        path: "/driver-requests",
+        permission: "viewDriverRequests",
+        hasBadge: true,
+      },
+      {
+        id: "suspended-drivers",
+        label: "Suspended Drivers",
+        icon: "UserX",
+        path: "/suspended-drivers",
+        permission: "viewDriverRequests",
+      },
+      {
+        id: "vehicle-category",
+        label: "Vehicle Categories",
+        icon: "Layers",
+        path: "/vehicle-category",
+        permission: "vehicleCategory",
+      },
+    ],
   },
   {
     id: "revenue",
-    label: "Revenue",
-    icon: "BadgeDollarSign",
-    path: "/revenue",
-    children: [],
+    title: "REVENUE",
+    items: [
+      {
+        id: "revenue",
+        label: "Financial Analytics",
+        icon: "BadgeDollarSign",
+        path: "/revenue",
+        permission: "financials",
+      },
+      {
+        id: "ride-rates",
+        label: "Ride Rates",
+        icon: "Gauge",
+        path: "/ride-rates",
+        permission: "financials",
+      },
+      {
+        id: "peak-windows",
+        label: "Peak Windows",
+        icon: "Clock3",
+        path: "/peak-windows",
+        permission: "financials",
+      },
+    ],
   },
   {
-    id: "private-rides",
-    label: "Private Rides",
-    icon: "Car",
-    path: "/private-rides",
-    children: [],
+    id: "growth",
+    title: "GROWTH & ENGAGEMENT",
+    items: [
+      {
+        id: "campaigns",
+        label: "Campaigns & Promos",
+        icon: "Tag",
+        path: "/campaigns",
+        permission: "promos",
+      },
+      {
+        id: "rewarded-balance-history",
+        label: "Rewarded Balance",
+        icon: "Coins",
+        path: "/rewarded-balance-history",
+        permission: "balancePoints",
+      },
+      {
+        id: "notifications",
+        label: "Push Notifications",
+        icon: "Bell",
+        path: "/notifications",
+        permission: "sendNotifications",
+      },
+      {
+        id: "reports",
+        label: "Reports & Incidents",
+        icon: "AlertTriangle",
+        path: "/reports",
+      },
+    ],
   },
   {
-    id: "carpool-rides",
-    label: "Carpool Rides",
-    icon: "Users",
-    path: "/carpool-rides",
-    children: [],
+    id: "system",
+    title: "SYSTEM & ACCESS",
+    items: [
+      {
+        id: "admin-management",
+        label: "Admin Management",
+        icon: "Shield",
+        path: "/admin-users",
+        superAdminOnly: true,
+      },
+      {
+        id: "ride-configuration",
+        label: "Ride Configuration",
+        icon: "SlidersHorizontal",
+        path: "/ride-configuration",
+        permission: "financials",
+      },
+    ],
   },
-  {
-    id: "campaigns",
-    label: "Campaigns",
-    icon: "Tag",
-    path: "/campaigns",
-    children: [],
-  },
-  {
-    id: "ride-rates",
-    label: "Ride Rates",
-    icon: "Gauge",
-    path: "/ride-rates",
-    children: [],
-  },
-  {
-    id: "peak-windows",
-    label: "Peak Windows",
-    icon: "Clock3",
-    path: "/peak-windows",
-    children: [],
-  },
-  {
-    id: "ride-configuration",
-    label: "Ride Configuration",
-    icon: "SlidersHorizontal",
-    path: "/ride-configuration",
-    children: [],
-  },
-  {
-    id: "birds-eye-view",
-    label: "Bird's Eye View",
-    icon: "Map",
-    path: "/birds-eye-view",
-    children: [],
-  },
-  // {
-  //   id: "history",
-  //   label: "History",
-  //   icon: "ShieldAlert",
-  //   path: "/history",
-  //   children: [],
-  // },
-  // {
-  //   id: "products",
-  //   label: "Products",
-  //   icon: "Package",
-  //   path: "/products",
-  //   children: [
-  //     { id: "products-list", label: "All Products", path: "/products" },
-  //     { id: "categories", label: "Categories", path: "/products/categories" },
-  //   ],
-  // },
-  // {
-  //   id: "orders",
-  //   label: "Orders",
-  //   icon: "ShoppingCart",
-  //   path: "/orders",
-  //   children: [],
-  // },
-  // {
-  //   id: "settings",
-  //   label: "Settings",
-  //   icon: "Settings",
-  //   path: "/settings",
-  //   children: [
-  //     // {
-  //     //   id: "configs",
-  //     //   label: "Configurations",
-  //     //   path: "/settings/configs",
-  //     // },
-  //     {
-  //       id: "change-password",
-  //       label: "Change Password",
-  //       path: "/settings/change-password",
-  //     },
-  //   ],
-  // },
 ];
+
+// Navigation Menu Items (Flat list for backwards compatibility)
+export const MENU_ITEMS = MENU_SECTIONS.flatMap((sec) => sec.items.map((item) => ({ ...item, children: [] })));
 
 // User Roles
 export const USER_ROLES = {

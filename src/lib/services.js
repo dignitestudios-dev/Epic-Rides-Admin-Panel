@@ -461,6 +461,9 @@ const sendNotification = (payload) =>
 const getAdminNotifications = (page = 1, limit = 10) =>
   apiHandler(() => API.get(`/notifications/mine?page=${page}&limit=${limit}`));
 
+const markNotificationAsRead = (id) =>
+  apiHandler(() => API.patch(`/notifications/${id}/read`));
+
 const getNotificationById = (id) =>
   apiHandler(() => API.get(`/notifications/${id}`));
 
@@ -734,6 +737,7 @@ export const api = {
   getNotifications,
   sendNotification,
   getAdminNotifications,
+  markNotificationAsRead,
   getNotificationById,
   updateNotification,
   deleteNotification,

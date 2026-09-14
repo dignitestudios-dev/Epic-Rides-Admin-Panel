@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BarChart3, Users, QrCode } from "lucide-react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
+import Tabs from "../components/ui/Tabs";
+import StatsCard from "../components/common/StatsCard";
+import Badge from "../components/ui/Badge";
 import DataTable from "../components/common/DataTable";
 import { formatDate, formatPercent } from "../utils/helpers";
 import useCampaignDetail from "../hooks/campaigns/useCampaignDetail";
@@ -52,210 +55,236 @@ const CampaignDetail = () => {
   }, [activeTab, codesPage, codesLimit, fetchCodes]);
 
   const tabs = [
-    { id: "stats", label: "Stats & Overview", icon: <BarChart3 className="w-4 h-4" /> },
-    { id: "redemptions", label: "Redemptions", icon: <Users className="w-4 h-4" /> },
-    { id: "codes", label: "Generated Codes", icon: <QrCode className="w-4 h-4" /> },
+    { key: "stats", label: "Stats & Overview", icon: <BarChart3 className="w-3.5 h-3.5" /> },
+    { key: "redemptions", label: "Redemptions", icon: <Users className="w-3.5 h-3.5" />, count: redemptionsTotal },
+    { key: "codes", label: "Generated Codes", icon: <QrCode className="w-3.5 h-3.5" />, count: codesTotal },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={() => navigate("/campaigns")} icon={<ArrowLeft className="w-4 h-4" />}>Back</Button>
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => navigate("/campaigns")}
+          className="p-1.5 rounded-lg border border-gray-200 dark:border-[#1f242b] bg-white dark:bg-[#13161a] text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaign Details</h1>
-          <p className="text-sm text-gray-500 mt-1">ID: {id}</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              {details?.name || stats?.campaignName || "Campaign Details"}
+            </h1>
+            <Badge variant={details?.status === "active" ? "success" : "warning"} dot>
+              {details?.status || "Active"}
+            </Badge>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5 font-mono">
+            ID: {id}
+          </p>
         </div>
       </div>
 
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`${activeTab === tab.id
-                  ? "border-primary-500 text-primary-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                } flex items-center whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      {/* Segment Tabs */}
+      <Tabs tabs={tabs} activeTab={activeTab} onChange={setActiveTab} />
 
+      {/* Tab Contents */}
       <div className="mt-4">
         {activeTab === "stats" && (
           <div className="space-y-6">
             {loadingStats ? (
-              <p>Loading stats...</p>
+              <div className="py-12 text-center text-xs text-gray-400">Loading metrics...</div>
             ) : stats ? (
               <>
-                <Card className="p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Campaign Info</h2>
-                  {loadingDetails ? (
-                    <p className="text-sm text-gray-500">Loading details...</p>
-                  ) : details ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div>
-                        <p className="text-sm text-gray-500">Name</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{details.name || stats.campaignName || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Status</p>
-                        <p className="font-medium text-gray-900 dark:text-white capitalize">{details.status || stats.status || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Discount</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {details.discountType === "percentage" ? formatPercent(details.discountValue) : `$${Number(details.discountValue || 0).toFixed(2)}`}
-                          {details.maxDiscountCap ? ` (Up to $${Number(details.maxDiscountCap).toFixed(2)})` : ""}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Duration</p>
-                        <p className="font-medium text-gray-900 dark:text-white text-sm">
-                          {details.startDate ? formatDate(details.startDate) : (stats.startDate ? formatDate(stats.startDate) : "")} - {details.expiresAt ? formatDate(details.expiresAt) : (stats.expiresAt ? formatDate(stats.expiresAt) : "")}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Code Mode</p>
-                        <p className="font-medium text-gray-900 dark:text-white capitalize">{details.codeMode || "—"}</p>
-                      </div>
-                      {/* <div>
-                        <p className="text-sm text-gray-500">Code / Prefix</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{details.codeMode === "public" ? details.code : details.prefix || "—"}</p>
-                      </div> */}
-                      <div>
-                        <p className="text-sm text-gray-500">Max Uses Per User</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{details.maxUsesPerUser || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Min Ride Amount</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{details.minRideAmount ? `$${Number(details.minRideAmount).toFixed(2)}` : "—"}</p>
-                      </div>
-                      <div className="col-span-2 md:col-span-4">
-                        <p className="text-sm text-gray-500 mb-1">Eligibility</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded capitalize dark:bg-blue-900/50 dark:text-blue-300">User Type: {details.eligibility?.userType || "All"}</span>
-                          {details.eligibility?.minAge && <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-800 rounded dark:bg-purple-900/50 dark:text-purple-300">Min Age: {details.eligibility.minAge}</span>}
-                          {details.eligibility?.rideTypes?.map(rt => <span key={rt} className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded capitalize dark:bg-green-900/50 dark:text-green-300">{rt} Ride</span>)}
-                          {details.eligibility?.cities?.map(city => <span key={city} className="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded dark:bg-yellow-900/50 dark:text-yellow-300">{city}</span>)}
-                        </div>
-                      </div>
-                      {details.description && (
-                        <div className="col-span-2 md:col-span-4">
-                          <p className="text-sm text-gray-500 mb-1">Description</p>
-                          <p className="font-medium text-gray-900 dark:text-white text-sm">{details.description}</p>
-                        </div>
-                      )}
+                {/* 6 Key Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <StatsCard
+                    title="Total Redemptions"
+                    value={stats.totalRedemptions || 0}
+                    index={0}
+                  />
+                  <StatsCard
+                    title="Unique Users"
+                    value={stats.uniqueUsersCount || 0}
+                    index={1}
+                  />
+                  <StatsCard
+                    title="Total Discount Given"
+                    value={`$${Number(stats.totalDiscountGiven || 0).toFixed(2)}`}
+                    index={2}
+                  />
+                  <StatsCard
+                    title="Avg Discount / Ride"
+                    value={`$${stats.averageDiscountPerRide != null ? Number(stats.averageDiscountPerRide).toFixed(2) : "0.00"}`}
+                    index={3}
+                  />
+                  <StatsCard
+                    title="Redemption Rate"
+                    value={formatPercent(stats.redemptionRate)}
+                    index={4}
+                  />
+                  <StatsCard
+                    title="Budget Remaining"
+                    value={stats.budgetRemaining !== null ? `$${Number(stats.budgetRemaining).toFixed(2)}` : "Unlimited"}
+                    index={5}
+                  />
+                </div>
+
+                {/* Campaign Configuration Card */}
+                <div className="rounded-xl border border-gray-200/80 dark:border-[#1f242b] bg-white dark:bg-[#13161a] p-5 sm:p-6 space-y-4">
+                  <div className="border-b border-gray-100 dark:border-[#1f242b] pb-3">
+                    <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+                      Campaign Configuration
+                    </h2>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
+                      Voucher rules, redemption criteria and usage parameters
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+                    <div>
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold">Discount Rule</p>
+                      <p className="font-bold text-gray-900 dark:text-white mt-1">
+                        {details?.discountType === "percentage" ? formatPercent(details.discountValue) : `$${Number(details?.discountValue || 0).toFixed(2)}`}
+                        {details?.maxDiscountCap ? ` (Cap $${Number(details.maxDiscountCap).toFixed(2)})` : ""}
+                      </p>
                     </div>
-                  ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                      <div>
-                        <p className="text-sm text-gray-500">Name</p>
-                        <p className="font-medium text-gray-900 dark:text-white">{stats.campaignName || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Status</p>
-                        <p className="font-medium text-gray-900 dark:text-white capitalize">{stats.status || "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Discount</p>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {stats.discountType === "percentage" ? formatPercent(stats.discountValue) : `$${Number(stats.discountValue || 0).toFixed(2)}`}
-                          {stats.maxDiscountCap ? ` (Up to $${Number(stats.maxDiscountCap).toFixed(2)})` : ""}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Duration</p>
-                        <p className="font-medium text-gray-900 dark:text-white text-sm">
-                          {stats.startDate ? formatDate(stats.startDate) : ""} - {stats.expiresAt ? formatDate(stats.expiresAt) : ""}
-                        </p>
+                    <div>
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold">Schedule Duration</p>
+                      <p className="font-medium text-gray-800 dark:text-slate-200 mt-1">
+                        {details?.startDate ? formatDate(details.startDate) : "—"} to {details?.expiresAt ? formatDate(details.expiresAt) : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold">Voucher Mode</p>
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 capitalize mt-1">
+                        {details?.codeMode || "Public"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold">Max Uses / User</p>
+                      <p className="font-semibold text-gray-800 dark:text-slate-200 mt-1">
+                        {details?.maxUsesPerUser || 1}
+                      </p>
+                    </div>
+                  </div>
+
+                  {details?.eligibility && (
+                    <div className="pt-3 border-t border-gray-100 dark:border-[#1f242b]">
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold mb-2">Eligibility</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-2 py-0.5 text-xs font-semibold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 rounded border border-sky-200 dark:border-sky-500/30 capitalize">
+                          Audience: {details.eligibility.userType || "All"}
+                        </span>
+                        {details.eligibility.rideTypes?.map(rt => (
+                          <span key={rt} className="px-2 py-0.5 text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-[#61CB08] rounded border border-emerald-200 dark:border-emerald-500/30 capitalize">
+                            {rt} Ride
+                          </span>
+                        ))}
+                        {details.eligibility.cities?.map(city => (
+                          <span key={city} className="px-2 py-0.5 text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 rounded border border-amber-200 dark:border-amber-500/30">
+                            {city}
+                          </span>
+                        ))}
                       </div>
                     </div>
                   )}
-                </Card>
 
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Performance Metrics</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Total Redemptions</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.totalRedemptions || 0}</p>
-                    <p className="text-xs text-gray-500 mt-1">Limit: {stats.totalRedemptionLimit || "Unlimited"}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Unique Users Redeemed</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.uniqueUsersCount || 0}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Total Discount Given</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${Number(stats.totalDiscountGiven || 0).toFixed(2)}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Average Discount / Ride</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">${stats.averageDiscountPerRide != null ? Number(stats.averageDiscountPerRide).toFixed(2) : "0.00"}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Redemption Rate</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{formatPercent(stats.redemptionRate)}</p>
-                  </Card>
-                  <Card className="p-4">
-                    <h3 className="text-sm font-medium text-gray-500">Budget Remaining</h3>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">{stats.budgetRemaining !== null ? `$${Number(stats.budgetRemaining).toFixed(2)}` : "Unlimited"}</p>
-                  </Card>
+                  {details?.description && (
+                    <div className="pt-3 border-t border-gray-100 dark:border-[#1f242b]">
+                      <p className="text-gray-400 uppercase tracking-wider text-[10px] font-bold">Description</p>
+                      <p className="text-xs text-gray-700 dark:text-slate-300 mt-1">{details.description}</p>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
-              <p>No stats available.</p>
+              <p className="text-xs text-gray-400">No stats available.</p>
             )}
           </div>
         )}
 
         {activeTab === "redemptions" && (
-          <Card className="overflow-hidden">
-            <DataTable
-              title="Redemptions"
-              data={redemptions}
-              columns={[
-                { key: "user", label: "User", render: (_, r) => r.user?.email || r.user?.name || r.userId?.email || r.userId || "—" },
-                { key: "rider", label: "Rider Name", render: (_, r) => r.riderName || r.user?.name || "—" },
-                { key: "driver", label: "Driver Name", render: (_, r) => r.driverName || r.driver?.name || "—" },
-                { key: "code", label: "Code Used", render: (_, r) => <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">{r.promoCode?.code || r.code || "—"}</span> },
-                { key: "date", label: "Redeemed At", render: (_, r) => formatDate(r.redeemedAt || r.createdAt) },
-              ]}
-              loading={loadingRedemptions}
-              totalData={redemptionsTotal}
-              totalPages={Math.ceil(redemptionsTotal / redemptionsLimit)}
-              currentPage={redemptionsPage}
-              pageSize={redemptionsLimit}
-              onPageChange={setRedemptionsPage}
-              onPageSizeChange={(s) => { setRedemptionsLimit(s); setRedemptionsPage(1); }}
-              addButton={false}
-            />
-          </Card>
+          <DataTable
+            title="Redemption History"
+            subtitle="Individual voucher uses recorded across rider orders"
+            data={redemptions}
+            columns={[
+              {
+                key: "user",
+                label: "Account",
+                render: (_, r) => (
+                  <span className="text-xs font-semibold text-gray-900 dark:text-white">
+                    {r.user?.email || r.user?.name || r.userId?.email || r.userId || "—"}
+                  </span>
+                ),
+              },
+              {
+                key: "rider",
+                label: "Rider Name",
+                render: (_, r) => <span className="text-xs text-gray-700 dark:text-slate-300">{r.riderName || r.user?.name || "—"}</span>,
+              },
+              {
+                key: "driver",
+                label: "Driver Name",
+                render: (_, r) => <span className="text-xs text-gray-700 dark:text-slate-300">{r.driverName || r.driver?.name || "—"}</span>,
+              },
+              {
+                key: "code",
+                label: "Code Used",
+                render: (_, r) => (
+                  <span className="font-mono bg-gray-100 dark:bg-[#181d24] px-1.5 py-0.5 rounded text-xs font-bold text-gray-900 dark:text-white border border-gray-200 dark:border-[#1f242b]">
+                    {r.promoCode?.code || r.code || "—"}
+                  </span>
+                ),
+              },
+              {
+                key: "date",
+                label: "Redeemed At",
+                render: (_, r) => <span className="text-xs text-gray-500 dark:text-slate-400">{formatDate(r.redeemedAt || r.createdAt)}</span>,
+              },
+            ]}
+            loading={loadingRedemptions}
+            totalData={redemptionsTotal}
+            totalPages={Math.ceil(redemptionsTotal / redemptionsLimit)}
+            currentPage={redemptionsPage}
+            pageSize={redemptionsLimit}
+            onPageChange={setRedemptionsPage}
+            onPageSizeChange={(s) => { setRedemptionsLimit(s); setRedemptionsPage(1); }}
+            addButton={false}
+          />
         )}
 
         {activeTab === "codes" && (
-          <Card className="overflow-hidden">
-            <DataTable
-              title="Generated Codes"
-              data={codes}
-              columns={[
-                { key: "code", label: "Code", render: (val) => <span className="font-mono bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">{val}</span> },
-                { key: "created", label: "Generated At", render: (_, r) => formatDate(r.createdAt) },
-              ]}
-              loading={loadingCodes}
-              totalData={codesTotal}
-              totalPages={Math.ceil(codesTotal / codesLimit)}
-              currentPage={codesPage}
-              pageSize={codesLimit}
-              onPageChange={setCodesPage}
-              onPageSizeChange={(s) => { setCodesLimit(s); setCodesPage(1); }}
-              addButton={false}
-            />
-          </Card>
+          <DataTable
+            title="Generated Vouchers"
+            subtitle="Unique serialized promo codes created for this campaign"
+            data={codes}
+            columns={[
+              {
+                key: "code",
+                label: "Promo Code",
+                render: (val) => (
+                  <span className="font-mono bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20 px-2 py-0.5 rounded text-xs font-bold">
+                    {val}
+                  </span>
+                ),
+              },
+              {
+                key: "created",
+                label: "Generated At",
+                render: (_, r) => <span className="text-xs text-gray-500 dark:text-slate-400">{formatDate(r.createdAt)}</span>,
+              },
+            ]}
+            loading={loadingCodes}
+            totalData={codesTotal}
+            totalPages={Math.ceil(codesTotal / codesLimit)}
+            currentPage={codesPage}
+            pageSize={codesLimit}
+            onPageChange={setCodesPage}
+            onPageSizeChange={(s) => { setCodesLimit(s); setCodesPage(1); }}
+            addButton={false}
+          />
         )}
       </div>
     </div>
@@ -263,3 +292,4 @@ const CampaignDetail = () => {
 };
 
 export default CampaignDetail;
+

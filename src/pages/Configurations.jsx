@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useApp } from "../contexts/AppContext";
 import useAppConfigsActions from "../hooks/app-configs/useAppConfigsActions";
 import Button from "../components/ui/Button";
-import toast from "react-hot-toast";
+import { Sliders, Save, Loader2 } from "lucide-react";
 
 const Configurations = () => {
   const { appConfigs } = useApp();
@@ -22,8 +22,6 @@ const Configurations = () => {
     register,
     handleSubmit,
     reset,
-    control,
-    clearErrors,
     setError,
     formState: { errors },
   } = useForm({ defaultValues });
@@ -38,21 +36,11 @@ const Configurations = () => {
   }, [appConfigs, reset]);
 
   const onSubmit = (data) => {
-    // if (data.shippingCost < 0) {
-    //   toast.error("Shipping cost cannot be negative");
-    //   return;
-    // }
-
-    if (
-      // data.shippingCost === appConfigs.shippingCost &&
-      data.pickupAddress === appConfigs.pickupAddress
-    ) {
+    if (data.pickupAddress === appConfigs?.pickupAddress) {
       setError(
         "pickupAddress",
-        { message: "No Change in Pickup Address" },
-        {
-          shouldFocus: true,
-        }
+        { message: "No change in pickup address" },
+        { shouldFocus: true }
       );
       return;
     }
@@ -61,62 +49,62 @@ const Configurations = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-        Configurations
-      </h1>
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Platform Configurations
+          </h1>
+          <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+            System
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+          Global dispatch base points, default operating addresses, and core app variables
+        </p>
+      </div>
 
-      <Card className="mt-6">
-        <Card.Header>
-          <p className="text-gray-700 dark:text-gray-300">
-            Skylaboo Configurations
+      <div className="rounded-xl border border-gray-200/80 dark:border-[#1f242b] bg-white dark:bg-[#13161a] p-5 sm:p-6 max-w-2xl">
+        <div className="border-b border-gray-100 dark:border-[#1f242b] pb-3 mb-4">
+          <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+            Dispatch Origin Settings
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-slate-400">
+            Default hub address used for fleet logistics and dispatch origin
           </p>
-        </Card.Header>
+        </div>
 
-        <Card.Content>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Pickup Address"
-                {...register("pickupAddress", {
-                  required: "Pickup address is required",
-                })}
-                disabled={loading}
-                error={errors.pickupAddress?.message}
-              />
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Input
+            label="Default Hub / Pickup Address"
+            placeholder="e.g. 100 S Biscayne Blvd, Miami, FL 33131"
+            {...register("pickupAddress", {
+              required: "Pickup address is required",
+            })}
+            disabled={loading}
+            error={errors.pickupAddress?.message}
+          />
 
-              {/* <Input
-                label="Shipping Cost"
-                type="number"
-                {...register("shippingCost", {
-                  required: "Shipping cost is required",
-                })}
-                disabled={loading}
-                error={errors.shippingCost?.message}
-              /> */}
-            </div>
+          <div className="flex justify-end pt-3 border-t border-gray-100 dark:border-[#1f242b]">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={loading}
+              icon={loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            >
+              {loading ? "Saving Changes..." : "Save Configurations"}
+            </Button>
+          </div>
+        </form>
 
-            <div className="w-full flex justify-end">
-              <Button
-                type="submit"
-                className="h-10 flex items-center gap-2"
-                disabled={loading}
-              >
-                {loading
-                  ? "Updating Configurations..."
-                  : "Update Configurations"}
-              </Button>
-            </div>
-          </form>
-
-          <Card.Footer>
-            These configurations will affect the entire application and the
-            end-user.
-          </Card.Footer>
-        </Card.Content>
-      </Card>
+        <p className="text-[11px] text-gray-400 dark:text-slate-500 mt-3 pt-3 border-t border-gray-100 dark:border-[#1f242b]">
+          Note: Changes take effect across active customer dispatch sessions immediately.
+        </p>
+      </div>
     </div>
   );
 };
 
 export default Configurations;
+

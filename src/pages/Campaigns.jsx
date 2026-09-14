@@ -458,10 +458,12 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button variant="outline" type="button" onClick={onClose} disabled={loading}>Cancel</Button>
-          <Button variant="primary" type="submit" loading={loading} disabled={loading}>
-            {isEdit ? "Save Changes" : "Create"}
+        <div className="flex justify-end gap-2.5 pt-4 border-t border-gray-100 dark:border-[#1f242b]">
+          <Button variant="outline" size="sm" type="button" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button size="sm" type="submit" loading={loading} disabled={loading}>
+            {isEdit ? "Save Changes" : "Create Campaign"}
           </Button>
         </div>
       </form>
@@ -471,12 +473,16 @@ const CampaignFormModal = ({ isOpen, onClose, initial, onSubmit, loading }) => {
 
 const DeleteModal = ({ isOpen, onClose, campaign, onConfirm, loading }) => (
   <Modal isOpen={isOpen} onClose={onClose} title="Delete Campaign" size="sm">
-    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-      Are you sure you want to delete campaign <strong className="text-gray-900 dark:text-white">{campaign?.name}</strong>? This action cannot be undone.
+    <p className="text-xs text-gray-500 dark:text-slate-400 mb-6">
+      Are you sure you want to delete campaign <strong className="text-gray-900 dark:text-white font-bold">{campaign?.name}</strong>? This action cannot be undone.
     </p>
-    <div className="flex justify-end gap-3">
-      <Button variant="outline" onClick={onClose} disabled={loading}>Cancel</Button>
-      <Button variant="danger" onClick={onConfirm} loading={loading} disabled={loading}>Delete</Button>
+    <div className="flex justify-end gap-2.5 pt-3 border-t border-gray-100 dark:border-[#1f242b]">
+      <Button variant="outline" size="sm" onClick={onClose} disabled={loading}>
+        Cancel
+      </Button>
+      <Button variant="danger" size="sm" onClick={onConfirm} loading={loading} disabled={loading}>
+        Delete
+      </Button>
     </div>
   </Modal>
 );
@@ -557,8 +563,18 @@ const Campaigns = () => {
       key: "name",
       label: "Campaign Info",
       render: (_, row) => (
-        <div>
-          <p className="font-semibold text-gray-900 dark:text-white">{row.name}</p>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-full bg-[#61CB08]/15 border border-[#61CB08]/30 flex items-center justify-center shrink-0">
+            <Tag className="w-3.5 h-3.5 text-[#61CB08]" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+              {row.name}
+            </p>
+            <p className="text-[10px] text-gray-400 capitalize">
+              {row.codeMode || "Public"} · {row.code || row.prefix || "—"}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -566,7 +582,7 @@ const Campaigns = () => {
       key: "discount",
       label: "Discount",
       render: (_, row) => (
-        <span className="font-semibold text-gray-800 dark:text-gray-200">
+        <span className="text-xs font-bold text-gray-900 dark:text-white">
           {row.discountType === "percentage"
             ? formatPercent(row.discountValue)
             : `$${Number(row.discountValue || 0).toFixed(2)}`}
@@ -577,9 +593,9 @@ const Campaigns = () => {
       key: "dates",
       label: "Duration",
       render: (_, row) => (
-        <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="text-xs text-gray-500 dark:text-slate-400">
           <div>{formatDate(row.startDate)}</div>
-          <div>to {formatDate(row.expiresAt)}</div>
+          <div className="text-[10px] text-gray-400">to {formatDate(row.expiresAt)}</div>
         </div>
       ),
     },
@@ -590,18 +606,18 @@ const Campaigns = () => {
         const isActive = value === "active";
         return (
           <div className="flex items-center gap-2">
-            <Badge variant={isActive ? "success" : value === "paused" ? "warning" : "danger"}>
+            <Badge variant={isActive ? "success" : value === "paused" ? "warning" : "danger"} dot>
               {value ? value.charAt(0).toUpperCase() + value.slice(1) : value}
             </Badge>
             <button
               onClick={() => handleToggleStatus(row)}
               disabled={actionLoading}
               title={`Mark as ${isActive ? "Paused" : "Active"}`}
-              className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 ${
-                isActive ? "bg-[#39A300]" : "bg-gray-200"
+              className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                isActive ? "bg-[#61CB08]" : "bg-gray-300 dark:bg-gray-700"
               }`}
             >
-              <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isActive ? "translate-x-4" : "translate-x-0"}`} />
+              <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isActive ? "translate-x-4" : "translate-x-0"}`} />
             </button>
           </div>
         );
@@ -611,52 +627,73 @@ const Campaigns = () => {
       key: "actions",
       label: "Actions",
       render: (_, row) => (
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" icon={<Eye className="w-4 h-4" />} onClick={() => navigate(`/campaigns/${row.id || row._id}`)}>
-            View
-          </Button>
-          <Button variant="ghost" size="sm" icon={<Pencil className="w-4 h-4" />} onClick={() => handleEditClick(row)} disabled={fetchingEdit}>
-            {fetchingEdit ? "Loading..." : "Edit"}
-          </Button>
-          <Button variant="ghost" size="sm" icon={<Trash2 className="w-4 h-4 text-red-500" />} onClick={() => setDeleteTarget(row)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
-            Delete
-          </Button>
+        <div className="flex items-center space-x-1">
+          <button
+            onClick={() => navigate(`/campaigns/${row.id || row._id}`)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+            title="View Campaign"
+          >
+            <Eye className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => handleEditClick(row)}
+            disabled={fetchingEdit}
+            className="p-1.5 rounded-md text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#181d24] transition-colors"
+            title="Edit Campaign"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setDeleteTarget(row)}
+            className="p-1.5 rounded-md text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+            title="Delete Campaign"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       ),
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-12">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Campaigns</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage promotional campaigns, public codes, and unique generated codes.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Campaigns
+            </h1>
+            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
+              {totalData || 0} active
+            </span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
+            Manage promotional campaigns, discount structures, and voucher redemption codes
+          </p>
         </div>
-        <Button variant="primary" icon={<Plus className="w-4 h-4" />} onClick={() => setCreateOpen(true)}>
+        <Button size="sm" icon={<Plus className="w-3.5 h-3.5" />} onClick={() => setCreateOpen(true)}>
           Create Campaign
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Campaigns" value={totalData} icon={<Tag />} index={0} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatsCard title="Total Campaigns" value={totalData} index={0} />
       </div>
 
-      <Card className="overflow-hidden">
-        <DataTable
-          title="Campaigns List"
-          data={campaigns}
-          columns={columns}
-          loading={loading}
-          totalPages={totalPages}
-          totalData={totalData}
-          currentPage={currentPage}
-          pageSize={pageSize}
-          onPageChange={setCurrentPage}
-          onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
-          addButton={false}
-        />
-      </Card>
+      <DataTable
+        title="Promotions Directory"
+        subtitle="Catalog of all created discount and promotional marketing programs"
+        data={campaigns}
+        columns={columns}
+        loading={loading}
+        totalPages={totalPages}
+        totalData={totalData}
+        currentPage={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(size) => { setPageSize(size); setCurrentPage(1); }}
+        addButton={false}
+      />
 
       <CampaignFormModal isOpen={createOpen} onClose={() => setCreateOpen(false)} initial={null} onSubmit={handleCreate} loading={actionLoading} />
       {editTarget && (
@@ -668,3 +705,4 @@ const Campaigns = () => {
 };
 
 export default Campaigns;
+

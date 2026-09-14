@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { MENU_ITEMS, PERMISSIONS, USER_ROLES } from "../config/constants";
+import { MENU_ITEMS, MENU_SECTIONS, PERMISSIONS, USER_ROLES } from "../config/constants";
 import { useAuth } from "./AuthContext";
 
 const AppContext = createContext();
@@ -21,39 +21,31 @@ export const AppProvider = ({ children }) => {
 
   const { user } = useAuth();
 
-  // Filter menu items based on feature flags and configurations
-  const getFilteredMenuItems = () => {
-    if (!user || !user.role) return MENU_ITEMS;
-    
+  const isItemAllowed = (item) => {
+    if (!user || !user.role) return true;
     const userRole = user.role.toLowerCase();
-    // Default to general if unknown role
     const permissions = PERMISSIONS[userRole] || PERMISSIONS[USER_ROLES.GENERAL];
 
-    return MENU_ITEMS.filter((item) => {
-      switch (item.id) {
-        case "admin-management":
-          return userRole === USER_ROLES.SUPER_ADMIN;
-        case "driver-management":
-          return permissions.viewDriverRequests;
-        case "vehicle-category":
-          return permissions.vehicleCategory;
-        case "notifications":
-          return permissions.sendNotifications;
-        case "revenue":
-        case "ride-rates":
-        case "peak-windows":
-        case "ride-configuration":
-          return permissions.financials;
-        case "promo-codes":
-          return permissions.promos;
-        case "cancelled-rides":
-          return permissions.cancelledRides;
-        case "birds-eye-view":
-          return permissions.birdsEye;
-        default:
-          return true; // Dashboard, User Management, Reports, Completed Rides allowed for all
-      }
-    });
+    if (item.superAdminOnly) {
+      return userRole === USER_ROLES.SUPER_ADMIN;
+    }
+    if (item.permission) {
+      return !!permissions[item.permission];
+    }
+    return true;
+  };
+
+  // Filter grouped menu sections based on user role & permissions
+  const getFilteredMenuSections = () => {
+    return MENU_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.filter(isItemAllowed),
+    })).filter((section) => section.items.length > 0);
+  };
+
+  // Filter flat menu items for backwards compatibility
+  const getFilteredMenuItems = () => {
+    return MENU_ITEMS.filter(isItemAllowed);
   };
 
   const toggleSidebar = () => {
@@ -92,8 +84,9 @@ export const AppProvider = ({ children }) => {
     loading,
     setLoading,
 
-    // Menu items
+    // Menu items & grouped sections
     menuItems: getFilteredMenuItems(),
+    menuSections: getFilteredMenuSections(),
 
     // App configurations
     appConfigs,

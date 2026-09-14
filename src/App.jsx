@@ -42,7 +42,6 @@ import Categories from "./pages/Categories";
 import Configurations from "./pages/Configurations";
 import ContentManagement from "./pages/ContentManagement";
 import ReportDetail from "./pages/ReportDetail";
-import Emergencies from "./pages/Emergencie";
 import UserDetailPage from "./pages/UserDetailPage";
 import DriverDetails from "./pages/DriverDetails";
 import DriverRequests from "./pages/DriverRequests";
@@ -304,7 +303,6 @@ function App() {
                             </ProtectedRoute>
                           }
                         />
-                        <Route path="/history" element={<Emergencies />} />
                         <Route
                           path="/user-detail/:id"
                           element={<UserDetailPage />}
