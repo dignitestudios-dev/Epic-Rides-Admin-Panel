@@ -238,7 +238,7 @@ const Dashboard = () => {
             onClick={() => navigate("/notifications")}
             className="btn-primary flex items-center gap-1.5 text-sm"
           >
-            <Bell className="w-4 h-4" /> Send Notification
+            <Bell className="w-4 h-4" /> Send Notifications
           </button>
           <button
             onClick={() => navigate("/reports")}
