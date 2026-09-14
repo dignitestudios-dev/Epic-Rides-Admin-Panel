@@ -58,6 +58,7 @@ import Revenue from "./pages/Revenue";
 import Campaigns from "./pages/Campaigns";
 import CampaignDetail from "./pages/CampaignDetail";
 import PrivateRides from "./pages/PrivateRides";
+import RideDetail from "./pages/RideDetail";
 import CarpoolRides from "./pages/CarpoolRides";
 import CarpoolRideDetail from "./pages/CarpoolRideDetail";
 import BirdsEyeView from "./pages/BirdsEyeView";
@@ -65,6 +66,7 @@ import RideRates from "./pages/RideRates";
 import PeakWindows from "./pages/PeakWindows";
 import RideConfiguration from "./pages/RideConfiguration";
 import AdminUsers from "./pages/AdminUsers";
+import DevHub from "./pages/DevHub";
 import { USER_ROLES } from "./config/constants";
 
 const SessionTimeoutModal = () => {
@@ -280,8 +282,15 @@ function App() {
                           }
                         />
                         <Route path="/private-rides" element={<PrivateRides />} />
+                        <Route path="/private-rides/:id" element={<RideDetail />} />
                         <Route path="/carpool-rides" element={<CarpoolRides />} />
                         <Route path="/carpool-rides/:id" element={<CarpoolRideDetail />} />
+                        
+                        {/* Developer Internal Routes (Direct URL Only) */}
+                        <Route path="/dev" element={<DevHub />} />
+                        <Route path="/dev/private-rides/:id" element={<RideDetail />} />
+                        <Route path="/dev/carpool-rides/:id" element={<CarpoolRideDetail />} />
+
                         <Route path="/birds-eye-view" element={<BirdsEyeView />} />
                         <Route
                           path="/reports-detail/:id"
