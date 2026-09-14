@@ -316,6 +316,16 @@ The platform employs a two-tier pricing engine:
 - Create new administrative users with assigned roles (`super_admin`, `admin`, `general`).
 - Password reset, role adjustments, and account deactivation.
 
+### 5.16 Ride Configuration & Geofencing (`/ride-configuration`)
+- Fine-tunes driver discovery radiuses:
+  - **Nearby Radius**: Proximity search radius for private ride bookings.
+  - **Carpool Nearby Radius**: Proximity search radius for shared carpool rides (default `0.31` miles).
+
+### 5.17 Developer Hub & Journey Telemetry (`/dev`)
+- Direct jump bar and live testing dashboard for developers and operations teams.
+- Allows direct lookup and inspection of Private and Carpool journeys by ID (`/dev/private-rides/:id` and `/dev/carpool-rides/:id`).
+- Employs `JourneyTimelineMap` with waypoint breadcrumbs, stop timelines, and event logs.
+
 ---
 
 ## 6. Developer Guidelines & Engineering Patterns
