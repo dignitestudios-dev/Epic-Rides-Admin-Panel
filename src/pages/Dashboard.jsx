@@ -30,7 +30,7 @@ const Skeleton = ({ className }) => (
 
 const StatsSkeleton = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-5">
-    {[...Array(5)].map((_, i) => (
+    {[...Array(6)].map((_, i) => (
       <Card key={i}>
         <div className="flex items-center justify-between">
           <div className="space-y-2 flex-1">
@@ -182,11 +182,17 @@ const Dashboard = () => {
       index: 2,
     },
     {
-      title: "Active Riders",
-      value: um.totalActiveRiders?.toLocaleString() ?? "—",
+      title: "Total Riders",
+      value: um.totalRiders?.toLocaleString() ?? "—",
       description: `+${(um.newRiderRegistrations?.last7Days ?? 0).toLocaleString()} last 7 days`,
       icon: <Users />,
       index: 0,
+    },
+    {
+      title: "Active Riders",
+      value: um.totalActiveRiders?.toLocaleString() ?? "—",
+      icon: <Users />,
+      index: 3,
     },
     {
       title: "Subscription Revenue",
@@ -196,7 +202,7 @@ const Dashboard = () => {
           : "—",
       description: "Total earned from subscriptions",
       icon: <DollarSign />,
-      index: 3,
+      index: 4,
     },
     {
       title: "Commission Revenue",
