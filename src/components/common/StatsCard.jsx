@@ -56,9 +56,31 @@ const StatsCard = ({
   icon,
   index = 0,
   sparkline = true,
+  loading = false,
   className = "",
 }) => {
   const accent = THEME_ACCENTS[index % THEME_ACCENTS.length];
+
+  if (loading) {
+    return (
+      <div
+        className={`rounded-xl border border-gray-200/80 dark:border-[#1f242b] bg-white dark:bg-[#13161a] p-4 sm:p-5 flex flex-col justify-between ${className}`}
+      >
+        <div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="h-3 w-24 bg-gray-200 dark:bg-[#181d24] animate-pulse rounded-md" />
+            <div className="w-4 h-4 rounded bg-gray-200 dark:bg-[#181d24] animate-pulse" />
+          </div>
+          <div className="mt-3 flex items-baseline justify-between gap-2">
+            <div className="h-7 w-28 bg-gray-200 dark:bg-[#181d24] animate-pulse rounded-md" />
+          </div>
+        </div>
+        {sparkline && (
+          <div className="w-full h-8 mt-3 bg-gray-100 dark:bg-[#181d24]/60 animate-pulse rounded-md" />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

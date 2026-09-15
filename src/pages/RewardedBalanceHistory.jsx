@@ -76,9 +76,9 @@ const RewardedBalanceHistory = () => {
   }, [debouncedSearch, startDate, endDate, activeTab, sortBy, order]);
 
   const tabs = [
-    { id: "all", label: "All Rewards" },
-    { id: "driver", label: "Drivers Only" },
-    { id: "rider", label: "Riders Only" },
+    { key: "all", id: "all", label: "All Rewards" },
+    { key: "driver", id: "driver", label: "Drivers Only" },
+    { key: "rider", id: "rider", label: "Riders Only" },
   ];
 
   const columns = [

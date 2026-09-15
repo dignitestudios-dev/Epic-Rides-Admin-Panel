@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -25,13 +25,30 @@ import {
   ListOrdered,
   Layers,
   Sparkles,
+  Copy,
+  Check,
+  CircleDollarSign,
+  ArrowUpRight,
+  ArrowDownRight,
+  Users as UsersIcon,
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Button from "../components/ui/Button";
+import Tabs from "../components/ui/Tabs";
+import StatsCard from "../components/common/StatsCard";
+import Table from "../components/ui/Table";
 import { api } from "../lib/services";
-import { formatDateTime, formatDate, formatPhoneNumber } from "../utils/helpers";
-import JourneyTimelineMap from "../components/common/JourneyTimelineMap";
+import {
+  formatDateTime,
+  formatDate,
+  formatPhoneNumber,
+  formatCurrency,
+  maskEmail,
+  maskPhone,
+} from "../utils/helpers";
+import { useAuth } from "../contexts/AuthContext";
+import { usePersistentState } from "../hooks/global/usePersistentState";
 import toast from "react-hot-toast";
 
 const fullName = (obj) =>
@@ -44,26 +61,34 @@ const formatTitleCase = (str) => {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
+const getInitials = (name = "") => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return (parts[0] || "?").slice(0, 2).toUpperCase();
+};
+
 const statusBadge = (status) => {
   switch (status?.toLowerCase()) {
     case "cancelled":
     case "canceled":
-      return <Badge variant="danger">Cancelled</Badge>;
+      return <Badge variant="danger" dot>Cancelled</Badge>;
     case "completed":
-      return <Badge variant="success">Completed</Badge>;
+      return <Badge variant="success" dot>Completed</Badge>;
     case "active":
     case "started":
     case "ongoing":
-      return <Badge variant="warning">Ongoing</Badge>;
+      return <Badge variant="warning" dot>Ongoing</Badge>;
     case "accepted":
-      return <Badge variant="primary">Accepted</Badge>;
+      return <Badge variant="primary" dot>Accepted</Badge>;
     case "arrived":
     case "driver_arrived":
-      return <Badge variant="info">Driver Arrived</Badge>;
+      return <Badge variant="info" dot>Driver Arrived</Badge>;
     case "pending":
-      return <Badge variant="default">Pending</Badge>;
+      return <Badge variant="default" dot>Pending</Badge>;
     default:
-      return <Badge variant="default">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="default" dot>{formatTitleCase(status)}</Badge>;
   }
 };
 
@@ -74,20 +99,20 @@ const paymentBadge = (status) => {
     case "completed":
     case "succeeded":
     case "success":
-      return <Badge variant="success">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="success" dot>{formatTitleCase(status)}</Badge>;
     case "pending":
     case "processing":
-      return <Badge variant="warning">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="warning" dot>{formatTitleCase(status)}</Badge>;
     case "failed":
     case "declined":
     case "cancelled":
     case "canceled":
-      return <Badge variant="danger">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="danger" dot>{formatTitleCase(status)}</Badge>;
     case "refunded":
     case "reversed":
-      return <Badge variant="info">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="info" dot>{formatTitleCase(status)}</Badge>;
     default:
-      return <Badge variant="default">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="default" dot>{formatTitleCase(status)}</Badge>;
   }
 };
 
@@ -99,65 +124,55 @@ const transactionStatusBadge = (status) => {
     case "completed":
     case "succeeded":
     case "success":
-      return <Badge variant="success">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="success" dot>{formatTitleCase(status)}</Badge>;
     case "pending":
     case "processing":
     case "in_escrow":
     case "hold":
     case "held":
-      return <Badge variant="warning">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="warning" dot>{formatTitleCase(status)}</Badge>;
     case "failed":
     case "declined":
     case "cancelled":
     case "canceled":
-      return <Badge variant="danger">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="danger" dot>{formatTitleCase(status)}</Badge>;
     case "refunded":
     case "refund":
     case "partial_refund":
     case "reversed":
-      return <Badge variant="info">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="info" dot>{formatTitleCase(status)}</Badge>;
     default:
-      return <Badge variant="default">{formatTitleCase(status)}</Badge>;
+      return <Badge variant="default" dot>{formatTitleCase(status)}</Badge>;
   }
 };
-
-const SectionHeading = ({ title, icon: Icon }) => (
-  <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2 mb-4">
-    {Icon && <Icon className="w-5 h-5 text-gray-500 dark:text-gray-400" />}
-    {title}
-  </h3>
-);
-
-const InfoItem = ({ label, value, valueClass = "" }) => (
-  <div className="flex flex-col gap-1">
-    <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{label}</span>
-    <span className={`text-sm font-medium text-gray-900 dark:text-white ${valueClass}`}>
-      {value !== null && value !== undefined && value !== "" ? value : "—"}
-    </span>
-  </div>
-);
 
 const RideDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const { hasPermission } = useAuth();
   const isDev = location.pathname.startsWith("/dev");
 
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [rawData, setRawData] = useState(null);
-  const [activeTab, setActiveTab] = useState(isDev ? "timeline" : "overview"); // "overview" | "timeline"
+  const [activeTab, setActiveTab] = usePersistentState(`ride_${id}_tab`, "overview");
+  const [copiedField, setCopiedField] = useState(null);
 
-  const fetchRideDetail = useCallback(async () => {
+  const fetchRideDetail = useCallback(async (isManual = false) => {
     try {
-      setLoading(true);
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
       const res = await api.getRideById(id);
       const data = res?.data || res;
       setRawData(data);
+      if (isManual) toast.success("Ride details refreshed");
     } catch (error) {
       toast.error(error.message || "Failed to fetch ride details.");
-      navigate(isDev ? "/dev" : "/private-rides");
+      if (!isManual) navigate(isDev ? "/dev" : "/private-rides");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, [id, navigate, isDev]);
 
@@ -165,26 +180,43 @@ const RideDetail = () => {
     fetchRideDetail();
   }, [fetchRideDetail]);
 
+  const handleCopy = (text, fieldName) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    toast.success(`Copied ${fieldName} to clipboard`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+      <div className="flex flex-col items-center justify-center min-h-[500px] gap-3">
+        <div className="relative">
+          <div className="w-12 h-12 rounded-full border-2 border-[#61CB08]/20 border-t-[#61CB08] animate-spin" />
+          <Car className="w-5 h-5 text-[#61CB08] absolute inset-0 m-auto" />
+        </div>
+        <p className="text-xs font-medium text-gray-500 dark:text-slate-400">Loading ride details...</p>
       </div>
     );
   }
 
-  // Handle both { rideDetails: { ... }, offers: [] } and flat object
   const ride = rawData?.rideDetails || rawData;
   const offers = rawData?.offers || ride?.offers || [];
   const transactions = rawData?.transactions || ride?.transactions || [];
-  const reviews = rawData?.reviews || ride?.reviews || [];
 
   if (!ride) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400">Ride details not found.</p>
-        <Button className="mt-4" onClick={() => navigate(isDev ? "/dev" : "/private-rides")}>
-          {isDev ? "Back to Dev Hub" : "Go Back"}
+      <div className="p-8 text-center max-w-md mx-auto my-12 bg-white dark:bg-[#13161a] border border-gray-200 dark:border-[#1f242b] rounded-2xl shadow-sm">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center">
+          <AlertTriangle className="w-6 h-6" />
+        </div>
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Ride not found</h2>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mt-1 mb-5">
+          The requested private ride could not be located.
+        </p>
+        <Button variant="outline" size="sm" onClick={() => navigate(isDev ? "/dev" : "/private-rides")} className="mx-auto">
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to Private Rides
         </Button>
       </div>
     );
@@ -214,204 +246,273 @@ const RideDetail = () => {
     requestedAt,
     createdAt,
     updatedAt,
+    acceptedAt,
+    driverArrivedAt,
+    passengerComingAt,
+    startedAt,
+    completedAt,
     endTime,
   } = ride;
 
   const pickup = pickupPoint;
   const dropoff = dropOffPointRequested || dropOffPoint;
-
   const pickupAddress = pickup?.placeName || (typeof pickup === "string" ? pickup : "—");
   const pickupCoords = pickup?.location?.coordinates || pickup?.coordinates || null;
-
   const dropoffAddress = dropoff?.placeName || (typeof dropoff === "string" ? dropoff : "—");
   const dropoffCoords = dropoff?.location?.coordinates || dropoff?.coordinates || null;
 
-  const tabs = [
+  const isCancelled = (rideStatus || "").toLowerCase() === "cancelled" || (rideStatus || "").toLowerCase() === "canceled";
+
+  // Tab configuration without timeline map
+  const tabsList = [
+    { key: "overview", label: "Trip & Route Details", icon: <Navigation className="w-3.5 h-3.5" /> },
+    { key: "participants", label: "Rider & Driver Profiles", icon: <UsersIcon className="w-3.5 h-3.5" /> },
     {
-      id: "overview",
-      label: "Ride Overview",
-      icon: <FileText className="w-4 h-4" />,
+      key: "financials",
+      label: "Fare & Transactions",
+      icon: <DollarSign className="w-3.5 h-3.5" />,
+      count: transactions.length || undefined,
     },
     {
-      id: "timeline",
-      label: "Journey & Activity Timeline",
-      icon: <Navigation className="w-4 h-4" />,
+      key: "offers",
+      label: "Driver Offers",
+      icon: <ListOrdered className="w-3.5 h-3.5" />,
+      count: offers.length || undefined,
     },
   ];
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn">
+      {/* ── TOP NAV BAR & BREADCRUMBS ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => navigate(isDev ? "/dev" : "/private-rides")}
-            icon={<ArrowLeft className="w-4 h-4" />}
-            className="text-gray-500"
+            className="text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white"
           >
-            {isDev ? "Back to Dev Hub" : "Back"}
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            {isDev ? "Back to Dev Hub" : "Back to Private Rides"}
           </Button>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Private Ride Details
-              </h1>
-              {statusBadge(rideStatus)}
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center flex-wrap gap-2">
-              <span>
-                Ride ID:{" "}
-                <span className="font-mono font-medium text-gray-700 dark:text-gray-300">
-                  {ride._id || ride.id}
-                </span>
-              </span>
-              <span>•</span>
-              <span>Requested: {formatDateTime(requestedAt || createdAt)}</span>
-              {cancelledAt && (
-                <>
-                  <span>•</span>
-                  <span className="text-rose-600 dark:text-rose-400 font-medium">
-                    Cancelled: {formatDateTime(cancelledAt)}
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
+          <span className="text-gray-300 dark:text-slate-700">/</span>
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20 uppercase tracking-wider">
+            Private Ride
+          </span>
+          <span className="text-gray-300 dark:text-slate-700">/</span>
+          <span className="font-mono text-xs font-semibold text-gray-700 dark:text-slate-300">
+            #{id?.slice(0, 8)}
+          </span>
         </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchRideDetail}
-          icon={<RotateCcw className="w-4 h-4" />}
-        >
-          Refresh Data
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchRideDetail(true)}
+            disabled={refreshing}
+            className="border-gray-200 dark:border-[#1f242b] text-xs font-medium"
+            icon={<RotateCcw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#61CB08]" : ""}`} />}
+          >
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
       </div>
 
-      {/* Tabs Navigation (Dev Mode Only) */}
-      {isDev && (
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="-mb-px flex space-x-6">
-            {tabs.map((tab) => (
+      {/* ── RIDE HERO HEADER CARD ── */}
+      <div className="bg-white dark:bg-[#13161a] border border-gray-200/80 dark:border-[#1f242b] rounded-2xl p-5 sm:p-6 shadow-xs relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-32 bg-gradient-to-l from-[#61CB08]/10 via-[#61CB08]/5 to-transparent pointer-events-none rounded-tr-2xl" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+                Private Ride Order
+              </h1>
+            </div>
+
+            {/* Clear, Explicitly-Labeled Status Badges */}
+            <div className="flex items-center gap-3 flex-wrap text-xs">
+              <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-[#181d24] px-2.5 py-1 rounded-lg border border-gray-200/60 dark:border-[#1f242b]">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-slate-400">Ride Status:</span>
+                {statusBadge(rideStatus)}
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-[#181d24] px-2.5 py-1 rounded-lg border border-gray-200/60 dark:border-[#1f242b]">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-slate-400">Service Class:</span>
+                <Badge variant="primary" className="capitalize text-[10px] font-semibold">
+                  {rideType || "Private"} Class
+                </Badge>
+              </div>
+
+              <div className="flex items-center gap-1.5 bg-gray-50 dark:bg-[#181d24] px-2.5 py-1 rounded-lg border border-gray-200/60 dark:border-[#1f242b]">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-slate-400">Payment Status:</span>
+                {paymentBadge(paymentStatus)}
+              </div>
+            </div>
+
+            {/* Metadata Bar */}
+            <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-slate-400 flex-wrap pt-1">
               <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`${
-                  activeTab === tab.id
-                    ? "border-[#39A300] text-[#39A300] font-semibold"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
-                } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`}
+                type="button"
+                onClick={() => handleCopy(id, "Ride ID")}
+                className="inline-flex items-center gap-1 font-mono text-[11px] px-2 py-0.5 rounded bg-gray-100 dark:bg-[#181d24] text-gray-700 dark:text-slate-300 hover:text-black dark:hover:text-white transition-colors"
+                title="Click to copy Ride ID"
               >
-                <span className="mr-2">{tab.icon}</span>
-                {tab.label}
+                <span>ID: {id?.slice(0, 10)}...</span>
+                {copiedField === "Ride ID" ? (
+                  <Check className="w-3 h-3 text-emerald-500" />
+                ) : (
+                  <Copy className="w-3 h-3 text-gray-400 opacity-60" />
+                )}
               </button>
-            ))}
-          </nav>
+
+              <div className="flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                <span>Requested: {formatDateTime(requestedAt || createdAt)}</span>
+              </div>
+
+              {completedAt && (
+                <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Completed: {formatDateTime(completedAt || endTime)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Prominent Price & Fare Pill */}
+          <div className="flex items-center gap-4 lg:border-l lg:border-gray-100 dark:lg:border-[#1f242b] lg:pl-6">
+            <div className="text-right">
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                Total Ride Fare
+              </span>
+              <div className="text-2xl sm:text-3xl font-extrabold text-[#61CB08] tracking-tight">
+                {formatCurrency(rideFare || driverFare || 0)}
+              </div>
+              <span className="text-[11px] text-gray-500 dark:text-slate-400 capitalize">
+                Paid via {formatTitleCase(paymentMethod || "Card")}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CANCELLATION ALERT (IF CANCELLED) ── */}
+      {isCancelled && (
+        <div className="bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5">
+          <div className="w-9 h-9 rounded-xl bg-rose-500/15 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">
+            <ShieldAlert className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-bold text-rose-900 dark:text-rose-200">
+              This ride was cancelled
+            </h4>
+            <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-rose-800 dark:text-rose-300">
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 block">Cancelled By:</span>
+                <span className="font-bold capitalize">{cancelledBy || "Unknown"}</span>
+              </div>
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 block">Cancellation Reason:</span>
+                <span className="font-bold">{cancellationReason || "No reason specified"}</span>
+              </div>
+              <div>
+                <span className="text-rose-600/80 dark:text-rose-400/80 block">Cancelled At:</span>
+                <span className="font-mono">{formatDateTime(cancelledAt || updatedAt)}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* OVERVIEW CONTENT (shown when not in dev mode OR when activeTab === "overview") */}
-      {(!isDev || activeTab === "overview") && (
-        <div className="space-y-6">
-          {/* Cancellation Alert Banner if Cancelled */}
-          {(rideStatus === "cancelled" || rideStatus === "canceled") && (
-            <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-xl p-4 flex items-start gap-3">
-              <ShieldAlert className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-              <div className="flex-1 text-sm">
-                <h4 className="font-semibold text-rose-900 dark:text-rose-200">
-                  Ride Cancelled
-                </h4>
-                <div className="mt-1 grid grid-cols-1 sm:grid-cols-3 gap-2 text-rose-800 dark:text-rose-300 text-xs">
-                  <div>
-                    <span className="font-medium">Cancelled By: </span>
-                    <span className="font-semibold">{formatTitleCase(cancelledBy)}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">Reason: </span>
-                    <span className="font-semibold">{formatTitleCase(cancellationReason)}</span>
-                  </div>
-                  <div>
-                    <span className="font-medium">Cancelled At: </span>
-                    <span>{formatDateTime(cancelledAt || updatedAt)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* ── KPI METRICS ROW ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Customer Fare"
+          value={formatCurrency(rideFare || 0)}
+          icon={<CircleDollarSign />}
+          index={0}
+          sparkline
+        />
+        <StatsCard
+          title="Driver Earnings"
+          value={formatCurrency(driverFare || rideFare || 0)}
+          icon={<DollarSign />}
+          index={1}
+          sparkline
+        />
+        <StatsCard
+          title="Route Distance"
+          value={rideDistance != null ? `${Number(rideDistance).toFixed(2)} mi` : "—"}
+          icon={<Navigation />}
+          index={2}
+          sparkline
+        />
+        <StatsCard
+          title="Trip Duration"
+          value={averageTime != null ? `${averageTime} min` : "—"}
+          icon={<Clock />}
+          index={3}
+          sparkline
+        />
+      </div>
 
-          {/* Main 2-Column Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Col 1 & 2: Trip & Payment Details */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Trip Overview Card */}
-              <Card className="p-6">
-                <SectionHeading title="Trip Overview" icon={Navigation} />
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
-                  <InfoItem
-                    label="Ride Type"
-                    value={
-                      <Badge variant="primary" className="capitalize">
-                        {rideType || "Private"}
-                      </Badge>
-                    }
-                  />
-                  <InfoItem
-                    label="Distance"
-                    value={
-                      rideDistance != null
-                        ? `${Number(rideDistance).toFixed(2)} miles`
-                        : "—"
-                    }
-                  />
-                  <InfoItem
-                    label="Est. Duration"
-                    value={averageTime != null ? `${averageTime} min` : "—"}
-                  />
-                  <InfoItem label="Status" value={statusBadge(rideStatus)} />
+      {/* ── SEGMENTED NAVIGATION TABS ── */}
+      <div className="bg-white dark:bg-[#13161a] border border-gray-200/80 dark:border-[#1f242b] rounded-2xl p-4 sm:p-5 shadow-xs space-y-6">
+        <Tabs tabs={tabsList} activeTab={activeTab} onChange={setActiveTab} />
+
+        {/* ── TAB CONTENT ── */}
+        <div>
+          {/* TAB 1: TRIP & ROUTE DETAILS */}
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Route Trajectory & Stops */}
+              <div className="lg:col-span-2 bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl p-5 space-y-6">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200/60 dark:border-[#1f242b]">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Navigation className="w-4 h-4 text-[#61CB08]" />
+                    Route Trajectory & Waypoints
+                  </h3>
+                  <Badge variant="default" className="text-[10px]">
+                    {rideDistance != null ? `${Number(rideDistance).toFixed(2)} miles` : "Direct Route"}
+                  </Badge>
                 </div>
 
-                {/* Route Stop Points */}
-                <div className="space-y-4">
-                  {/* Pickup */}
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 p-1.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-semibold text-green-700 dark:text-green-400 uppercase tracking-wider">
+                {/* Visual Route Stop Line */}
+                <div className="relative pl-6 space-y-6 before:absolute before:inset-y-3 before:left-[11px] before:w-0.5 before:bg-gradient-to-b before:from-emerald-500 before:via-gray-300 dark:before:via-gray-600 before:to-rose-500">
+                  {/* Origin */}
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#13161a] shadow-sm flex items-center justify-center" />
+                    <div>
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
                         Pickup Location
                       </span>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white mt-0.5">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
                         {pickupAddress}
                       </p>
                       {pickupCoords && (
-                        <span className="text-[11px] font-mono text-gray-400 block mt-0.5">
-                          [{pickupCoords[1]?.toFixed(5)}, {pickupCoords[0]?.toFixed(5)}]
+                        <span className="inline-block text-[10px] font-mono text-gray-400 mt-1 bg-white dark:bg-[#13161a] px-2 py-0.5 rounded border border-gray-200/60 dark:border-[#1f242b]">
+                          Lat: {pickupCoords[1]?.toFixed(5)}, Lng: {pickupCoords[0]?.toFixed(5)}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  {/* Connecting Line */}
-                  <div className="ml-4 w-0.5 h-6 bg-gray-200 dark:bg-gray-700"></div>
-
-                  {/* Dropoff */}
-                  <div className="flex items-start gap-3">
-                    <div className="mt-1 p-1.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400">
-                      <MapPin className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">
+                  {/* Destination */}
+                  <div className="relative">
+                    <div className="absolute -left-6 top-1 w-4 h-4 rounded-full bg-rose-500 border-2 border-white dark:border-[#13161a] shadow-sm flex items-center justify-center" />
+                    <div>
+                      <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider block">
                         Drop-off Location
                       </span>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white mt-0.5">
+                      <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
                         {dropoffAddress}
                       </p>
                       {dropoffCoords && (
-                        <span className="text-[11px] font-mono text-gray-400 block mt-0.5">
-                          [{dropoffCoords[1]?.toFixed(5)}, {dropoffCoords[0]?.toFixed(5)}]
+                        <span className="inline-block text-[10px] font-mono text-gray-400 mt-1 bg-white dark:bg-[#13161a] px-2 py-0.5 rounded border border-gray-200/60 dark:border-[#1f242b]">
+                          Lat: {dropoffCoords[1]?.toFixed(5)}, Lng: {dropoffCoords[0]?.toFixed(5)}
                         </span>
                       )}
                     </div>
@@ -420,232 +521,113 @@ const RideDetail = () => {
 
                 {/* Special Request */}
                 {specialRequest && (
-                  <div className="mt-5 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Special Request
+                  <div className="pt-4 border-t border-gray-200/60 dark:border-[#1f242b]">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+                      Passenger Special Instructions
                     </span>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-100 dark:border-gray-700">
-                      {specialRequest}
-                    </p>
+                    <div className="p-3 bg-white dark:bg-[#13161a] rounded-lg border border-gray-200/70 dark:border-[#1f242b] text-xs text-gray-700 dark:text-slate-300">
+                      "{specialRequest}"
+                    </div>
                   </div>
                 )}
-              </Card>
+              </div>
 
-              {/* Payment & Financial Card */}
-              <Card className="p-6">
-                <SectionHeading title="Fare & Payment Breakdown" icon={DollarSign} />
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 pb-5 border-b border-gray-100 dark:border-gray-700">
-                  <InfoItem
-                    label="Final Ride Fare"
-                    value={`$${Number(rideFare || 0).toFixed(2)}`}
-                    valueClass="text-lg font-bold text-primary-600 dark:text-primary-400"
-                  />
-                  <InfoItem
-                    label="Driver Fare"
-                    value={
-                      driverFare != null ? `$${Number(driverFare).toFixed(2)}` : "—"
-                    }
-                  />
-                  <InfoItem
-                    label="Payment Method"
-                    value={
-                      paymentMethod ? (
-                        <span className="capitalize">
-                          {formatTitleCase(paymentMethod)}
+              {/* Quick Trip Timeline & Specs */}
+              <div className="space-y-4">
+                <div className="bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl p-5 space-y-3">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 pb-3 border-b border-gray-200/60 dark:border-[#1f242b]">
+                    <Clock className="w-4 h-4 text-[#61CB08]" />
+                    Lifecycle Timeline
+                  </h3>
+
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-[#1f242b]">
+                      <span className="text-gray-500 dark:text-slate-400">Order Requested</span>
+                      <span className="font-mono font-medium text-gray-900 dark:text-white">
+                        {formatDateTime(requestedAt || createdAt)}
+                      </span>
+                    </div>
+
+                    {acceptedAt && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-[#1f242b]">
+                        <span className="text-gray-500 dark:text-slate-400">Driver Accepted</span>
+                        <span className="font-mono font-medium text-gray-900 dark:text-white">
+                          {formatDateTime(acceptedAt)}
                         </span>
-                      ) : (
-                        "—"
-                      )
-                    }
-                  />
-                  <InfoItem
-                    label="Payment Status"
-                    value={paymentBadge(paymentStatus)}
-                  />
-                </div>
+                      </div>
+                    )}
 
-                {/* Tier Fare Estimates */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 bg-gray-50 dark:bg-gray-850 p-3.5 rounded-xl border border-gray-100 dark:border-gray-700 text-xs">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 block mb-0.5">
-                      Economy Fare Option
-                    </span>
-                    <span className="font-bold text-gray-900 dark:text-white text-sm">
-                      {economyRideFare != null
-                        ? `$${Number(economyRideFare).toFixed(2)}`
-                        : "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 block mb-0.5">
-                      Luxury Fare Option
-                    </span>
-                    <span className="font-bold text-gray-900 dark:text-white text-sm">
-                      {luxuryRideFare != null
-                        ? `$${Number(luxuryRideFare).toFixed(2)}`
-                        : "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 block mb-0.5">
-                      Requested At
-                    </span>
-                    <span className="font-medium text-gray-700 dark:text-gray-300">
-                      {formatDateTime(requestedAt || createdAt)}
-                    </span>
+                    {driverArrivedAt && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-[#1f242b]">
+                        <span className="text-gray-500 dark:text-slate-400">Driver Arrived</span>
+                        <span className="font-mono font-medium text-gray-900 dark:text-white">
+                          {formatDateTime(driverArrivedAt)}
+                        </span>
+                      </div>
+                    )}
+
+                    {startedAt && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-[#1f242b]">
+                        <span className="text-gray-500 dark:text-slate-400">Trip Started</span>
+                        <span className="font-mono font-medium text-gray-900 dark:text-white">
+                          {formatDateTime(startedAt)}
+                        </span>
+                      </div>
+                    )}
+
+                    {completedAt && (
+                      <div className="flex justify-between items-center py-1 border-b border-gray-100 dark:border-[#1f242b]">
+                        <span className="text-gray-500 dark:text-slate-400">Trip Completed</span>
+                        <span className="font-mono font-medium text-emerald-600 dark:text-emerald-400">
+                          {formatDateTime(completedAt)}
+                        </span>
+                      </div>
+                    )}
+
+                    {cancelledAt && (
+                      <div className="flex justify-between items-center py-1">
+                        <span className="text-rose-500 font-medium">Trip Cancelled</span>
+                        <span className="font-mono font-medium text-rose-500">
+                          {formatDateTime(cancelledAt)}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </Card>
-
-              {/* Driver Offers Table (if any) */}
-              {offers.length > 0 && (
-                <Card className="p-6">
-                  <SectionHeading title={`Driver Offers (${offers.length})`} icon={ListOrdered} />
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 border-b border-gray-200 dark:border-gray-700">
-                        <tr>
-                          <th className="py-2.5 px-3">Driver</th>
-                          <th className="py-2.5 px-3">Offered Fare</th>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3">Offer Time</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {offers.map((offer, idx) => (
-                          <tr key={offer._id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                            <td className="py-2.5 px-3 font-medium text-gray-900 dark:text-white">
-                              {fullName(offer.driver)}
-                            </td>
-                            <td className="py-2.5 px-3 font-semibold text-primary-600">
-                              ${Number(offer.fare || offer.offeredFare || 0).toFixed(2)}
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <Badge variant={offer.status === "accepted" ? "success" : "default"}>
-                                {offer.status || "Offered"}
-                              </Badge>
-                            </td>
-                            <td className="py-2.5 px-3 text-gray-500">
-                              {formatDateTime(offer.createdAt)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              )}
-
-              {/* Transactions (if any) */}
-              {transactions.length > 0 && (
-                <Card className="p-6">
-                  <SectionHeading title={`Transactions (${transactions.length})`} icon={CreditCard} />
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-gray-50 dark:bg-gray-800 text-gray-500 border-b border-gray-200 dark:border-gray-700">
-                        <tr>
-                          <th className="py-2.5 px-3">Participant</th>
-                          <th className="py-2.5 px-3">Amount</th>
-                          <th className="py-2.5 px-3">Type</th>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3">Date</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                        {transactions.map((tx, idx) => {
-                          const uType = (tx?.userType || "").toLowerCase();
-                          let txUserName = "—";
-                          let txUserRole = tx?.userType ? formatTitleCase(tx.userType) : "User";
-                          let txUserImg = null;
-
-                          if (tx?.user && typeof tx.user === "object") {
-                            txUserName = fullName(tx.user);
-                            txUserRole = uType === "driver" ? "Driver" : "Rider";
-                            txUserImg = tx.user.profilePicture || tx.user.profileImage;
-                          } else if (uType === "driver" || (driver?._id && String(tx?.user) === String(driver._id))) {
-                            txUserName = fullName(driver) || "Driver";
-                            txUserRole = "Driver";
-                            txUserImg = driver?.profilePicture || driver?.profileImage;
-                          } else if (uType === "user" || uType === "rider" || (rider?._id && String(tx?.user) === String(rider._id))) {
-                            txUserName = fullName(rider) || "Rider";
-                            txUserRole = "Rider";
-                            txUserImg = rider?.profilePicture || rider?.profileImage;
-                          } else if (tx?.user) {
-                            txUserName = `${String(tx.user).substring(0, 8)}...`;
-                          }
-
-                          const isDriver = txUserRole === "Driver";
-
-                          return (
-                            <tr key={tx._id || idx} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                              <td className="py-2.5 px-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0 border border-gray-200 dark:border-gray-700">
-                                    {txUserImg ? (
-                                      <img
-                                        src={txUserImg}
-                                        alt={txUserName}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : isDriver ? (
-                                      <Car className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                                    ) : (
-                                      <User className="w-3.5 h-3.5 text-primary-600 dark:text-primary-400" />
-                                    )}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <p className="font-semibold text-gray-900 dark:text-white truncate">
-                                      {txUserName}
-                                    </p>
-                                    <span
-                                      className={`inline-block text-[10px] font-medium px-1.5 py-0.2 rounded ${
-                                        isDriver
-                                          ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
-                                          : "bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
-                                      }`}
-                                    >
-                                      {txUserRole}
-                                    </span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-2.5 px-3 font-bold text-gray-900 dark:text-white">
-                                ${Number(tx.amount || 0).toFixed(2)}
-                              </td>
-                              <td className="py-2.5 px-3 capitalize">
-                                {formatTitleCase(tx.type || tx.transactionType || "Payment")}
-                              </td>
-                              <td className="py-2.5 px-3">{transactionStatusBadge(tx.status)}</td>
-                              <td className="py-2.5 px-3 text-gray-500">
-                                {formatDateTime(tx.createdAt || tx.date)}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              )}
+              </div>
             </div>
+          )}
 
-            {/* Col 3: Rider & Driver Profiles */}
-            <div className="space-y-6">
-              {/* Rider Card */}
-              <Card className="p-5">
-                <SectionHeading title="Rider Information" icon={User} />
+          {/* TAB 2: PARTICIPANTS (RIDER & DRIVER) */}
+          {activeTab === "participants" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Rider Profile Card */}
+              <div className="bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200/60 dark:border-[#1f242b]">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <User className="w-4 h-4 text-blue-500" />
+                    Rider Passenger
+                  </h3>
+                  {rider?._id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/user-management/rider/${rider._id}`)}
+                      className="text-xs text-[#61CB08] hover:text-[#52ad06]"
+                    >
+                      View Profile <ExternalLink className="w-3 h-3 ml-1" />
+                    </Button>
+                  )}
+                </div>
+
                 {rider ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700 shrink-0">
-                        {rider.profilePicture || rider.profileImage ? (
-                          <img
-                            src={rider.profilePicture || rider.profileImage}
-                            alt={fullName(rider)}
-                            className="w-full h-full object-cover"
-                          />
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center font-bold text-base overflow-hidden border border-blue-500/30 shrink-0">
+                        {rider.profilePicture ? (
+                          <img src={rider.profilePicture} alt={fullName(rider)} className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-6 h-6 text-gray-400" />
+                          getInitials(fullName(rider))
                         )}
                       </div>
                       <div className="min-w-0">
@@ -657,66 +639,67 @@ const RideDetail = () => {
                           <span className="font-semibold text-gray-900 dark:text-white">
                             {rider.rating != null ? Number(rider.rating).toFixed(1) : "0.0"}
                           </span>
-                          <span>({rider.reviewsReceived || 0} reviews)</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-xs pt-3 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <div className="space-y-2.5 text-xs pt-2">
+                      <div className="flex items-center gap-2.5 text-gray-600 dark:text-slate-300">
                         <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span className="truncate">{rider.email || "—"}</span>
+                        <span className="truncate">
+                          {hasPermission("seeSensitiveData") ? rider.email : maskEmail(rider.email)}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                      <div className="flex items-center gap-2.5 text-gray-600 dark:text-slate-300">
                         <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span>{rider.phone ? formatPhoneNumber(rider.phone) : "—"}</span>
+                        <span className="font-mono">
+                          {hasPermission("seeSensitiveData")
+                            ? formatPhoneNumber(rider.phone) || "—"
+                            : maskPhone(rider.phone)}
+                        </span>
                       </div>
                       {rider.address && (
-                        <div className="flex items-start gap-2 text-gray-600 dark:text-gray-300">
+                        <div className="flex items-start gap-2.5 text-gray-600 dark:text-slate-300">
                           <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2">
-                            {[rider.address, rider.city, rider.state]
-                              .filter(Boolean)
-                              .join(", ")}
+                          <span className="truncate">
+                            {[rider.address, rider.city, rider.state].filter(Boolean).join(", ")}
                           </span>
                         </div>
                       )}
                     </div>
-
-                    {(rider._id || rider.id) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() =>
-                          navigate(`/user-management/rider/${rider._id || rider.id}`)
-                        }
-                        icon={<ExternalLink className="w-3.5 h-3.5" />}
-                      >
-                        View Rider Profile
-                      </Button>
-                    )}
                   </div>
                 ) : (
-                  <p className="text-xs text-gray-400 italic">No rider details recorded.</p>
+                  <p className="text-xs text-gray-400 py-4 text-center">No passenger record attached.</p>
                 )}
-              </Card>
+              </div>
 
-              {/* Driver & Vehicle Card */}
-              <Card className="p-5">
-                <SectionHeading title="Driver & Vehicle" icon={Car} />
+              {/* Driver & Vehicle Profile Card */}
+              <div className="bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl p-5 space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-gray-200/60 dark:border-[#1f242b]">
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Car className="w-4 h-4 text-[#61CB08]" />
+                    Assigned Driver & Vehicle
+                  </h3>
+                  {driver?._id && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/user-management/driver/${driver._id}`)}
+                      className="text-xs text-[#61CB08] hover:text-[#52ad06]"
+                    >
+                      View Profile <ExternalLink className="w-3 h-3 ml-1" />
+                    </Button>
+                  )}
+                </div>
+
                 {driver ? (
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700 shrink-0">
-                        {driver.profilePicture || driver.profileImage ? (
-                          <img
-                            src={driver.profilePicture || driver.profileImage}
-                            alt={fullName(driver)}
-                            className="w-full h-full object-cover"
-                          />
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/15 text-[#61CB08] flex items-center justify-center font-bold text-base overflow-hidden border border-[#61CB08]/30 shrink-0">
+                        {driver.profilePicture ? (
+                          <img src={driver.profilePicture} alt={fullName(driver)} className="w-full h-full object-cover" />
                         ) : (
-                          <User className="w-6 h-6 text-gray-400" />
+                          getInitials(fullName(driver))
                         )}
                       </div>
                       <div className="min-w-0">
@@ -732,92 +715,176 @@ const RideDetail = () => {
                       </div>
                     </div>
 
-                    <div className="space-y-2 text-xs pt-3 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                    <div className="space-y-2.5 text-xs pt-2">
+                      <div className="flex items-center gap-2.5 text-gray-600 dark:text-slate-300">
                         <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span className="truncate">{driver.email || "—"}</span>
+                        <span className="truncate">
+                          {hasPermission("seeSensitiveData") ? driver.email : maskEmail(driver.email)}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                      <div className="flex items-center gap-2.5 text-gray-600 dark:text-slate-300">
                         <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                        <span>{driver.phone ? formatPhoneNumber(driver.phone) : "—"}</span>
+                        <span className="font-mono">
+                          {hasPermission("seeSensitiveData")
+                            ? formatPhoneNumber(driver.phone) || "—"
+                            : maskPhone(driver.phone)}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Vehicle Details */}
+                    {/* Vehicle Specifications Chip */}
                     {(vehicle || driver.vehicleDetails) && (
-                      <div className="bg-gray-50 dark:bg-gray-850 rounded-lg p-3 text-xs space-y-1.5 border border-gray-100 dark:border-gray-700">
-                        <div className="font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1 mb-1">
-                          <Car className="w-3.5 h-3.5" /> Vehicle Info
+                      <div className="p-3 bg-white dark:bg-[#13161a] rounded-lg border border-gray-200/70 dark:border-[#1f242b] text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Vehicle:</span>
+                          <span className="font-bold text-gray-900 dark:text-white">
+                            {[vehicle?.make || driver.vehicleDetails?.make, vehicle?.model || driver.vehicleDetails?.model].filter(Boolean).join(" ")}
+                          </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-1 text-gray-600 dark:text-gray-400">
-                          <span>Make & Model:</span>
-                          <span className="font-medium text-gray-900 dark:text-white">
-                            {[
-                              vehicle?.make || driver.vehicleDetails?.make,
-                              vehicle?.model || driver.vehicleDetails?.model,
-                            ]
-                              .filter(Boolean)
-                              .join(" ") || "—"}
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Plate:</span>
+                          <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">
+                            {vehicle?.licensePlate || driver.vehicleDetails?.licensePlateNumber || "—"}
                           </span>
-                          <span>License Plate:</span>
-                          <span className="font-mono font-medium text-gray-900 dark:text-white">
-                            {vehicle?.licensePlate ||
-                              vehicle?.plateNumber ||
-                              driver.vehicleDetails?.licensePlateNumber ||
-                              "—"}
-                          </span>
-                          <span>Color / Year:</span>
-                          <span className="capitalize text-gray-900 dark:text-white">
-                            {[
-                              vehicle?.color || driver.vehicleDetails?.color,
-                              vehicle?.yearOfManufacture || driver.vehicleDetails?.yearOfManufacture,
-                            ]
-                              .filter(Boolean)
-                              .join(" / ") || "—"}
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Color / Year:</span>
+                          <span className="font-medium text-gray-900 dark:text-white capitalize">
+                            {[vehicle?.color || driver.vehicleDetails?.color, vehicle?.yearOfManufacture || driver.vehicleDetails?.yearOfManufacture].filter(Boolean).join(" • ") || "—"}
                           </span>
                         </div>
                       </div>
                     )}
-
-                    {(driver._id || driver.id) && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() =>
-                          navigate(`/user-management/driver/${driver._id || driver.id}`)
-                        }
-                        icon={<ExternalLink className="w-3.5 h-3.5" />}
-                      >
-                        View Driver Profile
-                      </Button>
-                    )}
                   </div>
                 ) : (
-                  <div className="text-center py-6 px-4 bg-gray-50 dark:bg-gray-850 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-                    <Car className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                      No Driver Assigned
-                    </p>
-                    <p className="text-[11px] text-gray-400 mt-1">
-                      {rideStatus === "cancelled" || rideStatus === "canceled"
-                        ? "Ride was cancelled before a driver accepted the offer."
-                        : "Looking for nearby drivers..."}
-                    </p>
+                  <div className="text-center py-6 border border-dashed border-gray-200 dark:border-[#1f242b] rounded-lg">
+                    <p className="text-xs text-gray-400">No driver assigned to this ride.</p>
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* TAB 2: JOURNEY TIMELINE & ACTIVITY MAP (Dev Mode Only) */}
-      {isDev && activeTab === "timeline" && (
-        <div className="space-y-4">
-          <JourneyTimelineMap journeyType="ride" journeyId={id} />
+          {/* TAB 3: FINANCIALS & TRANSACTIONS */}
+          {activeTab === "financials" && (
+            <div className="space-y-6">
+              {/* Fare Options Breakdown */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl">
+                  <span className="text-xs text-gray-400 block mb-1">Final Fare Billed</span>
+                  <span className="text-xl font-bold text-[#61CB08]">
+                    {formatCurrency(rideFare || 0)}
+                  </span>
+                </div>
+                <div className="p-4 bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl">
+                  <span className="text-xs text-gray-400 block mb-1">Economy Option</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {formatCurrency(economyRideFare || 0)}
+                  </span>
+                </div>
+                <div className="p-4 bg-gray-50/70 dark:bg-[#181d24]/60 border border-gray-200/80 dark:border-[#1f242b] rounded-xl">
+                  <span className="text-xs text-gray-400 block mb-1">Luxury Option</span>
+                  <span className="text-xl font-bold text-purple-500">
+                    {formatCurrency(luxuryRideFare || 0)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Transactions Ledger */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                  Transaction Ledger ({transactions.length})
+                </h3>
+
+                {transactions.length > 0 ? (
+                  <div className="border border-gray-200/80 dark:border-[#1f242b] rounded-xl overflow-hidden">
+                    <Table
+                      data={transactions}
+                      columns={[
+                        {
+                          key: "createdAt",
+                          label: "Date & Time",
+                          render: (val, row) => <span className="font-mono text-[11px]">{formatDateTime(val || row.date)}</span>,
+                        },
+                        {
+                          key: "amount",
+                          label: "Amount",
+                          render: (val) => <span className="font-bold text-xs">{formatCurrency(val || 0)}</span>,
+                        },
+                        {
+                          key: "type",
+                          label: "Type",
+                          render: (val) => <span className="capitalize text-xs">{formatTitleCase(val || "Payment")}</span>,
+                        },
+                        {
+                          key: "status",
+                          label: "Status",
+                          render: (val) => transactionStatusBadge(val),
+                        },
+                      ]}
+                    />
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400 py-6 text-center border border-dashed border-gray-200 dark:border-[#1f242b] rounded-xl">
+                    No transactions recorded for this order yet.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: DRIVER OFFERS */}
+          {activeTab === "offers" && (
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                Driver Bidding & Counter Offers ({offers.length})
+              </h3>
+
+              {offers.length > 0 ? (
+                <div className="border border-gray-200/80 dark:border-[#1f242b] rounded-xl overflow-hidden">
+                  <Table
+                    data={offers}
+                    columns={[
+                      {
+                        key: "driver",
+                        label: "Driver",
+                        render: (drv) => <span className="font-semibold text-xs text-gray-900 dark:text-white">{fullName(drv)}</span>,
+                      },
+                      {
+                        key: "fare",
+                        label: "Offered Fare",
+                        render: (val, row) => (
+                          <span className="font-bold text-xs text-[#61CB08]">
+                            {formatCurrency(val || row.offeredFare || 0)}
+                          </span>
+                        ),
+                      },
+                      {
+                        key: "status",
+                        label: "Status",
+                        render: (val) => (
+                          <Badge variant={val === "accepted" ? "success" : "default"} className="capitalize text-[10px]">
+                            {val || "Offered"}
+                          </Badge>
+                        ),
+                      },
+                      {
+                        key: "createdAt",
+                        label: "Timestamp",
+                        render: (val) => <span className="font-mono text-[11px]">{formatDateTime(val)}</span>,
+                      },
+                    ]}
+                  />
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 py-8 text-center border border-dashed border-gray-200 dark:border-[#1f242b] rounded-xl">
+                  No driver offers registered for this request.
+                </p>
+              )}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };

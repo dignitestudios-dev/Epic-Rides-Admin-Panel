@@ -23,6 +23,7 @@ const CarpoolRides = () => {
   
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = usePersistentState("carpoolrides_activeTab", "completed");
+  const effectiveTab = activeTab === "cancelled" ? "cancelled" : "completed";
   const [search, setSearch] = usePersistentState("carpoolrides_search", "");
   const [page, setPage] = usePersistentState("carpoolrides_page", 1);
   const [limit, setLimit] = usePersistentState("carpoolrides_limit", 10);
@@ -40,7 +41,7 @@ const CarpoolRides = () => {
     page,
     limit,
     debouncedSearch,
-    activeTab,
+    effectiveTab,
     startDate,
     endDate
   );
@@ -53,7 +54,7 @@ const CarpoolRides = () => {
       return;
     }
     setPage(1);
-  }, [debouncedSearch, startDate, endDate, activeTab]);
+  }, [debouncedSearch, startDate, endDate, effectiveTab]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -67,11 +68,13 @@ const CarpoolRides = () => {
 
   const tabs = [
     {
+      key: "completed",
       id: "completed",
       label: "Completed Rides",
       icon: <CheckCircle2 className="w-3.5 h-3.5 text-[#61CB08]" />,
     },
     {
+      key: "cancelled",
       id: "cancelled",
       label: "Cancelled Rides",
       icon: <XCircle className="w-3.5 h-3.5 text-rose-500" />,
@@ -86,7 +89,7 @@ const CarpoolRides = () => {
 
     setIsExporting(true);
     try {
-      const response = await api.exportCarpoolRides(activeTab, startDate, endDate);
+      const response = await api.exportCarpoolRides(effectiveTab, startDate, endDate);
       const blob = response.data instanceof Blob
         ? response.data
         : new Blob([response.data], { type: "text/csv" });
@@ -94,7 +97,7 @@ const CarpoolRides = () => {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}_Carpool_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `${effectiveTab.charAt(0).toUpperCase() + effectiveTab.slice(1)}_Carpool_Rides_Export_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Export downloaded successfully");
@@ -197,14 +200,9 @@ const CarpoolRides = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Carpool Rides
-            </h1>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
-              {totalData || 0} rides
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Carpool Rides
+          </h1>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
             View and manage all active, completed and cancelled carpool routes
           </p>
@@ -224,29 +222,29 @@ const CarpoolRides = () => {
       </div>
 
       {/* Segment Tabs */}
-      <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
+      <Tabs tabs={tabs} activeTab={effectiveTab} onChange={handleTabChange} />
 
       {/* Stats Cards (Standardized with StatsCard component) */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatsCard
-            title={`Total ${activeTab === "completed" ? "Completed" : "Cancelled"}`}
-            value={stats.totalRides != null ? stats.totalRides.toLocaleString() : "0"}
-            index={0}
-          />
-          <StatsCard
-            title="Revenue"
-            value={stats.totalRevenue != null ? `$${stats.totalRevenue.toFixed(2)}` : "$0.00"}
-            index={1}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatsCard
+          title={`Total ${effectiveTab === "completed" ? "Completed" : "Cancelled"}`}
+          value={stats?.totalRides != null ? stats.totalRides.toLocaleString() : "0"}
+          loading={loading}
+          index={0}
+        />
+        <StatsCard
+          title="Revenue"
+          value={stats?.totalRevenue != null ? `$${stats.totalRevenue.toFixed(2)}` : "$0.00"}
+          loading={loading}
+          index={1}
+        />
+      </div>
 
       {/* Data Table with embedded date filters */}
       <DataTable
         data={rides}
         columns={columns}
-        title={`${activeTab === "cancelled" ? "Cancelled" : "Completed"} Carpool Rides`}
+        title={`${effectiveTab === "cancelled" ? "Cancelled" : "Completed"} Carpool Rides`}
         subtitle="Route itineraries, pickup points, and passenger occupancies"
         loading={loading}
         searchable

@@ -221,14 +221,9 @@ const PrivateRides = () => {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
-              Private Rides
-            </h1>
-            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20">
-              {totalData || 0} rides
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+            Private Rides
+          </h1>
           <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
             View and manage all active, completed and cancelled private ride records
           </p>
@@ -251,20 +246,20 @@ const PrivateRides = () => {
       <Tabs tabs={tabs} activeTab={activeTab} onChange={handleTabChange} />
 
       {/* Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <StatsCard
-            title={`Total ${activeTab === "completed" ? "Completed" : "Cancelled"}`}
-            value={stats.totalRides != null ? stats.totalRides.toLocaleString() : "0"}
-            index={0}
-          />
-          <StatsCard
-            title="Revenue"
-            value={stats.totalRevenue != null ? `$${stats.totalRevenue.toFixed(2)}` : "$0.00"}
-            index={1}
-          />
-        </div>
-      )}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatsCard
+          title={`Total ${activeTab === "completed" ? "Completed" : "Cancelled"}`}
+          value={stats?.totalRides != null ? stats.totalRides.toLocaleString() : "0"}
+          loading={loading}
+          index={0}
+        />
+        <StatsCard
+          title="Revenue"
+          value={stats?.totalRevenue != null ? `$${stats.totalRevenue.toFixed(2)}` : "$0.00"}
+          loading={loading}
+          index={1}
+        />
+      </div>
 
       {/* Data Table */}
       <DataTable

@@ -10,12 +10,13 @@ const Tabs = ({ tabs = [], activeTab, onChange, className = "" }) => {
       className={`flex items-center gap-1 border-b border-gray-200 dark:border-[#1f242b] overflow-x-auto pb-1 text-xs ${className}`}
     >
       {tabs.map((tab) => {
-        const isActive = activeTab === tab.key;
+        const key = tab.key ?? tab.id;
+        const isActive = activeTab === key;
         return (
           <button
-            key={tab.key}
+            key={key}
             type="button"
-            onClick={() => onChange(tab.key)}
+            onClick={() => onChange(key)}
             className={`flex items-center gap-2 px-3.5 py-2 border-b-2 font-semibold whitespace-nowrap transition-all ${
               isActive
                 ? "border-[#61CB08] text-gray-900 dark:text-white font-bold"

@@ -1,11 +1,19 @@
 // pages/DriverDetails.jsx
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { api } from "../lib/services";
-import { formatDate, handleError, maskEmail, maskPhone, formatPhoneNumber } from "../utils/helpers";
+import {
+  formatDate,
+  formatDateTime,
+  handleError,
+  maskEmail,
+  maskPhone,
+  formatPhoneNumber,
+} from "../utils/helpers";
 import toast from "react-hot-toast";
 import Badge from "../components/ui/Badge";
 import Card from "../components/ui/Card";
+import Tabs from "../components/ui/Tabs";
 import Modal from "../components/ui/Modal";
 import Button from "../components/ui/Button";
 import EditProfileModal from "../components/common/EditProfileModal";
@@ -13,91 +21,135 @@ import {
   ArrowLeft,
   Car,
   FileText,
-  CheckCircle,
+  CheckCircle2,
   XCircle,
   Clock,
   ShieldCheck,
   ShieldAlert,
-  ShieldQuestion,
-  ChevronUp,
   Loader2,
   RotateCcw,
   RotateCw,
   ZoomIn,
   ZoomOut,
-  Maximize,
+  Maximize2,
   X,
-  User,
   Mail,
   Phone,
   Calendar,
-  ChevronDown,
   CreditCard,
   Pencil,
   MapPin,
+  Copy,
+  Check,
+  ExternalLink,
+  RefreshCw,
+  Layers,
+  AlertCircle,
+  Eye,
+  Info,
+  Users,
+  Shield,
+  Hash,
+  Sparkles,
+  Award,
 } from "lucide-react";
 import useGetUserDetails from "../hooks/users/useGetUserDetails";
 import { useAuth } from "../contexts/AuthContext";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+// ── Avatar Color Generator ───────────────────────────────────────────────────
 
-const statusStyles = {
-  approved: {
-    badge: "bg-emerald-100 text-emerald-700 border border-emerald-200",
-    dot: "bg-emerald-500",
-  },
-  rejected: {
-    badge: "bg-red-100 text-red-700 border border-red-200",
-    dot: "bg-red-500",
-  },
-  pending: {
-    badge: "bg-amber-100 text-amber-700 border border-amber-200",
-    dot: "bg-amber-400",
-  },
-  old: {
-    badge: "bg-gray-100 text-gray-500 border border-gray-200",
-    dot: "bg-gray-400",
-  },
+const AVATAR_PALETTE = [
+  { bg: "bg-emerald-500/15", text: "text-emerald-500", border: "border-emerald-500/30" },
+  { bg: "bg-blue-500/15", text: "text-blue-500", border: "border-blue-500/30" },
+  { bg: "bg-amber-500/15", text: "text-amber-500", border: "border-amber-500/30" },
+  { bg: "bg-purple-500/15", text: "text-purple-500", border: "border-purple-500/30" },
+  { bg: "bg-rose-500/15", text: "text-rose-500", border: "border-rose-500/30" },
+  { bg: "bg-cyan-500/15", text: "text-cyan-500", border: "border-cyan-500/30" },
+];
+
+function getAvatarColors(name = "") {
+  let hash = 0;
+  for (let i = 0; i < (name || "").length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+}
+
+function getInitials(name = "") {
+  const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return (parts[0] || "?").slice(0, 2).toUpperCase();
+}
+
+const formatTitleCase = (str) => {
+  if (!str) return "—";
+  return String(str)
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .trim();
 };
 
-const StatusPill = ({ status }) => {
-  const s = statusStyles[status] || statusStyles.old;
-  return (
-    <span
-      className={`text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5 capitalize ${s.badge}`}
-    >
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {status}
-    </span>
-  );
+const statusBadge = (status) => {
+  const s = String(status || "").toLowerCase();
+  switch (s) {
+    case "approved":
+    case "active":
+    case "completed":
+      return <Badge variant="success" dot>Approved</Badge>;
+    case "rejected":
+    case "declined":
+      return <Badge variant="danger" dot>Rejected</Badge>;
+    case "pending":
+    case "in_review":
+    case "needs_review":
+      return <Badge variant="warning" dot>Needs Review</Badge>;
+    case "old":
+    case "archived":
+      return <Badge variant="default" dot>Archived</Badge>;
+    default:
+      return <Badge variant="default" dot>{formatTitleCase(status || "Pending")}</Badge>;
+  }
 };
 
-const Detail = ({ label, value }) => (
-  <div className="flex justify-between items-center text-xs py-2 border-b border-gray-50 last:border-0">
-    <span className="text-gray-400 font-medium">{label}</span>
-    <span className="font-semibold text-gray-800 text-right max-w-[55%] truncate">
-      {value || "—"}
-    </span>
-  </div>
-);
+const REJECTION_PRESETS = [
+  "Scan is blurry or unreadable",
+  "Document is expired",
+  "Name mismatch with driver profile",
+  "Incorrect document type",
+  "Missing clear back scan",
+  "Plate or VIN mismatch",
+];
 
-const LoadingSpinner = ({ color = "gray" }) => {
-  const c = {
-    gray: "border-gray-300 border-t-gray-600",
-    emerald: "border-emerald-300 border-t-emerald-700",
-    white: "border-white/30 border-t-white",
-    red: "border-red-300 border-t-red-600",
-  };
-  return (
-    <span
-      className={`inline-block w-3 h-3 rounded-full animate-spin border-[1.5px] ${c[color]}`}
-    />
-  );
+const VEHICLE_REJECTION_PRESETS = [
+  "License plate mismatch with vehicle photos",
+  "Invalid or unverified VIN number",
+  "Vehicle year does not meet platform requirements",
+  "Vehicle registration document is expired",
+  "Vehicle type/class mismatch",
+];
+
+// ── Color Swatch Helper ───────────────────────────────────────────────────────
+
+const getColorHex = (colorName = "") => {
+  const c = colorName.toLowerCase().trim();
+  if (c.includes("black")) return "#171717";
+  if (c.includes("white")) return "#f8fafc";
+  if (c.includes("silver") || c.includes("grey") || c.includes("gray")) return "#94a3b8";
+  if (c.includes("blue") || c.includes("navy")) return "#2563eb";
+  if (c.includes("red") || c.includes("maroon")) return "#dc2626";
+  if (c.includes("green")) return "#16a34a";
+  if (c.includes("yellow") || c.includes("gold")) return "#eab308";
+  if (c.includes("brown") || c.includes("tan") || c.includes("beige")) return "#92400e";
+  if (c.includes("orange")) return "#ea580c";
+  return "#64748b";
 };
 
-// ── Image Viewer ─────────────────────────────────────────────────────────────
+// ── Interactive Lightbox Image Viewer ─────────────────────────────────────────
 
-const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
+const ImageViewer = ({ images = [], initialIndex = 0, onClose }) => {
   const [idx, setIdx] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
@@ -110,6 +162,7 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
     setRotation(0);
     setOffset({ x: 0, y: 0 });
   };
+
   const goTo = (i) => {
     setIdx(i);
     reset();
@@ -119,8 +172,7 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
     const onKey = (e) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") goTo((idx + 1) % images.length);
-      if (e.key === "ArrowLeft")
-        goTo((idx - 1 + images.length) % images.length);
+      if (e.key === "ArrowLeft") goTo((idx - 1 + images.length) % images.length);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -128,779 +180,835 @@ const ImageViewer = ({ images, initialIndex = 0, onClose }) => {
 
   const handleWheel = (e) => {
     e.preventDefault();
-    setZoom((z) => Math.min(5, Math.max(0.3, z * (e.deltaY < 0 ? 1.1 : 0.9))));
+    setZoom((z) => Math.min(5, Math.max(0.3, z * (e.deltaY < 0 ? 1.15 : 0.85))));
   };
+
   const onMouseDown = (e) => {
     if (zoom <= 1) return;
     setDragging(true);
     setDragStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
   };
+
   const onMouseMove = (e) => {
     if (!dragging || !dragStart) return;
     setOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
   };
+
   const onMouseUp = () => {
     setDragging(false);
     setDragStart(null);
   };
 
-  const img = images[idx];
-
-  const ToolBtn = ({ onClick, title, children }) => (
-    <button
-      onClick={onClick}
-      title={title}
-      className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all"
-    >
-      {children}
-    </button>
-  );
+  const img = images[idx] || {};
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex flex-col"
-      style={{ background: "rgba(4,6,14,0.97)" }}
+      className="fixed inset-0 z-[9999] flex flex-col bg-[#06080d]/95 backdrop-blur-md animate-fadeIn select-none"
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
       onMouseLeave={onMouseUp}
     >
-      {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 shrink-0">
-        <div className="flex items-center gap-2.5">
-          <span className="text-[11px] text-white/30 font-mono tracking-widest uppercase">
-            {img.label}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/10 shrink-0 bg-black/40">
+        <div className="flex items-center gap-3">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#61CB08] animate-pulse" />
+          <span className="text-sm text-white font-semibold tracking-wide truncate max-w-[280px] sm:max-w-md">
+            {img.label || "Document Preview"}
           </span>
           {images.length > 1 && (
-            <span className="text-[11px] text-white/20 font-mono">
-              {idx + 1}/{images.length}
+            <span className="text-xs font-mono text-white/60 bg-white/10 px-2.5 py-0.5 rounded-md">
+              {idx + 1} / {images.length}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-1">
-          <ToolBtn
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setZoom((z) => Math.max(0.3, +(z - 0.25).toFixed(2)))}
             title="Zoom Out"
-            onClick={() =>
-              setZoom((z) => Math.max(0.3, +(z - 0.25).toFixed(2)))
-            }
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <ZoomOut className="w-3.5 h-3.5" />
-          </ToolBtn>
+            <ZoomOut className="w-4 h-4" />
+          </button>
           <button
             onClick={reset}
-            className="text-[11px] font-mono text-white/40 bg-white/6 border-0 rounded-md px-2 py-0.5 min-w-[42px] text-center hover:text-white/70 transition-colors"
+            className="text-xs font-mono text-white/80 bg-white/10 hover:bg-white/15 px-2.5 py-1 rounded-md transition-colors"
+            title="Reset Zoom"
           >
             {Math.round(zoom * 100)}%
           </button>
-          <ToolBtn
-            title="Zoom In"
+          <button
             onClick={() => setZoom((z) => Math.min(5, +(z + 0.25).toFixed(2)))}
+            title="Zoom In"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </ToolBtn>
+            <ZoomIn className="w-4 h-4" />
+          </button>
+
           <div className="w-px h-4 bg-white/10 mx-1" />
-          <ToolBtn
-            title="Rotate Left 90°"
+
+          <button
             onClick={() => setRotation((r) => r - 90)}
+            title="Rotate Left 90°"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-          </ToolBtn>
-          <ToolBtn
-            title="Rotate Right 90°"
+            <RotateCcw className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => setRotation((r) => r + 90)}
+            title="Rotate Right 90°"
+            className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
           >
-            <RotateCw className="w-3.5 h-3.5" />
-          </ToolBtn>
+            <RotateCw className="w-4 h-4" />
+          </button>
+
+          {img.src && (
+            <a
+              href={img.src}
+              target="_blank"
+              rel="noreferrer"
+              title="Open Original in New Tab"
+              className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          )}
+
           <div className="w-px h-4 bg-white/10 mx-1" />
-          <ToolBtn title="Close (Esc)" onClick={onClose}>
-            <X className="w-3.5 h-3.5" />
-          </ToolBtn>
+
+          <button
+            onClick={onClose}
+            title="Close Preview (Esc)"
+            className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-rose-500/40 transition-colors"
+          >
+            <X className="w-4 h-4 text-rose-400" />
+          </button>
         </div>
       </div>
 
-      {/* Image Area */}
       <div
-        className="flex-1 flex items-center justify-center overflow-hidden relative"
-        style={{
-          cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "default",
-          userSelect: "none",
-        }}
+        className="flex-1 flex items-center justify-center overflow-hidden relative p-4"
+        style={{ cursor: zoom > 1 ? (dragging ? "grabbing" : "grab") : "default" }}
         onWheel={handleWheel}
         onMouseDown={onMouseDown}
       >
         {images.length > 1 && (
           <button
             onClick={() => goTo((idx - 1 + images.length) % images.length)}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/8 text-white/70 text-2xl flex items-center justify-center hover:bg-white/15 transition-colors"
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm transition-all shadow-lg text-xl"
           >
             ‹
           </button>
         )}
+
         <img
           src={img.src}
           alt={img.label}
           draggable={false}
           style={{
-            maxWidth: "88vw",
-            maxHeight: "74vh",
+            maxWidth: "90vw",
+            maxHeight: "75vh",
             objectFit: "contain",
             transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom}) rotate(${rotation}deg)`,
-            transition: dragging
-              ? "none"
-              : "transform 0.2s cubic-bezier(0.34,1.4,0.64,1)",
-            borderRadius: 8,
-            boxShadow: "0 32px 80px rgba(0,0,0,0.7)",
-            userSelect: "none",
+            transition: dragging ? "none" : "transform 0.2s cubic-bezier(0.34,1.4,0.64,1)",
+            borderRadius: 12,
+            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.8)",
             pointerEvents: "none",
           }}
         />
+
         {images.length > 1 && (
           <button
             onClick={() => goTo((idx + 1) % images.length)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-9 h-9 rounded-full bg-white/8 text-white/70 text-2xl flex items-center justify-center hover:bg-white/15 transition-colors"
+            className="absolute right-6 top-1/2 -translate-y-1/2 z-20 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center backdrop-blur-sm transition-all shadow-lg text-xl"
           >
             ›
           </button>
         )}
       </div>
 
-      {/* Thumbnails */}
       {images.length > 1 && (
-        <div className="flex justify-center gap-2 py-2 shrink-0">
+        <div className="flex justify-center gap-2.5 py-3 border-t border-white/5 bg-black/40 shrink-0">
           {images.map((im, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              className={`w-14 h-9 rounded-lg overflow-hidden transition-all ${i === idx ? "ring-2 ring-white/50 opacity-100" : "opacity-35 hover:opacity-60"}`}
+              className={`w-14 h-10 rounded-lg overflow-hidden border transition-all ${
+                i === idx
+                  ? "border-[#61CB08] ring-2 ring-[#61CB08]/40 scale-105 opacity-100"
+                  : "border-white/10 opacity-40 hover:opacity-80"
+              }`}
             >
-              <img
-                src={im.src}
-                alt={im.label}
-                className="w-full h-full object-cover"
-              />
+              <img src={im.src} alt={im.label} className="w-full h-full object-cover" />
             </button>
           ))}
         </div>
       )}
-      <p className="text-center pb-2 text-[10px] text-white/15 tracking-wide">
-        Scroll to zoom · Drag to pan{images.length > 1 ? " · ← → navigate" : ""}{" "}
-        · Esc to close
+
+      <p className="text-center pb-3 text-xs text-white/40 font-medium tracking-wide">
+        Scroll to Zoom · Drag to Pan · Arrow Keys to Navigate · Esc to Close
       </p>
     </div>
   );
 };
 
-// ── Doc Card ──────────────────────────────────────────────────────────────────
+// ── Clean & Balanced Document Card ───────────────────────────────────────────
 
-const DocCard = ({ doc, onRespond, isOld }) => {
+const DocumentCard = ({ doc, onApprove, onRequestReject, onOpenLightbox, isActionLoading }) => {
   const { hasPermission } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [localStatus, setLocalStatus] = useState(doc.status);
-  const [showRejectBox, setShowRejectBox] = useState(false);
-  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
-  const [reason, setReason] = useState("");
-  const [imgError, setImgError] = useState({});
-  const [viewerOpen, setViewerOpen] = useState(false);
-  const [viewerIdx, setViewerIdx] = useState(0);
-  const [collapsed, setCollapsed] = useState(isOld);
+  const [copiedKey, setCopiedKey] = useState(null);
+  const isPending = doc.status === "pending" || doc.status === "needs_review";
+  const isApproved = doc.status === "approved";
+  const isRejected = doc.status === "rejected";
 
-  const docImages = [
-    doc.frontImage && !imgError.front
-      ? { src: doc.frontImage, label: `${doc.type} — Front` }
-      : null,
-    doc.backImage && !imgError.back
-      ? { src: doc.backImage, label: `${doc.type} — Back` }
-      : null,
-  ].filter(Boolean);
-
-  const respond = async (status) => {
-    if (loading) return;
-    const isRejected = status === "rejected";
-    if (isRejected && !reason.trim()) {
-      toast.error("Rejection reason is required.");
-      return;
-    }
-    if (isRejected && reason.trim().length > 150) {
-      toast.error("Rejection reason cannot exceed 150 characters.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const payload = { id: doc._id, status };
-      if (isRejected) payload.rejectReason = reason;
-      if (doc.type === "vehicleVerification") {
-        payload.metadata = {
-          vehicleIdentificationNumber: doc.metadata?.vehicleIdentificationNumber || "",
-          registrationNumber: doc.metadata?.registrationNumber || "",
-        };
-      }
-
-      await api.updateDocs([payload], []);
-      console.log(payload);
-      setLocalStatus(status);
-      setShowRejectBox(false);
-      toast.success(`Document ${status} successfully.`);
-      if (onRespond) onRespond();
-    } catch (err) {
-      toast.error(err.message || "Failed to update document.");
-    } finally {
-      setLoading(false);
-    }
+  const handleCopy = (text, key) => {
+    if (!text) return;
+    navigator.clipboard.writeText(String(text));
+    setCopiedKey(key);
+    toast.success(`${key} copied`);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const docTypeLabel =
-    doc.type
-      ?.replace(/([A-Z])/g, " $1")
-      .replace(/^./, (s) => s.toUpperCase()) || "Document";
+  const docScans = [
+    doc.frontImage ? { src: doc.frontImage, label: `${formatTitleCase(doc.type)} — Front` } : null,
+    doc.backImage ? { src: doc.backImage, label: `${formatTitleCase(doc.type)} — Back` } : null,
+  ].filter(Boolean);
 
   return (
-    <>
-      {viewerOpen && docImages.length > 0 && (
-        <ImageViewer
-          images={docImages}
-          initialIndex={viewerIdx}
-          onClose={() => setViewerOpen(false)}
-        />
-      )}
-      {showApproveConfirm && (
-        <Modal
-          isOpen={showApproveConfirm}
-          onClose={() => setShowApproveConfirm(false)}
-          title="Confirm Approval"
-          size="sm"
-        >
-          <p className="text-sm text-gray-500 mb-6">
-            Are you sure you want to approve <strong className="text-gray-900">{docTypeLabel}</strong>? This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              variant="success"
-              loading={loading}
-              disabled={loading}
-              onClick={() => { setShowApproveConfirm(false); respond("approved"); }}
-            >
-              Yes, Approve
-            </Button>
+    <Card className="overflow-hidden border border-gray-200/90 dark:border-[#1f242b] shadow-xs">
+      {/* Card Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100 dark:border-[#1f242b]">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-[#61CB08]/10 text-[#61CB08] border border-[#61CB08]/20 flex items-center justify-center shrink-0">
+            <FileText className="w-5 h-5" />
           </div>
-        </Modal>
-      )}
-      <div
-        className={`border rounded-2xl bg-white shadow-sm flex flex-col gap-3 transition-all duration-200 overflow-hidden ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
-      >
-        {/* Card Header */}
-        <div
-          className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
-          onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
-        >
-          <div className="flex items-center gap-3">
-            <FileText className="w-5 h-5 text-slate-400" />
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-[15px] text-gray-700 capitalize">
-                {docTypeLabel}
-              </span>
-              {isOld && (
-                <span className="text-[11px] px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded-full font-medium">
-                  Old
-                </span>
-              )}
-              {localStatus === "pending" && !isOld && (
-                <span className="text-[11px] px-2.5 py-0.5 bg-amber-100 text-amber-600 rounded-full font-medium animate-pulse">
-                  Needs Review
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <StatusPill status={localStatus} />
-            {isOld &&
-              (collapsed ? (
-                <ChevronDown className="w-4 h-4 text-slate-400" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-slate-400" />
-              ))}
+          <div>
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              {formatTitleCase(doc.type)}
+            </h3>
+            <p className="text-xs text-gray-500 dark:text-slate-400">
+              Uploaded on {formatDate(doc.createdAt)}
+            </p>
           </div>
         </div>
 
-        {/* Collapsible Body */}
-        {!collapsed && (
-          <div className="px-4 pb-4 space-y-3">
-            {/* License Verification info removed */}
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {statusBadge(doc.status)}
+        </div>
+      </div>
 
-            {/* Images */}
-            <div className="space-y-2">
-              {doc.frontImage && (
-                <div
-                  className="relative group cursor-pointer rounded-xl overflow-hidden"
-                  onClick={() => {
-                    setViewerIdx(0);
-                    setViewerOpen(true);
-                  }}
-                >
-                  {!imgError.front ? (
-                    <img
-                      src={doc.frontImage}
-                      alt="Front"
-                      className="w-full h-32 object-cover bg-gray-100"
-                      onError={() =>
-                        setImgError((p) => ({ ...p, front: true }))
-                      }
-                    />
-                  ) : (
-                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                      Image unavailable
-                    </div>
-                  )}
-                  {!imgError.front && (
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                      <Maximize className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded">
-                    Front
-                  </span>
-                </div>
-              )}
-              {doc.backImage && (
-                <div
-                  className="relative group cursor-pointer rounded-xl overflow-hidden"
-                  onClick={() => {
-                    setViewerIdx(doc.frontImage && !imgError.front ? 1 : 0);
-                    setViewerOpen(true);
-                  }}
-                >
-                  {!imgError.back ? (
-                    <img
-                      src={doc.backImage}
-                      alt="Back"
-                      className="w-full h-32 object-cover bg-gray-100"
-                      onError={() => setImgError((p) => ({ ...p, back: true }))}
-                    />
-                  ) : (
-                    <div className="w-full h-32 bg-gray-100 flex items-center justify-center text-xs text-gray-400">
-                      Image unavailable
-                    </div>
-                  )}
-                  {!imgError.back && (
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center">
-                      <Maximize className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                  <span className="absolute bottom-1.5 left-1.5 text-[10px] bg-black/40 text-white px-1.5 py-0.5 rounded">
-                    Back
-                  </span>
-                </div>
-              )}
+      {/* Card Body (2 Columns: Left = Document Scans, Right = Document Details) */}
+      <div className="py-4 space-y-4">
+        {/* Rejection Alert Banner */}
+        {doc.rejectReason && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+            <div>
+              <span className="font-bold">Rejection Reason: </span>
+              <span>{doc.rejectReason}</span>
             </div>
+          </div>
+        )}
 
-            {/* Metadata */}
-            {doc.metadata && (
-              <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-                {doc.metadata.licenseNumber && (
-                  <Detail
-                    label="License #"
-                    value={doc.metadata.licenseNumber}
-                  />
-                )}
-                {doc.metadata.expiryDate && (
-                  <Detail
-                    label="Expiry Date"
-                    value={formatDate(doc.metadata.expiryDate)}
-                  />
-                )}
-              </div>
-            )}
-            {doc.rejectReason && (
-              <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100">
-                <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-                <p className="text-xs text-red-600">{doc.rejectReason}</p>
-              </div>
-            )}
-            <p className="text-[11px] text-gray-400">
-              Submitted: {formatDate(doc.createdAt)}
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          {/* Left: Document Scans Showcase (7 cols) */}
+          <div className="lg:col-span-7 space-y-2">
+            <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Document Scans ({docScans.length} Scan{docScans.length !== 1 ? "s" : ""})
+            </span>
 
-            {/* Actions — pending shows both, rejected shows approve only, approved shows static label */}
-            {!isOld && localStatus !== "approved" && hasPermission('approveDriversVehicles') && (
-              <div className="space-y-2 pt-1 border-t border-gray-50">
-                {!showRejectBox ? (
-                  <div className="flex gap-2">
-                    <button
-                      disabled={loading}
-                      onClick={() => setShowApproveConfirm(true)}
-                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                    >
-                      {loading ? (
-                        <LoadingSpinner color="emerald" />
-                      ) : (
-                        <><CheckCircle className="w-3.5 h-3.5" /> Approve</>
-                      )}
-                    </button>
-                    {/* Reject button only shown when pending */}
-                    {localStatus === "pending" && (
-                      <button
-                        disabled={loading}
-                        onClick={() => setShowRejectBox(true)}
-                        className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                      >
-                        <XCircle className="w-3.5 h-3.5" /> Reject
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <textarea
-                      placeholder="Enter reject reason (required)…"
-                      className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200 transition"
-                      rows={3}
-                      value={reason}
-                      maxLength={150}
-                      onChange={(e) => setReason(e.target.value.slice(0, 150))}
+            {docScans.length > 0 ? (
+              <div className="flex items-center gap-3.5 flex-wrap">
+                {docScans.map((scan, sIdx) => (
+                  <div
+                    key={sIdx}
+                    onClick={() => onOpenLightbox(docScans, sIdx)}
+                    className="relative group cursor-pointer flex-1 min-w-[180px] max-w-[260px] h-36 rounded-xl overflow-hidden border border-gray-200 dark:border-[#1f242b] bg-gray-50 dark:bg-[#181d24] hover:border-[#61CB08] transition-all shadow-xs"
+                    title="Click to view full image"
+                  >
+                    <img
+                      src={scan.src}
+                      alt={scan.label}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="flex items-center justify-between text-[11px] text-gray-400">
-                      <span>Max 150 characters</span>
-                      <span className={reason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
-                        {reason.length}/150
-                      </span>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 backdrop-blur-xs font-medium">
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        <span>Enlarge Scan</span>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setShowRejectBox(false)}
-                        className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50 transition"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        disabled={loading || !reason.trim() || reason.trim().length > 150}
-                        onClick={() => respond("rejected")}
-                        className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                      >
-                        {loading ? <LoadingSpinner color="white" /> : "Confirm Reject"}
-                      </button>
-                    </div>
+                    <span className="absolute bottom-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 text-white backdrop-blur-xs">
+                      {sIdx === 0 ? "Front Side" : "Back Side"}
+                    </span>
                   </div>
-                )}
+                ))}
               </div>
-            )}
-
-            {/* Static label for approved docs, or rejected docs if user cannot approve */}
-            {!isOld && (localStatus === "approved" || (!hasPermission('approveDriversVehicles') && localStatus === "rejected")) && (
-              <div
-                className={`text-center text-xs py-1.5 rounded-lg font-medium ${
-                  localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-                }`}
-              >
-                {localStatus === "approved" ? "✓ Approved" : "✕ Rejected"}
+            ) : (
+              <div className="h-36 rounded-xl border border-dashed border-gray-200 dark:border-[#1f242b] flex flex-col items-center justify-center text-gray-400 dark:text-slate-500 text-xs gap-1.5">
+                <FileText className="w-6 h-6 opacity-40" />
+                <span>No scan images attached</span>
               </div>
             )}
           </div>
-        )}
+
+          {/* Right: Document Verification Details (5 cols) */}
+          <div className="lg:col-span-5 space-y-2">
+            <span className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Credential Details
+            </span>
+
+            <div className="bg-gray-50/80 dark:bg-[#181d24]/80 rounded-xl p-3.5 border border-gray-200/70 dark:border-[#1f242b] space-y-2.5 text-xs">
+              {/* License Number if available */}
+              {doc.metadata?.licenseNumber ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">License Number</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-gray-900 dark:text-white">
+                      {doc.metadata.licenseNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(doc.metadata.licenseNumber, "License Number")}
+                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                      title="Copy"
+                    >
+                      {copiedKey === "License Number" ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Expiry Date if available */}
+              {doc.metadata?.expiryDate ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Expiration Date</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {formatDate(doc.metadata.expiryDate)}
+                  </span>
+                </div>
+              ) : null}
+
+              {/* Registration Number if available */}
+              {doc.metadata?.registrationNumber ? (
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Registration #</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono font-bold text-gray-900 dark:text-white">
+                      {doc.metadata.registrationNumber}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(doc.metadata.registrationNumber, "Registration #")}
+                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                      title="Copy"
+                    >
+                      {copiedKey === "Registration #" ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Submission Date */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-slate-400">Submission Date</span>
+                <span className="text-gray-700 dark:text-slate-300 font-medium">
+                  {formatDate(doc.createdAt)}
+                </span>
+              </div>
+
+              {/* Status */}
+              <div className="flex items-center justify-between border-t border-gray-200/60 dark:border-[#2d3748] pt-2">
+                <span className="text-gray-500 dark:text-slate-400">Review Status</span>
+                <span className="font-bold capitalize text-gray-900 dark:text-white">
+                  {doc.status === "approved"
+                    ? "✓ Verified & Approved"
+                    : doc.status === "rejected"
+                    ? "✕ Rejected"
+                    : "⏳ Pending Review"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </>
+
+      {/* Card Footer / Actions */}
+      {hasPermission("approveDriversVehicles") && (
+        <div className="pt-3 border-t border-gray-100 dark:border-[#1f242b] flex items-center justify-end gap-2.5">
+          {isPending ? (
+            <>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={isActionLoading}
+                onClick={() => onRequestReject(doc, "document")}
+                icon={<XCircle className="w-4 h-4" />}
+              >
+                Reject Document
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                loading={isActionLoading}
+                disabled={isActionLoading}
+                onClick={() => onApprove(doc._id, "document")}
+                icon={<CheckCircle2 className="w-4 h-4" />}
+              >
+                Approve Document
+              </Button>
+            </>
+          ) : isApproved ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-[#61CB08] flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Approved
+              </span>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => onRequestReject(doc, "document")}
+                className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 border-rose-200 dark:border-rose-900/40"
+              >
+                Revoke Approval
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-rose-500 flex items-center gap-1.5">
+                <XCircle className="w-4 h-4" /> Rejected
+              </span>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => onApprove(doc._id, "document")}
+                className="text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+              >
+                Overturn &amp; Approve
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
   );
 };
 
-// ── Vehicle Card ──────────────────────────────────────────────────────────────
+// ── Clean Automotive Vehicle Card ─────────────────────────────────────────────
 
 const VehicleCard = ({
   vehicle,
-  onRespond,
-  isLatest = false,
+  onApprove,
+  onRequestReject,
+  isActionLoading,
 }) => {
   const { hasPermission } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [localStatus, setLocalStatus] = useState(vehicle.status);
-  const [showReject, setShowReject] = useState(false);
-  const [showApproveConfirm, setShowApproveConfirm] = useState(false);
-  const [reason, setReason] = useState("");
+  const [copiedKey, setCopiedKey] = useState(null);
 
-  useEffect(() => {
-    setLocalStatus(vehicle.status);
-  }, [vehicle.status]);
+  const isPending = vehicle.status === "pending" || vehicle.status === "needs_review";
+  const isApproved = vehicle.status === "approved";
+  const isRejected = vehicle.status === "rejected";
 
-  const isOld = vehicle.status === "old";
-  const [collapsed, setCollapsed] = useState(isOld);
-
-  const respond = async (status) => {
-    if (loading) return;
-    const isRejected = status === "rejected";
-    if (isRejected && !reason.trim()) {
-      toast.error("Rejection reason is required.");
-      return;
-    }
-    if (isRejected && reason.trim().length > 150) {
-      toast.error("Rejection reason cannot exceed 150 characters.");
-      return;
-    }
-    setLoading(true);
-    try {
-      const payload = { 
-        id: vehicle._id, 
-        status, 
-        metadata: {
-          vehicleIdentificationNumber: vehicle?.vehicleIdentificationNumber || "",
-          registrationNumber: vehicle?.registrationNumber || "",
-        }
-      };
-      if (isRejected) payload.rejectReason = reason;
-
-      await api.updateDocs([], [payload]);
-      setLocalStatus(status);
-      setShowReject(false);
-      toast.success(`Vehicle ${status} successfully.`);
-      if (onRespond) onRespond();
-    } catch (err) {
-      toast.error(err.message || "Failed to update vehicle.");
-    } finally {
-      setLoading(false);
-    }
+  const handleCopyText = (val, keyName) => {
+    if (!val) return;
+    navigator.clipboard.writeText(String(val));
+    setCopiedKey(keyName);
+    toast.success(`${keyName} copied to clipboard`);
+    setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const colorHex = getColorHex(vehicle.color || "gray");
+
   return (
-    <>
-      {showApproveConfirm && (
-        <Modal
-          isOpen={showApproveConfirm}
-          onClose={() => setShowApproveConfirm(false)}
-          title="Confirm Approval"
-          size="sm"
-        >
-          <p className="text-sm text-gray-500 mb-6">
-            Are you sure you want to approve <strong className="text-gray-900">{vehicle.make} {vehicle.model}</strong>? This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setShowApproveConfirm(false)} disabled={loading}>
-              Cancel
-            </Button>
-            <Button
-              variant="success"
-              loading={loading}
-              disabled={loading}
-              onClick={() => { setShowApproveConfirm(false); respond("approved"); }}
-            >
-              Yes, Approve
-            </Button>
+    <Card className="overflow-hidden border border-gray-200/90 dark:border-[#1f242b] shadow-xs">
+      {/* ── HEADER: Vehicle Title & Clean Plate ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-gray-100 dark:border-[#1f242b]">
+        {/* Left: Vehicle Title with Accent Icon */}
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="relative w-13 h-13 rounded-2xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center shrink-0 shadow-xs">
+            <Car className="w-6 h-6 text-sky-600 dark:text-sky-400" />
+            <span
+              className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white dark:border-[#13161a] shadow-xs"
+              style={{ backgroundColor: colorHex }}
+              title={`Color: ${vehicle.color || "Standard"}`}
+            />
           </div>
-        </Modal>
-      )}
-      <div
-        className={`border rounded-2xl bg-white shadow-sm overflow-hidden transition-all duration-200 ${isOld ? "opacity-60 hover:opacity-80" : localStatus === "pending" ? "ring-2 ring-amber-200 border-amber-100" : ""}`}
-      >
-        <div
-          className={`flex items-center justify-between px-4 py-3 ${isOld ? "cursor-pointer hover:bg-gray-50/50" : ""}`}
-          onClick={isOld ? () => setCollapsed((v) => !v) : undefined}
-        >
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-            <Car className="w-5 h-5 text-blue-500" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold capitalize text-[15px] text-gray-700">
-                {vehicle.make} {vehicle.model}
-              </span>
-              {isOld && (
-                <span className="text-[11px] px-2.5 py-0.5 bg-slate-100 text-slate-500 rounded-full font-medium">
-                  Old
+
+          <div className="space-y-0.5 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white capitalize tracking-tight truncate">
+                {vehicle.yearOfManufacture ? `${vehicle.yearOfManufacture} ` : ""}
+                {vehicle.make || "Unknown Make"} {vehicle.model || "Unknown Model"}
+              </h3>
+              {vehicle.licensePlateNumber && (
+                <span className="font-mono text-xs font-extrabold px-2.5 py-0.5 rounded-md bg-gray-100 dark:bg-[#181d24] text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700">
+                  Plate: {vehicle.licensePlateNumber}
                 </span>
               )}
             </div>
-            <span className="text-[11px] text-gray-400">
-              {vehicle.vehicleType} · {vehicle.color}
-            </span>
+
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400 flex-wrap">
+              <span className="capitalize font-medium text-gray-700 dark:text-slate-300">
+                {vehicle.vehicleType || "Standard"} Category
+              </span>
+              <span>•</span>
+              <span>
+                {vehicle.createdAt ? `Registered ${formatDate(vehicle.createdAt)}` : "Registered Vehicle"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <StatusPill status={localStatus} />
-          {isOld &&
-            (collapsed ? (
-              <ChevronDown className="w-4 h-4 text-slate-400" />
-            ) : (
-              <ChevronUp className="w-4 h-4 text-slate-400" />
-            ))}
+
+        {/* Right: Status Badge */}
+        <div className="flex items-center gap-3 self-start sm:self-auto">
+          {statusBadge(vehicle.status)}
         </div>
       </div>
 
-      {!collapsed && (
-        <div className="px-5 pb-5 space-y-4 border-t border-gray-50">
-          <div className="grid grid-cols-2 gap-x-6 bg-gray-50 rounded-xl p-3 mt-3">
-            <Detail label="Year" value={vehicle?.yearOfManufacture} />
-            <Detail label="Plate #" value={vehicle?.licensePlateNumber} />
-            <Detail label="VIN" value={vehicle?.vehicleIdentificationNumber} />
-            <Detail label="Region" value={vehicle?.regionOfRegistration} />
-            <Detail label="Expiry" value={formatDate(vehicle?.expiryDate)} />
+      {/* ── BODY: Specifications & Legal Information Grid ── */}
+      <div className="py-5 space-y-4">
+        {/* Rejection Alert Banner */}
+        {vehicle.rejectReason && (
+          <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
+            <div>
+              <span className="font-bold">Vehicle Rejection Reason: </span>
+              <span>{vehicle.rejectReason}</span>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Column 1: Vehicle Specifications */}
+          <div className="bg-gray-50/80 dark:bg-[#181d24]/80 rounded-xl p-4 border border-gray-200/70 dark:border-[#1f242b] space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200/60 dark:border-[#2d3748]">
+              <Car className="w-4 h-4 text-[#61CB08]" />
+              <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Vehicle Specifications
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">Make &amp; Model</span>
+                <span className="font-bold text-gray-900 dark:text-white capitalize">
+                  {vehicle.make} {vehicle.model}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">Manufacture Year</span>
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {vehicle.yearOfManufacture || "—"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">Exterior Color</span>
+                <span className="font-semibold text-gray-900 dark:text-white capitalize flex items-center gap-2">
+                  <span
+                    className="w-3 h-3 rounded-full border border-gray-300 dark:border-gray-600 shrink-0 shadow-xs"
+                    style={{ backgroundColor: colorHex }}
+                  />
+                  {vehicle.color || "Standard"}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">Ride Class</span>
+                <span className="font-semibold text-[#61CB08] capitalize">
+                  {vehicle.vehicleType || "Economy"}
+                </span>
+              </div>
+            </div>
           </div>
 
-          {vehicle.rejectReason && (
-            <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-100">
-              <XCircle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-red-600">{vehicle.rejectReason}</p>
+          {/* Column 2: Legal & Identification Numbers */}
+          <div className="bg-gray-50/80 dark:bg-[#181d24]/80 rounded-xl p-4 border border-gray-200/70 dark:border-[#1f242b] space-y-3">
+            <div className="flex items-center gap-2 pb-2 border-b border-gray-200/60 dark:border-[#2d3748]">
+              <Shield className="w-4 h-4 text-sky-500" />
+              <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+                Identification &amp; Registration
+              </span>
             </div>
-          )}
 
-          {/* Actions — only the latest vehicle can have actions */}
-          {!isOld &&
-            isLatest &&
-            localStatus !== "approved" &&
-            hasPermission("approveDriversVehicles") && (
-            <div className="space-y-2 pt-3 border-t border-gray-50 mt-3">
-              {!showReject ? (
-                <div className="flex gap-2">
-                  <button
-                    disabled={loading}
-                    onClick={() => setShowApproveConfirm(true)}
-                    className="flex-1 py-2 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
-                  >
-                    {loading ? (
-                      <LoadingSpinner color="emerald" />
-                    ) : (
-                      <><CheckCircle className="w-3.5 h-3.5" /> Approve Vehicle</>
-                    )}
-                  </button>
-                  {localStatus === "pending" && (
+            <div className="space-y-2.5 text-xs">
+              {/* Plate */}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">License Plate</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-gray-900 dark:text-white">
+                    {vehicle.licensePlateNumber || "N/A"}
+                  </span>
+                  {vehicle.licensePlateNumber && (
                     <button
-                      disabled={loading}
-                      onClick={() => setShowReject(true)}
-                      className="flex-1 py-2 rounded-lg text-xs font-medium bg-red-50 text-red-600 hover:bg-red-100 transition disabled:opacity-50 flex items-center justify-center gap-1"
+                      type="button"
+                      onClick={() => handleCopyText(vehicle.licensePlateNumber, "License Plate")}
+                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                      title="Copy"
                     >
-                      <XCircle className="w-3.5 h-3.5" /> Reject Vehicle
+                      {copiedKey === "License Plate" ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
                     </button>
                   )}
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <textarea
-                    placeholder="Enter reject reason (required)…"
-                    className="w-full border border-gray-200 rounded-xl p-2.5 text-xs resize-none focus:outline-none focus:ring-2 focus:ring-red-200"
-                    rows={3}
-                    value={reason}
-                    maxLength={150}
-                    onChange={(e) => setReason(e.target.value.slice(0, 150))}
-                  />
-                  <div className="flex items-center justify-between text-[11px] text-gray-400">
-                    <span>Max 150 characters</span>
-                    <span className={reason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
-                      {reason.length}/150
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowReject(false)}
-                      className="flex-1 border border-gray-200 text-gray-500 py-1.5 rounded-lg text-xs hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      disabled={loading || !reason.trim() || reason.trim().length > 150}
-                      onClick={() => respond("rejected")}
-                      className="flex-1 bg-red-600 text-white py-1.5 rounded-lg text-xs hover:bg-red-700 disabled:opacity-50 flex items-center justify-center gap-1"
-                    >
-                      {loading ? <LoadingSpinner color="white" /> : "Confirm Reject"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
 
-          {localStatus !== "pending" && localStatus !== "old" && (
-            <div
-              className={`text-center text-xs py-1.5 rounded-lg font-medium ${
-                localStatus === "approved" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500"
-              }`}
-            >
-              {localStatus === "approved" ? "✓ Vehicle Approved" : "✕ Vehicle Rejected"}
+              {/* VIN */}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">VIN (Chassis #)</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-gray-900 dark:text-white truncate max-w-[150px]">
+                    {vehicle.vehicleIdentificationNumber || "Not Provided"}
+                  </span>
+                  {vehicle.vehicleIdentificationNumber && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText(vehicle.vehicleIdentificationNumber, "VIN")}
+                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                      title="Copy"
+                    >
+                      {copiedKey === "VIN" ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Registration Number */}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 dark:text-slate-400">Registration #</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono font-bold text-gray-900 dark:text-white truncate max-w-[150px]">
+                    {vehicle.registrationNumber || "Not Provided"}
+                  </span>
+                  {vehicle.registrationNumber && (
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText(vehicle.registrationNumber, "Registration Number")}
+                      className="text-gray-400 hover:text-gray-700 dark:hover:text-white"
+                      title="Copy"
+                    >
+                      {copiedKey === "Registration Number" ? (
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      ) : (
+                        <Copy className="w-3 h-3" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Indicator */}
+              <div className="flex items-center justify-between border-t border-gray-200/60 dark:border-[#2d3748] pt-2">
+                <span className="text-gray-500 dark:text-slate-400">Verification Status</span>
+                <span className="font-bold text-gray-900 dark:text-white capitalize">
+                  {vehicle.status === "approved"
+                    ? "✓ Approved"
+                    : vehicle.status === "rejected"
+                    ? "✕ Rejected"
+                    : "⏳ Pending"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── FOOTER: Actions ── */}
+      {hasPermission("approveDriversVehicles") && (
+        <div className="pt-4 border-t border-gray-100 dark:border-[#1f242b] flex items-center justify-end gap-2.5">
+          {isPending ? (
+            <>
+              <Button
+                variant="danger"
+                size="sm"
+                disabled={isActionLoading}
+                onClick={() => onRequestReject(vehicle, "vehicle")}
+                icon={<XCircle className="w-4 h-4" />}
+              >
+                Reject Vehicle
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                loading={isActionLoading}
+                disabled={isActionLoading}
+                onClick={() => onApprove(vehicle._id, "vehicle")}
+                icon={<CheckCircle2 className="w-4 h-4" />}
+              >
+                Approve Vehicle
+              </Button>
+            </>
+          ) : isApproved ? (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-[#61CB08] flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4" /> Approved Vehicle
+              </span>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => onRequestReject(vehicle, "vehicle")}
+                className="text-xs text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 border-rose-200 dark:border-rose-900/40"
+              >
+                Revoke Approval
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-rose-500 flex items-center gap-1.5">
+                <XCircle className="w-4 h-4" /> Rejected Vehicle
+              </span>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => onApprove(vehicle._id, "vehicle")}
+                className="text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+              >
+                Overturn &amp; Approve
+              </Button>
             </div>
           )}
         </div>
       )}
-      </div>
-    </>
+    </Card>
   );
 };
 
-
+// ── Main Driver Details Page ──────────────────────────────────────────────────
 
 const DriverDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
 
-  const [driverInfo, setDriverInfo] = useState(null);
   const [docs, setDocs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
+  const [activeTab, setActiveTab] = useState("documents");
 
-  const [bulkRejectMode, setBulkRejectMode] = useState(false);
-  const [bulkReasons, setBulkReasons] = useState({});
+  // Lightbox State
+  const [lightboxImages, setLightboxImages] = useState(null);
+  const [lightboxIdx, setLightboxIdx] = useState(0);
+
+  // Single Item Rejection Modal State
+  const [rejectItemModal, setRejectItemModal] = useState({
+    isOpen: false,
+    item: null,
+    type: "document", // 'document' or 'vehicle'
+    reason: "",
+  });
+
+  // Bulk Rejection Modal State
+  const [bulkRejectModalOpen, setBulkRejectModalOpen] = useState(false);
+  const [bulkRejectReason, setBulkRejectReason] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
-
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [approveAllModalOpen, setApproveAllModalOpen] = useState(false);
-  const [rejectAllReason, setRejectAllReason] = useState("");
 
   const { details: userDetails, loading: userLoading, refresh: refreshUser } = useGetUserDetails(
     id,
-    "driver",
+    "driver"
   );
   const pInfo = userDetails?.personalInfo;
+  const fDetails = userDetails?.fullDetails;
+
+  const handleCopy = (text, fieldName) => {
+    if (!text) return;
+    navigator.clipboard.writeText(String(text));
+    setCopiedField(fieldName);
+    toast.success(`${fieldName} copied to clipboard`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
 
   const editInitialData = useMemo(
     () => ({
-      firstName: userDetails?.fullDetails?.firstName || "",
-      lastName: userDetails?.fullDetails?.lastName || "",
-      email: pInfo?.email || userDetails?.fullDetails?.email || "",
-      subscriptionStatus: userDetails?.fullDetails?.subscriptionStatus || "",
+      firstName: fDetails?.firstName || pInfo?.firstName || "",
+      lastName: fDetails?.lastName || pInfo?.lastName || "",
+      email: pInfo?.email || fDetails?.email || "",
+      subscriptionStatus: fDetails?.subscriptionStatus === "Expired" ? "canceled" : "active",
       balance: 0,
     }),
-    [userDetails, pInfo],
+    [fDetails, pInfo]
   );
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [docsRes, vehiclesRes] = await Promise.all([
-        api.getDriverDocs(id),
-        api.getDriverVehicles(id),
-      ]);
-      const allDocs = docsRes.data || [];
-      const allVehicles = vehiclesRes.data || [];
-      setDocs(allDocs);
-      setVehicles(allVehicles);
+  const fetchData = useCallback(
+    async (isManual = false) => {
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
 
-      // Get driver info from the first doc's driver field if available, or from drivers API
-      if (allDocs.length > 0 && allDocs[0].driver) {
-        // driver field is just an ID string, fetch via drivers list or use params
+      try {
+        const [docsRes, vehiclesRes] = await Promise.all([
+          api.getDriverDocs(id),
+          api.getDriverVehicles(id),
+        ]);
+        setDocs(docsRes.data || []);
+        setVehicles(vehiclesRes.data || []);
+        if (isManual) {
+          refreshUser();
+          toast.success("Driver verification data refreshed");
+        }
+      } catch (err) {
+        toast.error("Failed to load driver verification data.");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-    } catch (err) {
-      toast.error("Failed to load driver application data.");
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+    },
+    [id, refreshUser]
+  );
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Partition docs: show only the latest per type (non-old), everything else is "old"
-  const latestDocsByType = {};
-  [...docs]
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .forEach((doc) => {
-      if (!latestDocsByType[doc.type]) latestDocsByType[doc.type] = doc;
-    });
-  const latestDocs = Object.values(latestDocsByType);
-  const oldDocs = docs.filter(
-    (d) => !latestDocs.find((ld) => ld._id === d._id),
+  // Document partitioning: active vs archived
+  const latestDocsByType = useMemo(() => {
+    const map = {};
+    [...docs]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .forEach((doc) => {
+        if (!map[doc.type]) map[doc.type] = doc;
+      });
+    return map;
+  }, [docs]);
+
+  const latestDocs = useMemo(() => Object.values(latestDocsByType), [latestDocsByType]);
+  const oldDocs = useMemo(
+    () => docs.filter((d) => !latestDocs.find((ld) => ld._id === d._id)),
+    [docs, latestDocs]
   );
 
-  console.log(latestDocs)
+  const pendingDocs = useMemo(
+    () => latestDocs.filter((d) => d.status === "pending" || d.status === "needs_review"),
+    [latestDocs]
+  );
 
-  const pendingDocs = latestDocs.filter((d) => d.status === "pending");
-  const approvablePendingDocs = pendingDocs; // Allow approval of all documents including licenses
+  // Vehicle verification docs for cross-referencing in vehicle card
+  const vehicleRelatedDocs = useMemo(
+    () =>
+      docs.filter(
+        (d) =>
+          d.type === "vehicleVerification" ||
+          d.type === "insurance" ||
+          d.type === "vehicleRegistration" ||
+          d.type === "inspection"
+      ),
+    [docs]
+  );
 
   const getVehicleTime = (v) => {
     if (v?.createdAt) {
@@ -925,399 +1033,643 @@ const DriverDetails = () => {
   }, [vehicles]);
 
   const latestVehicleId = sortedVehicles[0]?._id;
-  const pendingVehicles = sortedVehicles.filter(
-    (v) => v._id === latestVehicleId && v.status === "pending"
+  const pendingVehicles = useMemo(
+    () =>
+      sortedVehicles.filter(
+        (v) => v._id === latestVehicleId && (v.status === "pending" || v.status === "needs_review")
+      ),
+    [sortedVehicles, latestVehicleId]
   );
-  const approvableVehicles = pendingVehicles;
-  const activeVehicles = vehicles.filter((v) => v.status !== "old");
+
+  const totalPending = pendingDocs.length + pendingVehicles.length;
+
+  // ── Approval Handlers ───────────────────────────────────────────────────────
+
+  const handleApprove = async (itemId, type = "document") => {
+    setActionLoading(true);
+    try {
+      if (type === "document") {
+        await api.updateDocs([{ id: itemId, status: "approved" }], []);
+        toast.success("Document approved successfully!");
+      } else {
+        const v = sortedVehicles.find((x) => x._id === itemId);
+        await api.updateDocs([], [
+          {
+            id: itemId,
+            status: "approved",
+            metadata: {
+              vehicleIdentificationNumber: v?.vehicleIdentificationNumber || "",
+              registrationNumber: v?.registrationNumber || "",
+            },
+          },
+        ]);
+        toast.success("Vehicle approved successfully!");
+      }
+      fetchData();
+    } catch (err) {
+      toast.error(err.message || `Failed to approve ${type}.`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ── Rejection Handlers ─────────────────────────────────────────────────────
+
+  const handleOpenRejectModal = (item, type = "document") => {
+    setRejectItemModal({
+      isOpen: true,
+      item,
+      type,
+      reason: item?.rejectReason || "",
+    });
+  };
+
+  const handleConfirmSingleReject = async () => {
+    const { item, type, reason } = rejectItemModal;
+    if (!reason.trim()) {
+      toast.error("Please provide a rejection reason.");
+      return;
+    }
+
+    setActionLoading(true);
+    try {
+      if (type === "document") {
+        await api.updateDocs([{ id: item._id, status: "rejected", rejectReason: reason.trim() }], []);
+        toast.success("Document rejected.");
+      } else {
+        const v = sortedVehicles.find((x) => x._id === item._id);
+        await api.updateDocs([], [
+          {
+            id: item._id,
+            status: "rejected",
+            rejectReason: reason.trim(),
+            metadata: {
+              vehicleIdentificationNumber: v?.vehicleIdentificationNumber || "",
+              registrationNumber: v?.registrationNumber || "",
+            },
+          },
+        ]);
+        toast.success("Vehicle rejected.");
+      }
+      setRejectItemModal({ isOpen: false, item: null, type: "document", reason: "" });
+      fetchData();
+    } catch (err) {
+      toast.error(err.message || `Failed to reject ${type}.`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ── Bulk Handlers ──────────────────────────────────────────────────────────
 
   const handleApproveAll = async () => {
-    if (approvablePendingDocs.length === 0 && approvableVehicles.length === 0)
-      return;
+    if (totalPending === 0) return;
     setBulkLoading(true);
     try {
       await api.updateDocs(
-        approvablePendingDocs.map((d) => {
-          const payload = { id: d._id, status: "approved" };
-          if (d.type === "vehicleVerification") {
-            payload.metadata = {
-              vehicleIdentificationNumber:
-                d.metadata?.vehicleIdentificationNumber || "",
+        pendingDocs.map((d) => ({
+          id: d._id,
+          status: "approved",
+          ...(d.type === "vehicleVerification" && {
+            metadata: {
+              vehicleIdentificationNumber: d.metadata?.vehicleIdentificationNumber || "",
               registrationNumber: d.metadata?.registrationNumber || "",
-            };
-          }
-          return payload;
-        }),
-        approvableVehicles.map((v) => ({
+            },
+          }),
+        })),
+        pendingVehicles.map((v) => ({
           id: v._id,
           status: "approved",
           metadata: {
             vehicleIdentificationNumber: v?.vehicleIdentificationNumber || "",
             registrationNumber: v?.registrationNumber || "",
           },
-        })),
+        }))
       );
-      toast.success("All pending items approved.");
+      toast.success("All pending credentials & vehicles approved!");
       fetchData();
     } catch (err) {
-      toast.error(err.message || "Failed to approve all.");
+      toast.error(err.message || "Failed to approve all items.");
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const handleRejectAll = async () => {
-    if (!rejectAllReason.trim()) {
+  const handleConfirmBulkReject = async () => {
+    if (!bulkRejectReason.trim()) {
       toast.error("Please enter a rejection reason.");
-      return;
-    }
-    if (rejectAllReason.trim().length > 150) {
-      toast.error("Rejection reason cannot exceed 150 characters.");
       return;
     }
     setBulkLoading(true);
     try {
       await api.updateDocs(
-        approvablePendingDocs.map((d) => ({
+        pendingDocs.map((d) => ({
           id: d._id,
           status: "rejected",
-          rejectReason: rejectAllReason,
+          rejectReason: bulkRejectReason.trim(),
         })),
         pendingVehicles.map((v) => ({
           id: v._id,
           status: "rejected",
-          rejectReason: rejectAllReason,
-        })),
+          rejectReason: bulkRejectReason.trim(),
+        }))
       );
       toast.success("All pending items rejected.");
-      setRejectModalOpen(false);
-      setRejectAllReason("");
+      setBulkRejectModalOpen(false);
+      setBulkRejectReason("");
       fetchData();
     } catch (err) {
-      toast.error(err.message || "Failed to reject all.");
+      toast.error(err.message || "Failed to reject pending items.");
     } finally {
       setBulkLoading(false);
     }
   };
 
-  const totalPending = approvablePendingDocs.length + approvableVehicles.length;
+  const driverName = [pInfo?.firstName, pInfo?.lastName].filter(Boolean).join(" ") || "Driver Applicant";
+  const avatarColors = getAvatarColors(driverName);
+  const initials = getInitials(driverName);
 
-  if (loading) {
+  // Tabs Configuration
+  const tabsList = [
+    {
+      key: "documents",
+      label: "Documents",
+      count: latestDocs.length,
+      icon: <FileText className="w-3.5 h-3.5" />,
+    },
+    {
+      key: "vehicles",
+      label: "Vehicles",
+      count: sortedVehicles.length,
+      icon: <Car className="w-3.5 h-3.5" />,
+    },
+    ...(oldDocs.length > 0
+      ? [
+          {
+            key: "history",
+            label: "Submission History",
+            count: oldDocs.length,
+            icon: <Layers className="w-3.5 h-3.5" />,
+          },
+        ]
+      : []),
+  ];
+
+  if (loading && !docs.length && !vehicles.length) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#39A300]" />
+      <div className="flex flex-col items-center justify-center min-h-[460px] space-y-3">
+        <Loader2 className="w-9 h-9 animate-spin text-[#61CB08]" />
+        <p className="text-xs font-semibold text-gray-500 dark:text-slate-400">
+          Loading Driver Application...
+        </p>
       </div>
     );
   }
 
+  const activePresets =
+    rejectItemModal.type === "vehicle" ? VEHICLE_REJECTION_PRESETS : REJECTION_PRESETS;
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors font-medium"
+    <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-fadeIn">
+      {/* Lightbox Modal */}
+      {lightboxImages && (
+        <ImageViewer
+          images={lightboxImages}
+          initialIndex={lightboxIdx}
+          onClose={() => setLightboxImages(null)}
+        />
+      )}
+
+      {/* ── TOP HEADER & BREADCRUMBS ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/driver-requests")}
+            className="text-xs font-medium text-gray-700 dark:text-slate-300"
           >
-            <ArrowLeft className="w-4 h-4" /> Back to Driver Requests
-          </button>
+            <ArrowLeft className="w-4 h-4 mr-1.5" />
+            Back to Driver Requests
+          </Button>
+          <span>/</span>
+          <span className="font-semibold text-gray-900 dark:text-white">
+            Driver Verification
+          </span>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              disabled={userLoading}
+        {/* Global Action Bar */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchData(true)}
+            disabled={refreshing}
+            className="text-xs font-medium"
+            icon={<RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin text-[#61CB08]" : ""}`} />}
+          >
+            {refreshing ? "Refreshing..." : "Refresh"}
+          </Button>
+
+          {hasPermission("editUser") && (
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setEditModalOpen(true)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition disabled:opacity-50 flex items-center gap-1.5"
+              disabled={userLoading}
+              className="text-xs font-medium"
+              icon={<Pencil className="w-3.5 h-3.5" />}
             >
-              <Pencil className="w-3.5 h-3.5" /> Edit Profile
-            </button>
-            {totalPending > 0 && hasPermission('approveDriversVehicles') && (
-              <>
-                <button
-                  disabled={bulkLoading}
-                  onClick={() => setApproveAllModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  {bulkLoading ? (
-                    <LoadingSpinner color="emerald" />
-                  ) : (
-                    <CheckCircle className="w-3.5 h-3.5" />
-                  )}
-                  Approve All ({totalPending})
-                </button>
-                <button
-                  disabled={bulkLoading}
-                  onClick={() => setRejectModalOpen(true)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 text-red-600 hover:bg-red-200 transition disabled:opacity-50 flex items-center gap-1.5"
-                >
-                  <XCircle className="w-3.5 h-3.5" /> Reject All
-                </button>
-              </>
+              Edit Profile
+            </Button>
+          )}
+
+          {totalPending > 0 && hasPermission("approveDriversVehicles") && (
+            <>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => setBulkRejectModalOpen(true)}
+                disabled={bulkLoading}
+                className="text-xs font-medium"
+                icon={<XCircle className="w-3.5 h-3.5" />}
+              >
+                Reject All
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleApproveAll}
+                loading={bulkLoading}
+                disabled={bulkLoading}
+                className="text-xs font-medium"
+                icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+              >
+                Approve All ({totalPending})
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── DRIVER PROFILE CARD ── */}
+      <Card padding="p-5 sm:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          {/* Avatar & Personal Info */}
+          <div className="flex items-center gap-4 min-w-0">
+            {pInfo?.profilePicture ? (
+              <img
+                src={pInfo.profilePicture}
+                alt={driverName}
+                className="w-16 h-16 rounded-2xl object-cover border border-gray-200 dark:border-[#1f242b] shadow-xs shrink-0"
+              />
+            ) : (
+              <div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-xl border ${avatarColors.bg} ${avatarColors.text} ${avatarColors.border} shrink-0`}
+              >
+                {initials}
+              </div>
             )}
-          </div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
-        {/* Premium Profile Banner Header */}
-        <div className="bg-white rounded-3xl overflow-hidden shadow-[0px_2px_12px_rgba(0,0,0,0.03)] border border-gray-100">
-          {/* Gradient Top */}
-          <div className="h-36 bg-gradient-to-r from-slate-800 via-indigo-900 to-slate-900 w-full relative overflow-hidden">
-            {/* Decorative blurs */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 blur-3xl rounded-full" />
-            <div className="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-500/20 blur-[80px] rounded-full" />
-          </div>
-
-          <div className="px-6 pb-6 pt-4 relative">
-            {/* Overlapping Avatar */}
-            <div className="absolute -top-16 left-6 w-24 h-24 rounded-2xl border-[4px] border-white shadow-xl bg-gray-50 flex items-center justify-center overflow-hidden z-0 shrink-0">
-              {pInfo?.profilePicture ? (
-                <img
-                  src={pInfo.profilePicture}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-10 h-10 text-gray-300" />
-              )}
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 ml-[116px]">
-              <div>
-                <h1 className="text-[26px] font-bold text-gray-900 leading-none mb-2">
-                  {[pInfo?.firstName, pInfo?.lastName].filter(Boolean).join(" ") || "Driver Application"}
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white tracking-tight truncate">
+                  {driverName}
                 </h1>
-                <div className="flex items-center gap-3">
-                  <p className="text-xs font-mono text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100">
-                    ID: {id}
-                  </p>
-                  {pInfo?.status && (
-                    <Badge
-                      variant={
-                        pInfo.status.toLowerCase() === "active"
-                          ? "success"
-                          : "danger"
-                      }
-                    >
-                      {pInfo.status}
-                    </Badge>
+                {pInfo?.status && statusBadge(pInfo.status)}
+                <button
+                  type="button"
+                  onClick={() => handleCopy(id, "Driver ID")}
+                  className="inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded-md bg-gray-100 dark:bg-[#181d24] text-gray-600 dark:text-slate-400 hover:text-black dark:hover:text-white transition-colors"
+                >
+                  <span>ID: {id?.slice(0, 8)}</span>
+                  {copiedField === "Driver ID" ? (
+                    <Check className="w-3 h-3 text-emerald-500" />
+                  ) : (
+                    <Copy className="w-3 h-3 opacity-60" />
                   )}
-                </div>
+                </button>
               </div>
 
-              {/* Data Summary Badges (Documents & Vehicles Pending) */}
-              <div className="flex flex-wrap items-center justify-end gap-2">
-                <span className="text-[11px] px-3 py-1.5 rounded-full bg-slate-50 text-slate-600 font-semibold border border-slate-200">
-                  {docs.length} Docs Total
+              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-slate-400 flex-wrap">
+                <span className="flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5 opacity-60" />
+                  {hasPermission("seeSensitiveData")
+                    ? pInfo?.email || "—"
+                    : maskEmail(pInfo?.email || "—")}
                 </span>
-                {pendingDocs.length > 0 && (
-                  <span className="text-[11px] px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100 flex items-center gap-1.5 shadow-sm">
-                    <Clock className="w-3 h-3" /> {pendingDocs.length} Pending
-                    Docs
-                  </span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 opacity-60" />
+                  {hasPermission("seeSensitiveData")
+                    ? formatPhoneNumber(pInfo?.phone || pInfo?.phoneNumber) || "—"
+                    : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
+                </span>
+                {fDetails?.ssn && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 font-mono">
+                      <ShieldCheck className="w-3.5 h-3.5 opacity-60" />
+                      SSN: {fDetails.ssn.replace(/^(\d{3})(\d{2})(\d{4})$/, "$1-$2-$3")}
+                    </span>
+                  </>
                 )}
-                {pendingVehicles.length > 0 && (
-                  <span className="text-[11px] px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-100 flex items-center gap-1.5 shadow-sm">
-                    <Car className="w-3 h-3" /> {pendingVehicles.length} Pending
-                    Vehicles
-                  </span>
+                {pInfo?.address && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1 max-w-[240px] truncate">
+                      <MapPin className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                      {pInfo.address}
+                    </span>
+                  </>
                 )}
               </div>
             </div>
-
-            {/* Quick Contact & Info Pills */}
-            <div className="mt-8 flex flex-wrap gap-2.5">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Mail className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {hasPermission('seeSensitiveData') ? (pInfo?.email || "—") : maskEmail(pInfo?.email || "—")}
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Phone className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {hasPermission('seeSensitiveData') ? (formatPhoneNumber(pInfo?.phone || pInfo?.phoneNumber) || "—") : maskPhone(pInfo?.phone || pInfo?.phoneNumber || "—")}
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <CreditCard  className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {userDetails?.fullDetails?.ssn
-                  ? userDetails.fullDetails.ssn.replace(/^(\d{3})(\d{2})(\d{4})$/, "$1-$2-$3")
-                  : "—"}
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" />{" "}
-                {userDetails?.fullDetails.createdAt
-                  ? `Joined ${formatDate(userDetails?.fullDetails.createdAt)}`
-                  : "Onboarding"}
-              </div>
-              {(pInfo?.address || userDetails?.fullDetails?.address) && (
-                <div className="flex items-start gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-600 font-medium">
-                  <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />{" "}
-                  <span className="line-clamp-2">{pInfo?.address || userDetails?.fullDetails?.address}</span>
-                </div>
-              )}
-            </div>
           </div>
-        </div>
 
-        {/* Documents Section */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
+          {/* Verification Status Pill */}
+          <div className="bg-gray-50 dark:bg-[#181d24] border border-gray-200/80 dark:border-[#1f242b] rounded-xl px-5 py-3 shrink-0 flex items-center gap-4">
             <div>
-              <h2 className="text-lg font-bold text-gray-900">Documents</h2>
-              <p className="text-sm text-gray-500">
-                {latestDocs.length} latest · {oldDocs.length} historical
-                (collapsed)
-              </p>
+              <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider block">
+                Verification State
+              </span>
+              <span
+                className={`text-sm sm:text-base font-bold ${
+                  totalPending > 0 ? "text-amber-500" : "text-[#61CB08]"
+                }`}
+              >
+                {totalPending > 0 ? `${totalPending} Item(s) Pending Review` : "✓ All Items Verified"}
+              </span>
             </div>
           </div>
-
-          {/* Pending / Active Documents */}
-          {latestDocs.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-              {latestDocs.map((doc) => (
-                <DocCard
-                  key={doc._id}
-                  doc={doc}
-                  onRespond={fetchData}
-                  isOld={false}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2">
-                <FileText className="w-6 h-6 text-gray-300" />
-              </div>
-              <p className="text-sm">No current documents submitted.</p>
-            </div>
-          )}
-
-          {/* Old / Historical Documents */}
-          {oldDocs.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4" /> Historical Submissions (collapsed)
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
-                {oldDocs.map((doc) => (
-                  <DocCard
-                    key={doc._id}
-                    doc={doc}
-                    onRespond={fetchData}
-                    isOld={true}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+      </Card>
 
-        {/* Vehicles Section */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-gray-900">Vehicles</h2>
-              <p className="text-sm text-gray-500">
-                {activeVehicles.length} vehicles registered
-              </p>
-            </div>
-          </div>
-
-          {sortedVehicles.length > 0 ? (
-            <div className="space-y-4">
-              {sortedVehicles.map((v) => (
-                <VehicleCard
-                  key={v._id}
-                  vehicle={v}
-                  isLatest={v._id === latestVehicleId}
-                  onRespond={fetchData}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-gray-100 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center mb-2">
-                <Car className="w-6 h-6 text-gray-300" />
-              </div>
-              <p className="text-sm">No vehicles registered.</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Edit Profile Modal */}
-      <EditProfileModal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        userId={id}
-        type="driver"
-        initialData={editInitialData}
-        onSuccess={refreshUser}
+      {/* ── TABS NAVIGATION ── */}
+      <Tabs
+        tabs={tabsList}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        className="mb-4"
       />
 
-      {/* Approve All Confirmation Modal */}
-      <Modal
-        isOpen={approveAllModalOpen}
-        onClose={() => setApproveAllModalOpen(false)}
-        title="Confirm Approve All"
-        size="sm"
-      >
-        <p className="text-sm text-gray-500 mb-6">
-          Are you sure you want to approve all <strong className="text-gray-900">{totalPending}</strong> pending document(s) and vehicle(s)? This action cannot be undone.
-        </p>
-        <div className="flex justify-end gap-3">
-          <Button variant="ghost" onClick={() => setApproveAllModalOpen(false)} disabled={bulkLoading}>
-            Cancel
-          </Button>
-          <Button
-            variant="success"
-            loading={bulkLoading}
-            disabled={bulkLoading}
-            onClick={() => { setApproveAllModalOpen(false); handleApproveAll(); }}
-          >
-            Yes, Approve All
-          </Button>
+      {/* ── TAB 1: DOCUMENTS ── */}
+      {activeTab === "documents" && (
+        <div className="space-y-4 animate-fadeIn">
+          {latestDocs.length > 0 ? (
+            latestDocs.map((doc) => (
+              <DocumentCard
+                key={doc._id}
+                doc={doc}
+                onApprove={handleApprove}
+                onRequestReject={handleOpenRejectModal}
+                onOpenLightbox={(scans, idx) => {
+                  setLightboxImages(scans);
+                  setLightboxIdx(idx);
+                }}
+                isActionLoading={actionLoading}
+              />
+            ))
+          ) : (
+            <Card padding="p-12" className="text-center">
+              <FileText className="w-10 h-10 mx-auto text-gray-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                No documents uploaded
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                This driver applicant has not submitted any documents yet.
+              </p>
+            </Card>
+          )}
         </div>
-      </Modal>
+      )}
 
-      {/* Reject All Modal */}
+      {/* ── TAB 2: VEHICLES ── */}
+      {activeTab === "vehicles" && (
+        <div className="space-y-4 animate-fadeIn">
+          {sortedVehicles.length > 0 ? (
+            sortedVehicles.map((vehicle) => (
+              <VehicleCard
+                key={vehicle._id}
+                vehicle={vehicle}
+                onApprove={handleApprove}
+                onRequestReject={handleOpenRejectModal}
+                isActionLoading={actionLoading}
+              />
+            ))
+          ) : (
+            <Card padding="p-12" className="text-center">
+              <Car className="w-10 h-10 mx-auto text-gray-300 dark:text-slate-600 mb-2" />
+              <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                No vehicle registered
+              </p>
+              <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
+                No vehicle details have been provided for this applicant.
+              </p>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── TAB 3: SUBMISSION HISTORY ── */}
+      {activeTab === "history" && (
+        <div className="space-y-4 animate-fadeIn">
+          <div className="p-4 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/40 flex items-center gap-3 text-xs text-blue-800 dark:text-blue-300">
+            <Info className="w-4 h-4 shrink-0 text-blue-500" />
+            <span>
+              These are superseded or archived documents from previous submissions. They are preserved for audit purposes.
+            </span>
+          </div>
+
+          {oldDocs.map((doc) => (
+            <DocumentCard
+              key={doc._id}
+              doc={doc}
+              onApprove={() => {}}
+              onRequestReject={() => {}}
+              onOpenLightbox={(scans, idx) => {
+                setLightboxImages(scans);
+                setLightboxIdx(idx);
+              }}
+              isActionLoading={false}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* ── SINGLE ITEM REJECTION MODAL ── */}
       <Modal
-        isOpen={rejectModalOpen}
-        onClose={() => setRejectModalOpen(false)}
-        title="Reject All Pending Items"
+        isOpen={rejectItemModal.isOpen}
+        onClose={() => setRejectItemModal({ isOpen: false, item: null, type: "document", reason: "" })}
+        title={`Reject ${rejectItemModal.type === "document" ? "Document" : "Vehicle"}`}
         size="md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
-            This will reject all <strong>{totalPending}</strong> pending
-            document(s) and vehicle(s). Please provide a mandatory rejection
-            reason.
+          <p className="text-xs text-gray-600 dark:text-slate-300">
+            Please choose a preset rejection reason or provide a custom explanation for the driver:
           </p>
-          <textarea
-            value={rejectAllReason}
-            onChange={(e) => setRejectAllReason(e.target.value.slice(0, 150))}
-            maxLength={150}
-            className="w-full min-h-[120px] p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-300 outline-none transition-all text-sm"
-            placeholder="e.g., Documents are expired or unreadable. Please resubmit."
-          />
-          <div className="flex items-center justify-between text-xs text-gray-400">
-            <span>Max 150 characters</span>
-            <span className={rejectAllReason.length >= 150 ? "text-amber-600 font-semibold" : ""}>
-              {rejectAllReason.length}/150
-            </span>
+
+          {/* Preset Buttons */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Quick Presets
+            </label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {activePresets.map((preset, pIdx) => (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={() => setRejectItemModal((prev) => ({ ...prev, reason: preset }))}
+                  className="text-xs px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-[#181d24] text-gray-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 border border-gray-200 dark:border-[#2d3748] transition-colors"
+                >
+                  + {preset}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex justify-end gap-3">
-            <Button variant="ghost" onClick={() => setRejectModalOpen(false)}>
+
+          {/* Reason Textarea */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Rejection Note
+            </label>
+            <textarea
+              rows={3}
+              value={rejectItemModal.reason}
+              onChange={(e) =>
+                setRejectItemModal((prev) => ({
+                  ...prev,
+                  reason: e.target.value.slice(0, 150),
+                }))
+              }
+              placeholder="Enter explanation for the applicant..."
+              maxLength={150}
+              className="w-full text-xs p-3 rounded-xl border border-gray-300 dark:border-[#2d3748] bg-white dark:bg-[#141a24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500 resize-none"
+            />
+            <div className="flex justify-between text-[11px] text-gray-400">
+              <span>Max 150 characters</span>
+              <span className={rejectItemModal.reason.length >= 150 ? "text-rose-500 font-bold" : ""}>
+                {rejectItemModal.reason.length}/150
+              </span>
+            </div>
+          </div>
+
+          {/* Modal Actions */}
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100 dark:border-[#1f242b]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() =>
+                setRejectItemModal({ isOpen: false, item: null, type: "document", reason: "" })
+              }
+              disabled={actionLoading}
+            >
               Cancel
             </Button>
             <Button
               variant="danger"
-              onClick={handleRejectAll}
+              size="sm"
+              loading={actionLoading}
+              disabled={actionLoading || !rejectItemModal.reason.trim()}
+              onClick={handleConfirmSingleReject}
+              icon={<XCircle className="w-4 h-4" />}
+            >
+              Confirm Rejection
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── BULK REJECT MODAL ── */}
+      <Modal
+        isOpen={bulkRejectModalOpen}
+        onClose={() => setBulkRejectModalOpen(false)}
+        title="Reject All Pending Items"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-xs text-gray-600 dark:text-slate-300">
+            This will reject all{" "}
+            <strong className="text-gray-900 dark:text-white font-bold">{totalPending}</strong>{" "}
+            pending items. Select a reason preset or enter custom notes:
+          </p>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Quick Presets
+            </label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {REJECTION_PRESETS.map((preset, pIdx) => (
+                <button
+                  key={pIdx}
+                  type="button"
+                  onClick={() => setBulkRejectReason(preset)}
+                  className="text-xs px-2.5 py-1.5 rounded-lg bg-gray-100 dark:bg-[#181d24] text-gray-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 border border-gray-200 dark:border-[#2d3748] transition-colors"
+                >
+                  + {preset}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider block">
+              Rejection Note
+            </label>
+            <textarea
+              value={bulkRejectReason}
+              onChange={(e) => setBulkRejectReason(e.target.value.slice(0, 150))}
+              maxLength={150}
+              rows={3}
+              placeholder="e.g. Scans are expired or unreadable..."
+              className="w-full text-xs p-3 rounded-xl border border-gray-300 dark:border-[#2d3748] bg-white dark:bg-[#141a24] text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500 resize-none"
+            />
+            <div className="flex items-center justify-between text-[11px] text-gray-400">
+              <span>Max 150 characters</span>
+              <span className={bulkRejectReason.length >= 150 ? "text-rose-500 font-bold" : ""}>
+                {bulkRejectReason.length}/150
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2 border-t border-gray-100 dark:border-[#1f242b]">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setBulkRejectModalOpen(false);
+                setBulkRejectReason("");
+              }}
+              disabled={bulkLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
               loading={bulkLoading}
-              disabled={!rejectAllReason.trim() || rejectAllReason.trim().length > 150}
+              disabled={bulkLoading || !bulkRejectReason.trim()}
+              onClick={handleConfirmBulkReject}
+              icon={<XCircle className="w-4 h-4" />}
             >
               Confirm Reject All
             </Button>
           </div>
         </div>
       </Modal>
+
+      {/* ── EDIT PROFILE MODAL ── */}
+      <EditProfileModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        userId={id}
+        type="driver"
+        initialData={editInitialData}
+        onSuccess={() => {
+          refreshUser();
+          fetchData();
+        }}
+      />
     </div>
   );
 };
